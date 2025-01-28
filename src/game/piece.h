@@ -18,11 +18,7 @@ class Piece {
   Color GetColor() const { return Team; }
   bool IsMaster() const { return Master; }
 
-  void Swap(Piece& other);
-
  private:
   Color Team;
   bool Master;
 };
-
-void swap(Piece& first, Piece& second);

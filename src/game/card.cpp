@@ -4,45 +4,45 @@
 #include <stdexcept>
 #include <string>
 
-std::vector<Offset> Card::GetMoves(CardType card) {
+std::unordered_set<Offset> Card::GetMoves(CardType card) {
   switch (card) {
     case CardType::Boar:
-      return std::vector({Offset(-1, 0), Offset(0, -1), Offset(1, 0)});
+      return std::unordered_set({Offset(-1, 0), Offset(0, -1), Offset(1, 0)});
     case CardType::Cobra:
-      return std::vector({Offset(-1, 0), Offset(1, -1), Offset(1, 1)});
+      return std::unordered_set({Offset(-1, 0), Offset(1, -1), Offset(1, 1)});
     case CardType::Crab:
-      return std::vector({Offset(-2, 0), Offset(0, -1), Offset(2, 0)});
+      return std::unordered_set({Offset(-2, 0), Offset(0, -1), Offset(2, 0)});
     case CardType::Crane:
-      return std::vector({Offset(-1, 1), Offset(0, -1), Offset(1, 1)});
+      return std::unordered_set({Offset(-1, 1), Offset(0, -1), Offset(1, 1)});
     case CardType::Dragon:
-      return std::vector(
+      return std::unordered_set(
           {Offset(-2, -1), Offset(-1, 1), Offset(1, 1), Offset(2, -1)});
     case CardType::Eel:
-      return std::vector({Offset(-1, -1), Offset(-1, 1), Offset(1, 0)});
+      return std::unordered_set({Offset(-1, -1), Offset(-1, 1), Offset(1, 0)});
     case CardType::Elephant:
-      return std::vector(
+      return std::unordered_set(
           {Offset(-1, -1), Offset(-1, 0), Offset(1, -1), Offset(1, 0)});
     case CardType::Frog:
-      return std::vector({Offset(-2, 0), Offset(-1, -1), Offset(1, 1)});
+      return std::unordered_set({Offset(-2, 0), Offset(-1, -1), Offset(1, 1)});
     case CardType::Goose:
-      return std::vector(
+      return std::unordered_set(
           {Offset(-1, -1), Offset(-1, 0), Offset(1, 0), Offset(1, 1)});
     case CardType::Horse:
-      return std::vector({Offset(-1, 0), Offset(0, -1), Offset(0, 1)});
+      return std::unordered_set({Offset(-1, 0), Offset(0, -1), Offset(0, 1)});
     case CardType::Mantis:
-      return std::vector({Offset(-1, -1), Offset(0, 1), Offset(1, -1)});
+      return std::unordered_set({Offset(-1, -1), Offset(0, 1), Offset(1, -1)});
     case CardType::Monkey:
-      return std::vector(
+      return std::unordered_set(
           {Offset(-1, -1), Offset(-1, 1), Offset(1, -1), Offset(1, 1)});
     case CardType::Ox:
-      return std::vector({Offset(0, -1), Offset(0, 1), Offset(1, 0)});
+      return std::unordered_set({Offset(0, -1), Offset(0, 1), Offset(1, 0)});
     case CardType::Rabbit:
-      return std::vector({Offset(-1, 1), Offset(1, -1), Offset(2, 0)});
+      return std::unordered_set({Offset(-1, 1), Offset(1, -1), Offset(2, 0)});
     case CardType::Rooster:
-      return std::vector(
+      return std::unordered_set(
           {Offset(-1, 0), Offset(-1, 1), Offset(1, 0), Offset(1, -1)});
     case CardType::Tiger:
-      return std::vector({Offset(0, -2), Offset(0, 1)});
+      return std::unordered_set({Offset(0, -2), Offset(0, 1)});
 
     default:
       size_t cardNum = (size_t)card;
@@ -79,3 +79,9 @@ Color Card::GetColor(CardType card) {
           std::vformat("Invalid card type {}", std::make_format_args(cardNum)));
   }
 }
+
+bool Offset::operator==(const Offset& other) const {
+  return dx == other.dx && dy == other.dy;
+}
+
+bool Card::operator==(const Card& other) const { return Type == other.Type; }

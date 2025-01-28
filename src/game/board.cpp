@@ -14,7 +14,7 @@ void Coordinate::operator+=(Coordinate other) {
   this->y += other.y;
 }
 
-bool Coordinate::operator==(Coordinate other) {
+bool Coordinate::operator==(Coordinate other) const {
   return this->x == other.x && this->y == other.y;
 }
 
@@ -47,11 +47,14 @@ void Board::Reset() {
   }
 }
 
-bool Board::DoMove(Coordinate src, Coordinate dest) {
-  Tile& srcTile = (*this)[src];
+bool Board::DoMove(Coordinate source, Offset offset) {
+  std::optional<Coordinate> destination = source.try_add(offset);
+  if (!destination) return false;
+
+  Tile& srcTile = (*this)[source];
   if (!srcTile) return false;
 
-  Tile& destTile = (*this)[dest];
+  Tile& destTile = (*this)[*destination];
   if (destTile && destTile->GetColor() == srcTile->GetColor()) return false;
 
   srcTile.swap(destTile);
@@ -63,6 +66,17 @@ std::optional<Tile> Board::GetTile(Coordinate coordinate) const {
 
   return std::optional<Tile>(
       Grid[coordinate.x * BOARD_DIMENSIONS + coordinate.x].value());
+}
+
+std::vector<Coordinate> Board::GetPieceCoordinates(Color color) const {
+  std::vector<Coordinate> coordinates;
+
+  for (size_t i = 0; i < BOARD_SIZE; i++) {
+    if (Grid[i] && Grid[i]->GetColor() == color)
+      coordinates.emplace_back(i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS);
+  }
+
+  return coordinates;
 }
 
 bool Board::OnBoard(Coordinate coordinate) const {

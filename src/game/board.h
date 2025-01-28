@@ -17,7 +17,7 @@ struct Coordinate {
 
   Coordinate operator+(Coordinate other) const;
   void operator+=(Coordinate other);
-  bool operator==(Coordinate other);
+  bool operator==(Coordinate other) const;
   void operator=(Coordinate other);
 
   std::optional<Coordinate> try_add(Offset direction);
@@ -33,9 +33,11 @@ class Board {
   Board(const Board& other);
 
   void Reset();
-  bool DoMove(Coordinate src, Coordinate dest);
+  bool DoMove(Coordinate source, Offset offset);
 
   std::optional<Tile> GetTile(Coordinate coordinate) const;
+  std::vector<Coordinate> GetPieceCoordinates(Color color) const;
+
   bool OnBoard(Coordinate coordinate) const;
   std::optional<Color> IsFinished() const;
 
