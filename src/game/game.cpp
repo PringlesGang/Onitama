@@ -140,6 +140,13 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   const std::span<Card, HAND_SIZE> bottomHand =
       TopPlayer != Color::Red ? game.RedHand : game.BlueHand;
 
+  std::string cardNumberString = "";
+  for (size_t card = 0; card < HAND_SIZE; card++) {
+    cardNumberString += std::string("Card ") + std::to_string(card) + " ";
+  }
+  cardNumberString += "\n";
+
+  if (game.CurrentPlayer == TopPlayer) stream << cardNumberString;
   game.StreamHand(stream, topHand, true);
 
   size_t pawnIndex = 0;
@@ -155,7 +162,9 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   }
 
   stream << std::endl;
+  if (game.CurrentPlayer != TopPlayer) stream << cardNumberString;
   game.StreamHand(stream, bottomHand, false);
+
   stream << "Current player: " << game.CurrentPlayer << std::endl;
   return stream << std::endl;
 }
