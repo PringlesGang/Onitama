@@ -35,6 +35,10 @@ class Board {
   bool OnBoard(Coordinate coordinate) const;
   std::optional<Color> IsFinished() const;
 
+  std::ostream& StreamPlayer(std::ostream& stream, const Color player) const;
+  std::ostream& StreamPlayerRow(std::ostream& stream, const Color player,
+                                const size_t row, size_t& pawnIndex) const;
+
  private:
   std::array<Tile, BOARD_SIZE> Grid;
 

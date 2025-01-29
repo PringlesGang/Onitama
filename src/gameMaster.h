@@ -10,7 +10,7 @@ class GameMaster {
   GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
              std::unique_ptr<Strategy::Strategy> bluePlayer);
 
-  void Render();
+  void Render() const;
   void Update();
   std::optional<Color> IsFinished() const;
 

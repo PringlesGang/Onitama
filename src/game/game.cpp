@@ -135,8 +135,10 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
 
   game.StreamHand(stream, topHand, true);
 
+  size_t pawnIndex = 0;
   for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
-    stream << game.Board.GetRow(row).value() << "  ";
+    game.Board.StreamPlayerRow(stream, game.CurrentPlayer, row, pawnIndex);
+    stream << "  ";
 
     const bool reverse = game.CurrentPlayer == TopPlayer;
     const int8_t sign = reverse ? -1 : 1;

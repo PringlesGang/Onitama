@@ -131,4 +131,31 @@ std::ostream& operator<<(std::ostream& stream, const Board& board) {
   return stream;
 }
 
+std::ostream& Board::StreamPlayerRow(std::ostream& stream, const Color player,
+                                     const size_t row,
+                                     size_t& pawnIndex) const {
+  for (const Tile& tile : *GetRow(row)) {
+    if (tile && tile->GetColor() == player && !tile->IsMaster()) {
+      stream << ++pawnIndex;
+    } else {
+      stream << tile;
+    }
+  }
+
+  return stream;
+}
+
+std::ostream& Board::StreamPlayer(std::ostream& stream,
+                                  const Color player) const {
+  stream << std::endl;
+  size_t pawnIndex = 0;
+
+  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+    StreamPlayerRow(stream, player, row, pawnIndex);
+    stream << std::endl;
+  }
+
+  return stream;
+}
+
 }  // namespace Game

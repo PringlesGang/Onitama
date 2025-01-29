@@ -10,7 +10,7 @@ GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
       BluePlayer(std::move(bluePlayer)),
       GameInstance(Game::Game::WithRandomCards()) {}
 
-void GameMaster::Render() { std::cout << GameInstance; }
+void GameMaster::Render() const { std::cout << GameInstance; }
 
 void GameMaster::Update() {
   if (IsFinished()) return;

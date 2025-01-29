@@ -91,14 +91,17 @@ bool Card::operator==(const Card& other) const { return Type == other.Type; }
 
 std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
                               const bool rotate) const {
+  const std::vector<Offset> offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
   Offset offset{.dx = -2 * sign, .dy = row};
 
   for (; abs(offset.dx) <= 2; offset.dx += sign) {
-    if (HasMove(offset)) {
-      stream << 'X';
+    const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
+
+    if (offsetId != offsets.end()) {
+      stream << std::distance(offsets.begin(), offsetId);
     } else {
-      stream << ((offset.dx == 0 && row == 0) ? 'O' : '.');
+      stream << ((offset.dx == 0 && row == 0) ? 'X' : '.');
     }
   }
 
@@ -113,10 +116,12 @@ std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
   stream << std::endl;
   for (; abs(offset.dy) <= 2; offset.dy += sign) {
     for (; abs(offset.dx) <= 2; offset.dx += sign) {
-      if (HasMove(offset)) {
-        stream << 'X';
+      const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
+
+      if (offsetId != offsets.end()) {
+        stream << std::distance(offsets.begin(), offsetId);
       } else {
-        stream << ((offset.dx == 0 && offset.dy == 0) ? 'O' : '.');
+        stream << ((offset.dx == 0 && offset.dy == 0) ? 'X' : '.');
       }
     }
 
