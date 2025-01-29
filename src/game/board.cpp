@@ -60,8 +60,16 @@ std::vector<Coordinate> Board::GetPieceCoordinates(Color color) const {
   std::vector<Coordinate> coordinates;
 
   for (size_t i = 0; i < BOARD_SIZE; i++) {
-    if (Grid[i] && Grid[i]->GetColor() == color)
-      coordinates.emplace_back(i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS);
+    if (Grid[i] && Grid[i]->GetColor() == color) {
+      // Place master in the front
+      if (Grid[i]->IsMaster()) {
+        coordinates.insert(
+            coordinates.begin(),
+            Coordinate{i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS});
+      } else {
+        coordinates.emplace_back(i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS);
+      }
+    }
   }
 
   return coordinates;

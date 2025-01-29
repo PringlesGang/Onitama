@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ostream>
-#include <unordered_set>
+#include <vector>
 
 #include "../util/offset.h"
 #include "piece.h"
@@ -29,11 +29,12 @@ enum class CardType {
 };
 
 struct Card {
-  static std::unordered_set<Offset> GetMoves(CardType card);
+  static std::vector<Offset> GetMoves(CardType card);
   static Color GetColor(CardType card);
 
   Color GetColor() const { return GetColor(Type); };
-  std::unordered_set<Offset> GetMoves() const { return GetMoves(Type); };
+  std::vector<Offset> GetMoves() const { return GetMoves(Type); };
+  bool HasMove(const Offset offset) const;
 
   bool operator==(const Card& other) const;
 

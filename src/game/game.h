@@ -1,8 +1,10 @@
 #pragma once
 
 #include <array>
+#include <optional>
 #include <ostream>
 #include <span>
+#include <string>
 #include <unordered_set>
 
 #include "../util/color.h"
@@ -21,8 +23,13 @@ class Game {
 
   static Game WithRandomCards(bool repeatCards = false);
 
+  std::span<const Card, HAND_SIZE> GetHand(Color color) const;
+  std::span<const Card, HAND_SIZE> GetCurrentHand() const;
+  Card GetSetAsideCard() const;
+  Color GetCurrentPlayer() const;
+
   std::unordered_set<Move> GetValidMoves() const;
-  bool IsValidMove(Move move) const;
+  std::optional<std::string> IsInvalidMove(Move move) const;
   std::optional<Color> IsFinished() const;
   bool DoMove(Move move);
 

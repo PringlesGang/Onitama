@@ -6,45 +6,45 @@
 
 namespace Game {
 
-std::unordered_set<Offset> Card::GetMoves(CardType card) {
+std::vector<Offset> Card::GetMoves(CardType card) {
   switch (card) {
     case CardType::Boar:
-      return std::unordered_set({Offset(-1, 0), Offset(0, -1), Offset(1, 0)});
+      return std::vector({Offset(-1, 0), Offset(0, -1), Offset(1, 0)});
     case CardType::Cobra:
-      return std::unordered_set({Offset(-1, 0), Offset(1, -1), Offset(1, 1)});
+      return std::vector({Offset(-1, 0), Offset(1, -1), Offset(1, 1)});
     case CardType::Crab:
-      return std::unordered_set({Offset(-2, 0), Offset(0, -1), Offset(2, 0)});
+      return std::vector({Offset(-2, 0), Offset(0, -1), Offset(2, 0)});
     case CardType::Crane:
-      return std::unordered_set({Offset(-1, 1), Offset(0, -1), Offset(1, 1)});
+      return std::vector({Offset(-1, 1), Offset(0, -1), Offset(1, 1)});
     case CardType::Dragon:
-      return std::unordered_set(
+      return std::vector(
           {Offset(-2, -1), Offset(-1, 1), Offset(1, 1), Offset(2, -1)});
     case CardType::Eel:
-      return std::unordered_set({Offset(-1, -1), Offset(-1, 1), Offset(1, 0)});
+      return std::vector({Offset(-1, -1), Offset(-1, 1), Offset(1, 0)});
     case CardType::Elephant:
-      return std::unordered_set(
+      return std::vector(
           {Offset(-1, -1), Offset(-1, 0), Offset(1, -1), Offset(1, 0)});
     case CardType::Frog:
-      return std::unordered_set({Offset(-2, 0), Offset(-1, -1), Offset(1, 1)});
+      return std::vector({Offset(-2, 0), Offset(-1, -1), Offset(1, 1)});
     case CardType::Goose:
-      return std::unordered_set(
+      return std::vector(
           {Offset(-1, -1), Offset(-1, 0), Offset(1, 0), Offset(1, 1)});
     case CardType::Horse:
-      return std::unordered_set({Offset(-1, 0), Offset(0, -1), Offset(0, 1)});
+      return std::vector({Offset(-1, 0), Offset(0, -1), Offset(0, 1)});
     case CardType::Mantis:
-      return std::unordered_set({Offset(-1, -1), Offset(0, 1), Offset(1, -1)});
+      return std::vector({Offset(-1, -1), Offset(0, 1), Offset(1, -1)});
     case CardType::Monkey:
-      return std::unordered_set(
+      return std::vector(
           {Offset(-1, -1), Offset(-1, 1), Offset(1, -1), Offset(1, 1)});
     case CardType::Ox:
-      return std::unordered_set({Offset(0, -1), Offset(0, 1), Offset(1, 0)});
+      return std::vector({Offset(0, -1), Offset(0, 1), Offset(1, 0)});
     case CardType::Rabbit:
-      return std::unordered_set({Offset(-1, 1), Offset(1, -1), Offset(2, 0)});
+      return std::vector({Offset(-1, 1), Offset(1, -1), Offset(2, 0)});
     case CardType::Rooster:
-      return std::unordered_set(
+      return std::vector(
           {Offset(-1, 0), Offset(-1, 1), Offset(1, 0), Offset(1, -1)});
     case CardType::Tiger:
-      return std::unordered_set({Offset(0, -2), Offset(0, 1)});
+      return std::vector({Offset(0, -2), Offset(0, 1)});
 
     default:
       size_t cardNum = (size_t)card;
@@ -82,16 +82,20 @@ Color Card::GetColor(CardType card) {
   }
 }
 
+bool Card::HasMove(const Offset offset) const {
+  const std::vector moves = GetMoves();
+  return std::find(moves.begin(), moves.end(), offset) != moves.end();
+}
+
 bool Card::operator==(const Card& other) const { return Type == other.Type; }
 
 std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
                               const bool rotate) const {
-  const std::unordered_set<Offset> offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
   Offset offset{.dx = -2 * sign, .dy = row};
 
   for (; abs(offset.dx) <= 2; offset.dx += sign) {
-    if (offsets.contains(offset)) {
+    if (HasMove(offset)) {
       stream << 'X';
     } else {
       stream << ((offset.dx == 0 && row == 0) ? 'O' : '.');
@@ -102,14 +106,14 @@ std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
 }
 
 std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
-  const std::unordered_set<Offset> offsets = GetMoves();
+  const std::vector<Offset> offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
   Offset offset{.dx = -2 * sign, .dy = -2 * sign};
 
   stream << std::endl;
   for (; abs(offset.dy) <= 2; offset.dy += sign) {
     for (; abs(offset.dx) <= 2; offset.dx += sign) {
-      if (offsets.contains(offset)) {
+      if (HasMove(offset)) {
         stream << 'X';
       } else {
         stream << ((offset.dx == 0 && offset.dy == 0) ? 'O' : '.');

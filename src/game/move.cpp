@@ -3,7 +3,7 @@
 namespace Game {
 
 bool Move::operator==(const Move& other) const {
-  return Source == other.Source && OrientedOffset == other.OrientedOffset &&
+  return PawnId == other.PawnId && OffsetId == other.OffsetId &&
          UsedCard == other.UsedCard;
 }
 

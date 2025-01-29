@@ -7,9 +7,9 @@
 namespace Game {
 
 struct Move {
-  Coordinate Source;
-  Offset OrientedOffset;
+  size_t PawnId;
   Card UsedCard;
+  size_t OffsetId;
 
   bool operator==(const Move& move) const;
 };
@@ -19,8 +19,7 @@ struct Move {
 template <>
 struct std::hash<Game::Move> {
   size_t operator()(const Game::Move& move) const noexcept {
-    return ((move.Source.x + move.OrientedOffset.dx) << 16) ^
-           ((move.Source.y + move.OrientedOffset.dy) << 8) ^
+    return (move.PawnId << 16) ^ (move.OffsetId << 8) ^
            (size_t)move.UsedCard.Type;
   }
 };

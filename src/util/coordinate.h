@@ -12,7 +12,7 @@ struct Coordinate {
   bool operator==(Coordinate other) const;
   void operator=(Coordinate other);
 
-  std::optional<Coordinate> try_add(Offset direction);
+  std::optional<Coordinate> try_add(Offset direction) const;
 
   size_t x;
   size_t y;

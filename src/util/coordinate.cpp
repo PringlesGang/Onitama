@@ -23,7 +23,7 @@ void Coordinate::operator=(Coordinate other) {
   this->y = other.y;
 }
 
-std::optional<Coordinate> Coordinate::try_add(Offset direction) {
+std::optional<Coordinate> Coordinate::try_add(Offset direction) const {
   if (this->x < direction.dx || this->y < direction.dy)
     return std::optional<Coordinate>();
 
