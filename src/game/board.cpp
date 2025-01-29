@@ -37,7 +37,9 @@ bool Board::DoMove(Coordinate source, Offset offset) {
   Tile& destTile = (*this)[*destination];
   if (destTile && destTile->GetColor() == srcTile->GetColor()) return false;
 
+  if (destTile) destTile.reset();  // Capture
   srcTile.swap(destTile);
+
   return true;
 }
 
