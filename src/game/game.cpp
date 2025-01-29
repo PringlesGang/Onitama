@@ -91,18 +91,16 @@ std::optional<std::string> Game::IsInvalidMove(Move move) const {
   if (std::find(hand.begin(), hand.end(), move.UsedCard) == hand.end())
     return "Used card not in player's hand!";
 
-  const std::vector<Coordinate> pawnCoordinates =
-      Board.GetPieceCoordinates(CurrentPlayer);
-  if (move.PawnId >= pawnCoordinates.size()) return "Pawn does not exist!";
-
-  const Offset offset = offsets[move.OffsetId];
+  const Offset orientedOffset = CurrentPlayer == TopPlayer
+                                    ? -offsets[move.OffsetId]
+                                    : offsets[move.OffsetId];
   const std::optional<Coordinate> destCoordinate =
-      pawnCoordinates[move.PawnId].try_add(offset);
+      pawnLocations[move.PawnId].try_add(orientedOffset);
   if (!destCoordinate || !Board.OnBoard(*destCoordinate))
     return "Destination not on board!";
 
   const Tile destTile = Board.GetTile(*destCoordinate).value();
-  if (destTile->GetColor() == CurrentPlayer)
+  if (destTile && destTile->GetColor() == CurrentPlayer)
     return "Cannot capture pawn of the same color!";
 
   return std::optional<std::string>();

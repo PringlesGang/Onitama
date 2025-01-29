@@ -24,7 +24,8 @@ void Coordinate::operator=(Coordinate other) {
 }
 
 std::optional<Coordinate> Coordinate::try_add(Offset direction) const {
-  if (this->x < direction.dx || this->y < direction.dy)
+  if (direction.dx < 0 && this->x < (size_t)-direction.dx ||
+      direction.dy < 0 && this->y < (size_t)-direction.dy)
     return std::optional<Coordinate>();
 
   return std::optional<Coordinate>(
