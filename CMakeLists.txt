@@ -17,6 +17,8 @@ set(Src
         src/util/color.cpp
         src/util/coordinate.cpp
         src/util/offset.cpp
+
+        src/strategies/human.cpp
 )
 
 set(Header
@@ -31,6 +33,7 @@ set(Header
         src/util/offset.h
 
         src/strategies/strategy.h
+        src/strategies/human.h
 )
 
 add_executable("onitama" ${Src} ${Header})
