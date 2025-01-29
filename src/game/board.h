@@ -9,6 +9,8 @@
 #include "../util/coordinate.h"
 #include "piece.h"
 
+namespace Game {
+
 constexpr size_t BOARD_DIMENSIONS = 5;
 constexpr size_t BOARD_SIZE = BOARD_DIMENSIONS * BOARD_DIMENSIONS;
 
@@ -43,3 +45,5 @@ class Board {
 std::ostream& operator<<(std::ostream& stream,
                          const std::span<const Tile, BOARD_DIMENSIONS> row);
 std::ostream& operator<<(std::ostream& stream, const Board& board);
+
+}  // namespace Game

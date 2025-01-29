@@ -2,6 +2,8 @@
 
 #include "../util/color.h"
 
+namespace Game {
+
 class Piece {
  public:
   Piece(Color color, bool master);
@@ -17,3 +19,5 @@ class Piece {
   Color Team;
   bool Master;
 };
+
+}  // namespace Game

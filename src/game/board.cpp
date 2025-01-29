@@ -1,5 +1,7 @@
 #include "board.h"
 
+namespace Game {
+
 std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
   const char character =
       !tile.has_value() ? '.'
@@ -120,3 +122,5 @@ std::ostream& operator<<(std::ostream& stream, const Board& board) {
 
   return stream;
 }
+
+}  // namespace Game

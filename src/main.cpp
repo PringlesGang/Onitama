@@ -3,7 +3,7 @@
 #include "game./game.h"
 
 int main(int argc, char* argv[]) {
-  Game game = Game::WithRandomCards();
+  Game::Game game = Game::Game::WithRandomCards();
 
   std::cout << game;
 

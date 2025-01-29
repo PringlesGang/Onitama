@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 
+namespace Game {
+
 std::unordered_set<Offset> Card::GetMoves(CardType card) {
   switch (card) {
     case CardType::Boar:
@@ -119,3 +121,5 @@ std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
 
   return stream;
 }
+
+}  // namespace Game

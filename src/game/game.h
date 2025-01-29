@@ -10,6 +10,8 @@
 #include "card.h"
 #include "move.h"
 
+namespace Game {
+
 constexpr size_t HAND_SIZE = 2;
 constexpr size_t CARD_COUNT = HAND_SIZE * 2 + 1;
 
@@ -41,3 +43,5 @@ class Game {
                            const std::span<const Card, HAND_SIZE> hand,
                            const bool rotate = false) const;
 };
+
+}  // namespace Game

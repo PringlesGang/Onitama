@@ -2,6 +2,8 @@
 
 #include <random>
 
+namespace Game {
+
 Game::Game(std::array<Card, CARD_COUNT> cards)
     : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {}
 
@@ -131,3 +133,5 @@ std::ostream& Game::StreamHand(std::ostream& stream,
 
   return stream << std::endl;
 }
+
+}  // namespace Game

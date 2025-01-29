@@ -6,6 +6,8 @@
 #include "../util/offset.h"
 #include "piece.h"
 
+namespace Game {
+
 enum class CardType {
   Boar,
   Cobra,
@@ -41,3 +43,5 @@ struct Card {
                           const bool rotate = false) const;
   std::ostream& Stream(std::ostream& stream, const bool rotate = false) const;
 };
+
+}  // namespace Game
