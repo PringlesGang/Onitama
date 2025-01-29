@@ -29,6 +29,8 @@ set(Header
         src/util/color.h
         src/util/coordinate.h
         src/util/offset.h
+
+        src/strategies/strategy.h
 )
 
 add_executable("onitama" ${Src} ${Header})
