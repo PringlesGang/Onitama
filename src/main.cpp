@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     game.Render();
     game.Update();
   } while (!game.IsFinished());
+  game.Render();
 
   return 0;
 }
