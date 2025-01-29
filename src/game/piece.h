@@ -5,6 +5,8 @@ enum class Color {
   Blue,
 };
 
+constexpr Color TopPlayer = Color::Red;
+
 Color operator~(const Color& orig);
 
 class Piece {

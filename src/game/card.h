@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ostream>
 #include <unordered_set>
 
 #include "piece.h"
@@ -30,6 +31,7 @@ struct Offset {
   int8_t dy;
 
   bool operator==(const Offset& other) const;
+  Offset operator-() const;
 };
 
 template <>
@@ -49,4 +51,6 @@ struct Card {
   bool operator==(const Card& other) const;
 
   CardType Type = CardType(0);
+
+  friend std::ostream& operator<<(std::ostream& stream, const Card& card);
 };

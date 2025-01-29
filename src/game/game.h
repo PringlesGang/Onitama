@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <unordered_set>
 
 #include "board.h"
@@ -9,7 +10,7 @@ constexpr size_t CARD_COUNT = HAND_SIZE * 2 + 1;
 
 struct Move {
   Coordinate Source;
-  Offset MoveOffset;
+  Offset OrientedOffset;
   Card UsedCard;
 
   bool operator==(const Move& move) const;
@@ -18,8 +19,8 @@ struct Move {
 template <>
 struct std::hash<Move> {
   size_t operator()(const Move& move) const noexcept {
-    return ((move.Source.x + move.MoveOffset.dx) << 16) ^
-           ((move.Source.y + move.MoveOffset.dy) << 8) ^
+    return ((move.Source.x + move.OrientedOffset.dx) << 16) ^
+           ((move.Source.y + move.OrientedOffset.dy) << 8) ^
            (size_t)move.UsedCard.Type;
   }
 };
@@ -35,6 +36,8 @@ class Game {
   std::optional<Color> IsFinished() const;
   bool DoMove(Move move);
 
+  friend std::ostream& operator<<(std::ostream& stream, const Game& game);
+
  private:
   Board Board;
   std::array<Card, CARD_COUNT> Cards;
@@ -46,3 +49,8 @@ class Game {
   std::span<Card, HAND_SIZE> BlueHand =
       std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE);
 };
+
+std::ostream& operator<<(std::ostream& stream,
+                         const std::span<const Card, HAND_SIZE> cards);
+std::ostream& operator<<(std::ostream& stream,
+                         const std::pair<const Board&, Card> boardAndCard);

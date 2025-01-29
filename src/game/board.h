@@ -2,6 +2,7 @@
 
 #include <array>
 #include <optional>
+#include <ostream>
 #include <span>
 
 #include "card.h"
@@ -11,6 +12,8 @@ constexpr size_t BOARD_DIMENSIONS = 5;
 constexpr size_t BOARD_SIZE = BOARD_DIMENSIONS * BOARD_DIMENSIONS;
 
 typedef std::optional<Piece> Tile;
+
+std::ostream& operator<<(std::ostream& stream, const Tile& tile);
 
 struct Coordinate {
   Coordinate(size_t x, size_t y);
@@ -40,6 +43,8 @@ class Board {
 
   bool OnBoard(Coordinate coordinate) const;
   std::optional<Color> IsFinished() const;
+
+  friend std::ostream& operator<<(std::ostream& stream, const Board& board);
 
  private:
   std::array<Tile, BOARD_SIZE> Grid;

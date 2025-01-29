@@ -1,5 +1,16 @@
 #include "board.h"
 
+std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
+  char character = '.';
+  if (tile.has_value()) {
+    character = tile->IsMaster() ? 'm' : 's';
+
+    if (tile->GetColor() == Color::Red) character += 'A' - 'a';
+  }
+
+  return stream << character;
+}
+
 Coordinate::Coordinate(size_t x, size_t y) {
   this->x = x;
   this->y = y;
@@ -38,11 +49,11 @@ Board::Board(const std::array<Tile, BOARD_SIZE>& grid) : Grid(grid) {}
 Board::Board(const Board& other) : Grid(other.Grid) {}
 
 void Board::Reset() {
-  constexpr size_t center = BOARD_DIMENSIONS / 2 + 1;
+  constexpr size_t center = BOARD_DIMENSIONS / 2;
 
   for (size_t x = 0; x < BOARD_DIMENSIONS; x++) {
-    (*this)[0][x].emplace(Color::Red, x == center);
-    (*this)[BOARD_DIMENSIONS - 1][x].emplace(Color::Blue, x == center);
+    (*this)[0][x].emplace(TopPlayer, x == center);
+    (*this)[BOARD_DIMENSIONS - 1][x].emplace(~TopPlayer, x == center);
     for (size_t y = 1; y < BOARD_DIMENSIONS - 1; y++) (*this)[y][x].reset();
   }
 }
@@ -64,8 +75,7 @@ bool Board::DoMove(Coordinate source, Offset offset) {
 std::optional<Tile> Board::GetTile(Coordinate coordinate) const {
   if (!OnBoard(coordinate)) return std::optional<Tile>();
 
-  return std::optional<Tile>(
-      Grid[coordinate.x * BOARD_DIMENSIONS + coordinate.x].value());
+  return Grid[coordinate.y * BOARD_DIMENSIONS + coordinate.x];
 }
 
 std::vector<Coordinate> Board::GetPieceCoordinates(Color color) const {
@@ -103,12 +113,24 @@ std::optional<Color> Board::IsFinished() const {
   if (!redMasterPosition || !blueMasterPosition)
     return redMasterPosition ? Color::Red : Color::Blue;
 
-  constexpr size_t center = BOARD_SIZE / 2 + 1;
+  constexpr size_t center = BOARD_SIZE / 2;
   if (redMasterPosition.value() == Coordinate(center, BOARD_DIMENSIONS - 1))
     return Color::Red;
   if (blueMasterPosition.value() == Coordinate(center, 0)) return Color::Blue;
 
   return std::optional<Color>();
+}
+
+std::ostream& operator<<(std::ostream& stream, const Board& board) {
+  stream << std::endl;
+  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+    for (size_t column = 0; column < BOARD_DIMENSIONS; column++) {
+      stream << board.GetTile(Coordinate(column, row)).value();
+    }
+    stream << std::endl;
+  }
+
+  return stream;
 }
 
 Tile& Board::operator[](Coordinate coordinate) {

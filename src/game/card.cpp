@@ -84,4 +84,29 @@ bool Offset::operator==(const Offset& other) const {
   return dx == other.dx && dy == other.dy;
 }
 
+Offset Offset::operator-() const {
+  return Offset{.dx = (int8_t)-dx, .dy = (int8_t)-dy};
+}
+
 bool Card::operator==(const Card& other) const { return Type == other.Type; }
+
+std::ostream& operator<<(std::ostream& stream, const Card& card) {
+  const std::unordered_set<Offset> offsets = card.GetMoves();
+
+  stream << std::endl;
+  for (int8_t row = -2; row <= 2; row++) {
+    for (int8_t column = -2; column <= 2; column++) {
+      if (row == 0 && column == 0) {
+        stream << 'O';
+      } else if (offsets.contains(Offset{.dx = column, .dy = row})) {
+        stream << 'X';
+      } else {
+        stream << '.';
+      }
+    }
+
+    stream << std::endl;
+  }
+
+  return stream;
+}
