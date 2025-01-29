@@ -120,6 +120,8 @@ bool Game::DoMove(Move move) {
   const auto usedCardIt = std::find(hand.begin(), hand.end(), move.UsedCard);
   std::swap(SetAsideCard, *usedCardIt);
 
+  CurrentPlayer = ~CurrentPlayer;
+
   return true;
 }
 
