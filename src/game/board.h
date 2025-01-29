@@ -4,8 +4,9 @@
 #include <optional>
 #include <ostream>
 #include <span>
+#include <vector>
 
-#include "card.h"
+#include "../util/coordinate.h"
 #include "piece.h"
 
 constexpr size_t BOARD_DIMENSIONS = 5;
@@ -14,20 +15,6 @@ constexpr size_t BOARD_SIZE = BOARD_DIMENSIONS * BOARD_DIMENSIONS;
 typedef std::optional<Piece> Tile;
 
 std::ostream& operator<<(std::ostream& stream, const Tile& tile);
-
-struct Coordinate {
-  Coordinate(size_t x, size_t y);
-
-  Coordinate operator+(Coordinate other) const;
-  void operator+=(Coordinate other);
-  bool operator==(Coordinate other) const;
-  void operator=(Coordinate other);
-
-  std::optional<Coordinate> try_add(Offset direction);
-
-  size_t x;
-  size_t y;
-};
 
 class Board {
  public:

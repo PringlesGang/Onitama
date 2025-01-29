@@ -80,14 +80,6 @@ Color Card::GetColor(CardType card) {
   }
 }
 
-bool Offset::operator==(const Offset& other) const {
-  return dx == other.dx && dy == other.dy;
-}
-
-Offset Offset::operator-() const {
-  return Offset{.dx = (int8_t)-dx, .dy = (int8_t)-dy};
-}
-
 bool Card::operator==(const Card& other) const { return Type == other.Type; }
 
 std::ostream& operator<<(std::ostream& stream, const Card& card) {

@@ -1,29 +1,17 @@
 #pragma once
 
+#include <array>
 #include <ostream>
+#include <span>
 #include <unordered_set>
 
+#include "../util/color.h"
 #include "board.h"
+#include "card.h"
+#include "move.h"
 
 constexpr size_t HAND_SIZE = 2;
 constexpr size_t CARD_COUNT = HAND_SIZE * 2 + 1;
-
-struct Move {
-  Coordinate Source;
-  Offset OrientedOffset;
-  Card UsedCard;
-
-  bool operator==(const Move& move) const;
-};
-
-template <>
-struct std::hash<Move> {
-  size_t operator()(const Move& move) const noexcept {
-    return ((move.Source.x + move.OrientedOffset.dx) << 16) ^
-           ((move.Source.y + move.OrientedOffset.dy) << 8) ^
-           (size_t)move.UsedCard.Type;
-  }
-};
 
 class Game {
  public:

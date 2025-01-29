@@ -12,6 +12,11 @@ set(Src
         src/game/board.cpp
         src/game/piece.cpp
         src/game/card.cpp
+        src/game/move.cpp
+
+        src/util/color.cpp
+        src/util/coordinate.cpp
+        src/util/offset.cpp
 )
 
 set(Header
@@ -19,6 +24,11 @@ set(Header
         src/game/board.h
         src/game/piece.h
         src/game/card.h
+        src/game/move.h
+
+        src/util/color.h
+        src/util/coordinate.h
+        src/util/offset.h
 )
 
 add_executable("onitama" ${Src} ${Header})

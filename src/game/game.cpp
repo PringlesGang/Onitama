@@ -2,11 +2,6 @@
 
 #include <random>
 
-bool Move::operator==(const Move& other) const {
-  return Source == other.Source && OrientedOffset == other.OrientedOffset &&
-         UsedCard == other.UsedCard;
-}
-
 Game::Game(std::array<Card, CARD_COUNT> cards)
     : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {}
 
