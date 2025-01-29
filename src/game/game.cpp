@@ -105,17 +105,25 @@ std::optional<std::string> Game::IsInvalidMove(Move move) const {
 }
 
 bool Game::DoMove(Move move) {
-  if (IsInvalidMove(move)) return false;
+  const size_t validMoveCount = GetValidMoves().size();
 
-  const Coordinate startCoordinate =
-      Board.GetPieceCoordinates(CurrentPlayer)[move.PawnId];
-  const Offset offset =
-      move.UsedCard.GetMoves()[move.OffsetId].Orient(CurrentPlayer);
+  if (validMoveCount > 0) {
+    if (IsInvalidMove(move)) return false;
 
-  Board.DoMove(startCoordinate, offset);
+    const Coordinate startCoordinate =
+        Board.GetPieceCoordinates(CurrentPlayer)[move.PawnId];
+    const Offset offset =
+        move.UsedCard.GetMoves()[move.OffsetId].Orient(CurrentPlayer);
+
+    Board.DoMove(startCoordinate, offset);
+  }
 
   const std::span<Card, HAND_SIZE> hand =
       CurrentPlayer == Color::Red ? RedHand : BlueHand;
+  if (validMoveCount == 0 &&
+      std::find(hand.begin(), hand.end(), move.UsedCard) == hand.end())
+    return false;
+
   const auto usedCardIt = std::find(hand.begin(), hand.end(), move.UsedCard);
   std::swap(SetAsideCard, *usedCardIt);
 

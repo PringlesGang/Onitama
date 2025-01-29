@@ -11,6 +11,8 @@ class Human : public Strategy {
  private:
   static std::optional<Game::Move> ParseMove(const std::string& string,
                                              const Game::Game& game);
+  static std::optional<Game::Move> ParseCard(const std::string& string,
+                                             const Game::Game& game);
 };
 
 }  // namespace Strategy
