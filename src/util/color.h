@@ -7,8 +7,6 @@ enum class Color {
   Blue,
 };
 
-constexpr Color TopPlayer = Color::Red;
-
 Color operator~(const Color& orig);
 
 std::ostream& operator<<(std::ostream& stream, Color color);

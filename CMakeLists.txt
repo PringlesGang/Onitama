@@ -24,6 +24,7 @@ set(Src
 
 set(Header
         src/gameMaster.h
+        src/constants.h
 
         src/game/game.h
         src/game/board.h

@@ -7,15 +7,13 @@
 #include <string>
 #include <unordered_set>
 
+#include "../constants.h"
 #include "../util/color.h"
 #include "board.h"
 #include "card.h"
 #include "move.h"
 
 namespace Game {
-
-constexpr size_t HAND_SIZE = 2;
-constexpr size_t CARD_COUNT = HAND_SIZE * 2 + 1;
 
 class Game {
  public:

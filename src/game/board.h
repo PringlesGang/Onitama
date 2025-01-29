@@ -6,13 +6,11 @@
 #include <span>
 #include <vector>
 
+#include "../constants.h"
 #include "../util/coordinate.h"
 #include "piece.h"
 
 namespace Game {
-
-constexpr size_t BOARD_DIMENSIONS = 5;
-constexpr size_t BOARD_SIZE = BOARD_DIMENSIONS * BOARD_DIMENSIONS;
 
 typedef std::optional<Piece> Tile;
 

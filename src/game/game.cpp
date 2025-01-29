@@ -91,9 +91,7 @@ std::optional<std::string> Game::IsInvalidMove(Move move) const {
   if (std::find(hand.begin(), hand.end(), move.UsedCard) == hand.end())
     return "Used card not in player's hand!";
 
-  const Offset orientedOffset = CurrentPlayer == TopPlayer
-                                    ? -offsets[move.OffsetId]
-                                    : offsets[move.OffsetId];
+  const Offset orientedOffset = offsets[move.OffsetId].Orient(CurrentPlayer);
   const std::optional<Coordinate> destCoordinate =
       pawnLocations[move.PawnId].try_add(orientedOffset);
   if (!destCoordinate || !Board.OnBoard(*destCoordinate))
@@ -111,7 +109,8 @@ bool Game::DoMove(Move move) {
 
   const Coordinate startCoordinate =
       Board.GetPieceCoordinates(CurrentPlayer)[move.PawnId];
-  const Offset offset = move.UsedCard.GetMoves()[move.OffsetId];
+  const Offset offset =
+      move.UsedCard.GetMoves()[move.OffsetId].Orient(CurrentPlayer);
 
   Board.DoMove(startCoordinate, offset);
 

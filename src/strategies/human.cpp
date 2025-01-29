@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+#include "../constants.h"
+
 namespace Strategy {
 
 Game::Move Human::GetMove(const Game::Game& game) {
@@ -44,9 +46,9 @@ std::optional<Game::Move> Human::ParseMove(const std::string& string,
     return std::optional<Game::Move>();
   }
 
-  if (cardNum >= Game::HAND_SIZE) {
+  if (cardNum >= HAND_SIZE) {
     std::cout << std::format("Pick a card number between 0 and {}!",
-                             Game::HAND_SIZE - 1)
+                             HAND_SIZE - 1)
               << std::endl;
     return std::optional<Game::Move>();
   }
