@@ -1,12 +1,10 @@
 #include "board.h"
 
 std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
-  char character = '.';
-  if (tile.has_value()) {
-    character = tile->IsMaster() ? 'm' : 's';
-
-    if (tile->GetColor() == Color::Red) character += 'A' - 'a';
-  }
+  const char character =
+      !tile.has_value() ? '.'
+                        : (tile->IsMaster() ? 'm' : 's') +
+                              ('A' - 'a') * (tile->GetColor() == Color::Red);
 
   return stream << character;
 }
@@ -45,6 +43,15 @@ std::optional<Tile> Board::GetTile(Coordinate coordinate) const {
   if (!OnBoard(coordinate)) return std::optional<Tile>();
 
   return Grid[coordinate.y * BOARD_DIMENSIONS + coordinate.x];
+}
+
+std::optional<std::span<const Tile, BOARD_DIMENSIONS>> Board::GetRow(
+    size_t row) const {
+  if (row >= BOARD_DIMENSIONS)
+    return std::optional<std::span<Tile, BOARD_DIMENSIONS>>();
+
+  return std::span<const Tile, BOARD_DIMENSIONS>(&Grid[row * BOARD_DIMENSIONS],
+                                                 BOARD_DIMENSIONS);
 }
 
 std::vector<Coordinate> Board::GetPieceCoordinates(Color color) const {
@@ -90,18 +97,6 @@ std::optional<Color> Board::IsFinished() const {
   return std::optional<Color>();
 }
 
-std::ostream& operator<<(std::ostream& stream, const Board& board) {
-  stream << std::endl;
-  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
-    for (size_t column = 0; column < BOARD_DIMENSIONS; column++) {
-      stream << board.GetTile(Coordinate(column, row)).value();
-    }
-    stream << std::endl;
-  }
-
-  return stream;
-}
-
 Tile& Board::operator[](Coordinate coordinate) {
   return Grid[coordinate.y * BOARD_DIMENSIONS + coordinate.x];
 }
@@ -109,4 +104,19 @@ Tile& Board::operator[](Coordinate coordinate) {
 std::span<Tile, BOARD_DIMENSIONS> Board::operator[](size_t row) {
   return std::span<Tile, BOARD_DIMENSIONS>(&Grid[row * BOARD_DIMENSIONS],
                                            BOARD_DIMENSIONS);
+}
+
+std::ostream& operator<<(std::ostream& stream,
+                         const std::span<const Tile, BOARD_DIMENSIONS> row) {
+  for (const Tile& tile : row) stream << tile;
+  return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const Board& board) {
+  stream << std::endl;
+  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+    stream << *board.GetRow(row) << std::endl;
+  }
+
+  return stream;
 }

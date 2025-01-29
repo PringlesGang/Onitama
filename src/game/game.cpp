@@ -99,59 +99,31 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   const std::span<Card, HAND_SIZE> bottomHand =
       TopPlayer != Color::Red ? game.RedHand : game.BlueHand;
 
-  return stream << topHand
-                << std::pair<const Board&, Card>(game.Board, game.SetAsideCard)
-                << bottomHand << "Current player: "
-                << (game.CurrentPlayer == Color::Red ? "Red" : "Blue")
-                << std::endl
-                << std::endl;
-}
+  game.StreamHand(stream, topHand, true);
 
-std::ostream& operator<<(std::ostream& stream,
-                         const std::span<const Card, HAND_SIZE> cards) {
-  for (int8_t row = -2; row <= 2; row++) {
-    for (Card card : cards) {
-      const std::unordered_set<Offset> offsets = card.GetMoves();
+  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+    stream << game.Board.GetRow(row).value() << "  ";
 
-      for (int8_t column = -2; column <= 2; column++) {
-        if (row == 0 && column == 0) {
-          stream << 'O';
-        } else if (offsets.contains(Offset{.dx = column, .dy = row})) {
-          stream << 'X';
-        } else {
-          stream << '.';
-        }
-      }
-
-      stream << "  ";
-    }
-
-    stream << std::endl;
+    const bool reverse = game.CurrentPlayer == TopPlayer;
+    const int8_t sign = reverse ? -1 : 1;
+    game.SetAsideCard.StreamRow(stream, sign * (row - 2),
+                                game.CurrentPlayer == TopPlayer)
+        << std::endl;
   }
 
+  stream << std::endl;
+  game.StreamHand(stream, bottomHand, false);
+  stream << "Current player: " << game.CurrentPlayer << std::endl;
   return stream << std::endl;
 }
 
-std::ostream& operator<<(std::ostream& stream,
-                         const std::pair<const Board&, Card> boardAndCard) {
-  const Board& board = boardAndCard.first;
-  const std::unordered_set<Offset> offsets = boardAndCard.second.GetMoves();
-
-  for (int8_t row = -2; row <= 2; row++) {
-    for (size_t column = 0; column < BOARD_DIMENSIONS; column++) {
-      stream << board.GetTile(Coordinate(column, row + 2)).value();
-    }
-
-    stream << "  ";
-
-    for (int8_t column = -2; column <= 2; column++) {
-      if (row == 0 && column == 0) {
-        stream << 'O';
-      } else if (offsets.contains(Offset{.dx = column, .dy = row})) {
-        stream << 'X';
-      } else {
-        stream << '.';
-      }
+std::ostream& Game::StreamHand(std::ostream& stream,
+                               const std::span<const Card, HAND_SIZE> hand,
+                               const bool rotate) const {
+  const uint8_t sign = rotate ? -1 : 1;
+  for (int8_t row = -2 * sign; abs(row) <= 2; row += sign) {
+    for (Card card : hand) {
+      card.StreamRow(stream, row, rotate) << "  ";
     }
 
     stream << std::endl;

@@ -36,9 +36,8 @@ class Game {
       std::span<Card, HAND_SIZE>(&Cards[1], HAND_SIZE);
   std::span<Card, HAND_SIZE> BlueHand =
       std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE);
-};
 
-std::ostream& operator<<(std::ostream& stream,
-                         const std::span<const Card, HAND_SIZE> cards);
-std::ostream& operator<<(std::ostream& stream,
-                         const std::pair<const Board&, Card> boardAndCard);
+  std::ostream& StreamHand(std::ostream& stream,
+                           const std::span<const Card, HAND_SIZE> hand,
+                           const bool rotate = false) const;
+};

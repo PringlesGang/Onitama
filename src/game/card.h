@@ -37,5 +37,7 @@ struct Card {
 
   CardType Type = CardType(0);
 
-  friend std::ostream& operator<<(std::ostream& stream, const Card& card);
+  std::ostream& StreamRow(std::ostream& stream, int8_t row,
+                          const bool rotate = false) const;
+  std::ostream& Stream(std::ostream& stream, const bool rotate = false) const;
 };

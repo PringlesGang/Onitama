@@ -26,12 +26,12 @@ class Board {
   bool DoMove(Coordinate source, Offset offset);
 
   std::optional<Tile> GetTile(Coordinate coordinate) const;
+  std::optional<std::span<const Tile, BOARD_DIMENSIONS>> GetRow(
+      size_t row) const;
   std::vector<Coordinate> GetPieceCoordinates(Color color) const;
 
   bool OnBoard(Coordinate coordinate) const;
   std::optional<Color> IsFinished() const;
-
-  friend std::ostream& operator<<(std::ostream& stream, const Board& board);
 
  private:
   std::array<Tile, BOARD_SIZE> Grid;
@@ -39,3 +39,7 @@ class Board {
   Tile& operator[](Coordinate coordinate);
   std::span<Tile, BOARD_DIMENSIONS> operator[](size_t row);
 };
+
+std::ostream& operator<<(std::ostream& stream,
+                         const std::span<const Tile, BOARD_DIMENSIONS> row);
+std::ostream& operator<<(std::ostream& stream, const Board& board);

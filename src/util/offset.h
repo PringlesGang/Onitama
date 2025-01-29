@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <ostream>
 
 struct Offset {
   int8_t dx;

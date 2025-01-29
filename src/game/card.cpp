@@ -82,18 +82,35 @@ Color Card::GetColor(CardType card) {
 
 bool Card::operator==(const Card& other) const { return Type == other.Type; }
 
-std::ostream& operator<<(std::ostream& stream, const Card& card) {
-  const std::unordered_set<Offset> offsets = card.GetMoves();
+std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
+                              const bool rotate) const {
+  const std::unordered_set<Offset> offsets = GetMoves();
+  const int8_t sign = rotate ? -1 : 1;
+  Offset offset{.dx = -2 * sign, .dy = row};
+
+  for (; abs(offset.dx) <= 2; offset.dx += sign) {
+    if (offsets.contains(offset)) {
+      stream << 'X';
+    } else {
+      stream << ((offset.dx == 0 && row == 0) ? 'O' : '.');
+    }
+  }
+
+  return stream;
+}
+
+std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
+  const std::unordered_set<Offset> offsets = GetMoves();
+  const int8_t sign = rotate ? -1 : 1;
+  Offset offset{.dx = -2 * sign, .dy = -2 * sign};
 
   stream << std::endl;
-  for (int8_t row = -2; row <= 2; row++) {
-    for (int8_t column = -2; column <= 2; column++) {
-      if (row == 0 && column == 0) {
-        stream << 'O';
-      } else if (offsets.contains(Offset{.dx = column, .dy = row})) {
+  for (; abs(offset.dy) <= 2; offset.dy += sign) {
+    for (; abs(offset.dx) <= 2; offset.dx += sign) {
+      if (offsets.contains(offset)) {
         stream << 'X';
       } else {
-        stream << '.';
+        stream << ((offset.dx == 0 && offset.dy == 0) ? 'O' : '.');
       }
     }
 
