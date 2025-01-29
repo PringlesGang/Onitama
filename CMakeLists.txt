@@ -7,6 +7,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 set(Src
         src/main.cpp
+        src/gameMaster.cpp
 
         src/game/game.cpp
         src/game/board.cpp
@@ -22,6 +23,8 @@ set(Src
 )
 
 set(Header
+        src/gameMaster.h
+
         src/game/game.h
         src/game/board.h
         src/game/piece.h

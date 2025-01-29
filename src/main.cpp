@@ -1,11 +1,16 @@
-#include <iostream>
+#include <utility>
 
-#include "game./game.h"
+#include "gameMaster.h"
+#include "strategies/human.h"
 
 int main(int argc, char* argv[]) {
-  Game::Game game = Game::Game::WithRandomCards();
+  GameMaster game = GameMaster(std::make_unique<Strategy::Human>(),
+                               std::make_unique<Strategy::Human>());
 
-  std::cout << game;
+  do {
+    game.Render();
+    game.Update();
+  } while (!game.IsFinished());
 
   return 0;
 }

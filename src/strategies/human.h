@@ -4,7 +4,7 @@
 
 namespace Strategy {
 
-class Human : Strategy {
+class Human : public Strategy {
  public:
   Game::Move GetMove(const Game::Game& game) override;
 

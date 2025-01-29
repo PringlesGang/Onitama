@@ -1,0 +1,38 @@
+#include "gameMaster.h"
+
+#include <format>
+#include <iostream>
+#include <stdexcept>
+
+GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+                       std::unique_ptr<Strategy::Strategy> bluePlayer)
+    : RedPlayer(std::move(redPlayer)),
+      BluePlayer(std::move(bluePlayer)),
+      GameInstance(Game::Game::WithRandomCards()) {}
+
+void GameMaster::Render() { std::cout << GameInstance; }
+
+void GameMaster::Update() {
+  if (IsFinished()) return;
+
+  Game::Move move;
+  switch (GameInstance.GetCurrentPlayer()) {
+    case Color::Red:
+      move = RedPlayer->GetMove(GameInstance);
+      break;
+    case Color::Blue:
+      move = BluePlayer->GetMove(GameInstance);
+      break;
+
+    default:
+      size_t colorNum = (size_t)GameInstance.GetCurrentPlayer();
+      throw std::runtime_error(
+          std::vformat("Invalid color {}", std::make_format_args(colorNum)));
+  }
+
+  GameInstance.DoMove(move);
+}
+
+std::optional<Color> GameMaster::IsFinished() const {
+  return GameInstance.IsFinished();
+}
