@@ -13,8 +13,8 @@ namespace Cli {
 void Help() {
   const std::array<const std::string, 5> commands = {
       "help",
-      ("game red_strategy blue_strategy (--duplicate-cards)"
-       "(--repeat repeat_count)(--cards set_aside r1 r2 b1 b2)"),
+      ("game red_strategy blue_strategy (--duplicate-cards) "
+       "(--repeat repeat_count) (--cards set_aside r1 r2 b1 b2)"),
       "strategies",
       "cards",
       "exit",
