@@ -5,14 +5,14 @@
 #include "offset.h"
 
 struct Coordinate {
-  Coordinate(size_t x, size_t y);
+  Coordinate(const size_t x, const size_t y);
 
-  Coordinate operator+(Coordinate other) const;
-  void operator+=(Coordinate other);
-  bool operator==(Coordinate other) const;
-  void operator=(Coordinate other);
+  Coordinate operator+(const Coordinate other) const;
+  void operator+=(const Coordinate other);
+  bool operator==(const Coordinate other) const;
+  void operator=(const Coordinate other);
 
-  std::optional<Coordinate> try_add(Offset direction) const;
+  std::optional<Coordinate> try_add(const Offset direction) const;
 
   size_t x;
   size_t y;

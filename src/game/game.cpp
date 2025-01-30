@@ -9,7 +9,7 @@ namespace Game {
 Game::Game(std::array<Card, CARD_COUNT> cards)
     : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {}
 
-Game Game::WithRandomCards(bool repeatCards) {
+Game Game::WithRandomCards(const bool repeatCards) {
   std::array<Card, CARD_COUNT> cards;
 
   std::random_device randomDevice;
@@ -21,15 +21,13 @@ Game Game::WithRandomCards(bool repeatCards) {
     do {
       *cardIt = Card(CardType(randomCard(generator)));
     } while (!repeatCards &&
-             std::find_if(cards.begin(), cardIt, [cardIt](Card& card) {
-               return card.Type == cardIt->Type;
-             }) != cardIt);
+             std::find(cards.begin(), cardIt, *cardIt) != cardIt);
   }
 
   return Game(cards);
 }
 
-std::span<const Card, HAND_SIZE> Game::GetHand(Color color) const {
+std::span<const Card, HAND_SIZE> Game::GetHand(const Color color) const {
   switch (color) {
     case Color::Blue:
       return BlueHand;
@@ -37,9 +35,8 @@ std::span<const Card, HAND_SIZE> Game::GetHand(Color color) const {
       return RedHand;
 
     default:
-      size_t colorNum = (size_t)color;
-      throw std::runtime_error(
-          std::vformat("Invalid color {}", std::make_format_args(colorNum)));
+      const size_t colorNum = (size_t)color;
+      throw std::runtime_error(std::format("Invalid color {}", colorNum));
   }
 }
 
@@ -48,10 +45,10 @@ std::span<const Card, HAND_SIZE> Game::GetCurrentHand() const {
 }
 
 std::unordered_set<Move> Game::GetValidMoves() const {
-  std::vector<Coordinate> pieceLocations =
+  const std::vector<Coordinate> pieceLocations =
       Board.GetPieceCoordinates(CurrentPlayer);
 
-  const std::span<Card, HAND_SIZE>& hand =
+  const std::span<const Card, HAND_SIZE>& hand =
       CurrentPlayer == Color::Red ? RedHand : BlueHand;
 
   std::unordered_set<Move> validMoves;
@@ -75,7 +72,7 @@ std::unordered_set<Move> Game::GetValidMoves() const {
   return validMoves;
 }
 
-std::optional<std::string> Game::IsInvalidMove(Move move) const {
+std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   const std::vector<Coordinate> pawnLocations =
       Board.GetPieceCoordinates(CurrentPlayer);
   if (move.PawnId >= pawnLocations.size()) return "Pawn does not exist!";
@@ -88,19 +85,18 @@ std::optional<std::string> Game::IsInvalidMove(Move move) const {
     return "Used card not in player's hand!";
 
   const Offset orientedOffset = offsets[move.OffsetId].Orient(CurrentPlayer);
-  const std::optional<Coordinate> destCoordinate =
+  const std::optional<const Coordinate> destCoordinate =
       pawnLocations[move.PawnId].try_add(orientedOffset);
-  if (!destCoordinate || !Board.OnBoard(*destCoordinate))
-    return "Destination not on board!";
+  if (!Board.OnBoard(destCoordinate)) return "Destination not on board!";
 
   const Tile destTile = Board.GetTile(*destCoordinate).value();
   if (destTile && destTile->GetColor() == CurrentPlayer)
     return "Cannot capture pawn of the same color!";
 
-  return std::optional<std::string>();
+  return std::nullopt;
 }
 
-bool Game::DoMove(Move move) {
+bool Game::DoMove(const Move move) {
   const size_t validMoveCount = GetValidMoves().size();
 
   if (validMoveCount > 0) {
@@ -116,11 +112,9 @@ bool Game::DoMove(Move move) {
 
   const std::span<Card, HAND_SIZE> hand =
       CurrentPlayer == Color::Red ? RedHand : BlueHand;
-  if (validMoveCount == 0 &&
-      std::find(hand.begin(), hand.end(), move.UsedCard) == hand.end())
-    return false;
-
   const auto usedCardIt = std::find(hand.begin(), hand.end(), move.UsedCard);
+
+  if (usedCardIt == hand.end()) return false;
   std::swap(SetAsideCard, *usedCardIt);
 
   CurrentPlayer = ~CurrentPlayer;
@@ -136,11 +130,10 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
 
   std::string cardNumberString = "";
   for (size_t card = 0; card < HAND_SIZE; card++) {
-    cardNumberString += std::string("Card ") + std::to_string(card) + " ";
+    cardNumberString += std::format("Card {} ", card);
   }
-  cardNumberString += "\n";
 
-  if (game.CurrentPlayer == TopPlayer) stream << cardNumberString;
+  if (game.CurrentPlayer == TopPlayer) stream << cardNumberString << std::endl;
   game.StreamHand(stream, topHand, true);
 
   size_t pawnIndex = 0;
@@ -156,7 +149,7 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   }
 
   stream << std::endl;
-  if (game.CurrentPlayer != TopPlayer) stream << cardNumberString;
+  if (game.CurrentPlayer != TopPlayer) stream << cardNumberString << std::endl;
   game.StreamHand(stream, bottomHand, false);
 
   const std::optional<Color> finished = game.IsFinished();

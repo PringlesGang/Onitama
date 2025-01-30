@@ -9,4 +9,4 @@ enum class Color {
 
 Color operator~(const Color& orig);
 
-std::ostream& operator<<(std::ostream& stream, Color color);
+std::ostream& operator<<(std::ostream& stream, const Color color);

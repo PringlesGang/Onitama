@@ -49,9 +49,8 @@ std::vector<Offset> Card::GetMoves(CardType card) {
       return std::vector({Offset(0, -2), Offset(0, 1)});
 
     default:
-      size_t cardNum = (size_t)card;
-      throw std::runtime_error(
-          std::vformat("Invalid card type {}", std::make_format_args(cardNum)));
+      const size_t cardNum = (size_t)card;
+      throw std::runtime_error(std::format("Invalid card type {}", cardNum));
   }
 }
 
@@ -78,9 +77,8 @@ Color Card::GetColor(CardType card) {
       return Color::Blue;
 
     default:
-      size_t cardNum = (size_t)card;
-      throw std::runtime_error(
-          std::vformat("Invalid card type {}", std::make_format_args(cardNum)));
+      const size_t cardNum = (size_t)card;
+      throw std::runtime_error(std::format("Invalid card type {}", cardNum));
   }
 }
 
@@ -89,15 +87,13 @@ bool Card::HasMove(const Offset offset) const {
   return std::find(moves.begin(), moves.end(), offset) != moves.end();
 }
 
-bool Card::operator==(const Card& other) const { return Type == other.Type; }
-
-std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
+std::ostream& Card::StreamRow(std::ostream& stream, const int8_t row,
                               const bool rotate) const {
   const std::vector<Offset> offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
-  Offset offset{.dx = -2 * sign, .dy = row};
 
-  for (; abs(offset.dx) <= 2; offset.dx += sign) {
+  for (Offset offset{.dx = -2 * sign, .dy = row}; abs(offset.dx) <= 2;
+       offset.dx += sign) {
     const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
 
     if (offsetId != offsets.end()) {
@@ -116,11 +112,10 @@ std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
 
 std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
   const int8_t sign = rotate ? -1 : 1;
-  Offset offset{.dx = -2 * sign, .dy = -2 * sign};
 
   stream << std::endl;
-  for (; abs(offset.dy) <= 2; offset.dy += sign) {
-    StreamRow(stream, offset.dy, rotate) << std::endl;
+  for (int8_t row = -2 * sign; abs(row) <= 2; row++) {
+    StreamRow(stream, row, rotate) << std::endl;
   }
 
   return stream;

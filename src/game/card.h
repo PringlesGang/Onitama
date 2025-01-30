@@ -29,18 +29,18 @@ enum class CardType {
 };
 
 struct Card {
-  static std::vector<Offset> GetMoves(CardType card);
-  static Color GetColor(CardType card);
+  static std::vector<Offset> GetMoves(const CardType card);
+  static Color GetColor(const CardType card);
 
   Color GetColor() const { return GetColor(Type); };
   std::vector<Offset> GetMoves() const { return GetMoves(Type); };
   bool HasMove(const Offset offset) const;
 
-  bool operator==(const Card& other) const;
+  bool operator==(const Card& other) const { return Type == other.Type; }
 
   CardType Type = CardType(0);
 
-  std::ostream& StreamRow(std::ostream& stream, int8_t row,
+  std::ostream& StreamRow(std::ostream& stream, const int8_t row,
                           const bool rotate = false) const;
   std::ostream& Stream(std::ostream& stream, const bool rotate = false) const;
 };

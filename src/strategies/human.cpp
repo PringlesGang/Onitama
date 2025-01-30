@@ -50,29 +50,30 @@ std::optional<Game::Move> Human::ParseMove(const std::string& string,
 
   if (found != 3) {
     std::cout << "Failed to parse move!" << std::endl;
-    return std::optional<Game::Move>();
+    return std::nullopt;
   }
 
   const bool master = pawnId == 'm' || pawnId == 'M';
   if (!master && (pawnId < '0' || pawnId > '9')) {
-    std::cout << std::format("Invalid pawn ID!") << std::endl;
-    return std::optional<Game::Move>();
+    std::cout << std::format("Invalid pawn ID: {}!", pawnId) << std::endl;
+    return std::nullopt;
   }
 
   if (cardNum >= HAND_SIZE) {
     std::cout << std::format("Pick a card number between 0 and {}!",
                              HAND_SIZE - 1)
               << std::endl;
-    return std::optional<Game::Move>();
+    return std::nullopt;
   }
 
   const Game::Move move{.PawnId = (master ? size_t{0} : pawnId - '0'),
                         .UsedCard = game.GetCurrentHand()[cardNum],
                         .OffsetId = offsetNum};
-  std::optional<std::string> errorMessage = game.IsInvalidMove(move);
-  if (errorMessage) {
-    std::cout << *errorMessage << std::endl;
-    return std::optional<Game::Move>();
+
+  const std::optional<const std::string> errorMsg = game.IsInvalidMove(move);
+  if (errorMsg) {
+    std::cout << *errorMsg << std::endl;
+    return std::nullopt;
   }
 
   return move;
@@ -85,14 +86,14 @@ std::optional<Game::Move> Human::ParseCard(const std::string& string,
 
   if (found != 1) {
     std::cout << "Failed to parse card number!" << std::endl;
-    return std::optional<Game::Move>();
+    return std::nullopt;
   }
 
   if (cardNum >= HAND_SIZE) {
     std::cout << std::format("Pick a card number between 0 and {}!",
                              HAND_SIZE - 1)
               << std::endl;
-    return std::optional<Game::Move>();
+    return std::nullopt;
   }
 
   return Game::Move{

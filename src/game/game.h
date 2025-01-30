@@ -19,19 +19,19 @@ class Game {
  public:
   Game(std::array<Card, CARD_COUNT> cards);
 
-  static Game WithRandomCards(bool repeatCards = false);
+  static Game WithRandomCards(const bool repeatCards = false);
 
   const Board& GetBoard() const { return Board; }
   std::span<const Card, CARD_COUNT> GetCards() const { return Cards; }
-  std::span<const Card, HAND_SIZE> GetHand(Color color) const;
+  std::span<const Card, HAND_SIZE> GetHand(const Color color) const;
   std::span<const Card, HAND_SIZE> GetCurrentHand() const;
   Card GetSetAsideCard() const { return SetAsideCard; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
 
   std::unordered_set<Move> GetValidMoves() const;
-  std::optional<std::string> IsInvalidMove(Move move) const;
+  std::optional<std::string> IsInvalidMove(const Move move) const;
   std::optional<Color> IsFinished() const { return Board.IsFinished(); }
-  bool DoMove(Move move);
+  bool DoMove(const Move move);
 
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
 

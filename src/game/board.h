@@ -23,15 +23,15 @@ class Board {
   Board(const Board& other);
 
   void Reset();
-  bool DoMove(Coordinate source, Offset offset);
+  bool DoMove(const Coordinate source, const Offset offset);
 
   std::span<const Tile, BOARD_SIZE> GetGrid() const { return Grid; }
-  std::optional<Tile> GetTile(Coordinate coordinate) const;
+  std::optional<Tile> GetTile(const Coordinate coordinate) const;
   std::optional<std::span<const Tile, BOARD_DIMENSIONS>> GetRow(
-      size_t row) const;
-  std::vector<Coordinate> GetPieceCoordinates(Color color) const;
+      const size_t row) const;
+  std::vector<Coordinate> GetPieceCoordinates(const Color color) const;
 
-  bool OnBoard(Coordinate coordinate) const;
+  bool OnBoard(const std::optional<const Coordinate> coordinate) const;
   std::optional<Color> IsFinished() const;
 
   std::ostream& StreamPlayer(std::ostream& stream, const Color player) const;
@@ -41,8 +41,8 @@ class Board {
  private:
   std::array<Tile, BOARD_SIZE> Grid;
 
-  Tile& operator[](Coordinate coordinate);
-  std::span<Tile, BOARD_DIMENSIONS> operator[](size_t row);
+  Tile& operator[](const Coordinate coordinate);
+  std::span<Tile, BOARD_DIMENSIONS> operator[](const size_t row);
 };
 
 std::ostream& operator<<(std::ostream& stream,

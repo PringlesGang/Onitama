@@ -10,7 +10,7 @@ Color operator~(const Color& orig) {
   return orig == Color::Red ? Color::Blue : Color::Red;
 }
 
-std::ostream& operator<<(std::ostream& stream, Color color) {
+std::ostream& operator<<(std::ostream& stream, const Color color) {
   switch (color) {
     case Color::Blue:
       return stream << AnsiColor::Color(AnsiColor::Foreground::Blue) << "Blue"
@@ -21,7 +21,6 @@ std::ostream& operator<<(std::ostream& stream, Color color) {
 
     default:
       size_t colorNum = (size_t)color;
-      throw std::runtime_error(
-          std::vformat("Invalid color {}", std::make_format_args(colorNum)));
+      throw std::runtime_error(std::format("Invalid color {}", colorNum));
   }
 }

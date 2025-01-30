@@ -1,18 +1,15 @@
 #include "random.h"
 
-#include <random>
-
 namespace Strategy {
+
+Random::Random() : Generator(RandomDevice()) {}
 
 Game::Move Random::GetMove(const Game::Game& game) {
   const std::unordered_set validMoves = game.GetValidMoves();
   const size_t moveCount = validMoves.empty() ? HAND_SIZE : validMoves.size();
 
-  std::random_device randomDevice;
-  std::mt19937 generator(randomDevice());
   std::uniform_int_distribution<size_t> randomMove(0, moveCount - 1);
-
-  size_t randomMoveIndex = randomMove(generator);
+  size_t randomMoveIndex = randomMove(Generator);
 
   if (validMoves.empty()) {
     return Game::Move{.PawnId = 0,

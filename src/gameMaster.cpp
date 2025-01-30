@@ -11,7 +11,7 @@ GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
       GameInstance(Game::Game::WithRandomCards()) {}
 
 void GameMaster::Render() const {
-  std::cout << "Round " << round << ':' << std::endl << GameInstance;
+  std::cout << std::format("Round {}:", round) << std::endl << GameInstance;
 }
 
 void GameMaster::Update() {
@@ -27,9 +27,8 @@ void GameMaster::Update() {
       break;
 
     default:
-      size_t colorNum = (size_t)GameInstance.GetCurrentPlayer();
-      throw std::runtime_error(
-          std::vformat("Invalid color {}", std::make_format_args(colorNum)));
+      const size_t colorNum = (size_t)GameInstance.GetCurrentPlayer();
+      throw std::runtime_error(std::format("Invalid color {}", colorNum));
   }
 
   round += GameInstance.DoMove(move);

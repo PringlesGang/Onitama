@@ -19,7 +19,8 @@ enum class Foreground {
   White = 97,
 };
 
-std::string Color(Foreground fg, Background bg = Background::Default);
+std::string Color(const Foreground fg,
+                  const Background bg = Background::Default);
 constexpr std::string Reset() { return "\033[0m"; }
 constexpr std::string Invert() { return "\033[7m"; }
 
