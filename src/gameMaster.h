@@ -19,4 +19,6 @@ class GameMaster {
 
   std::unique_ptr<Strategy::Strategy> RedPlayer;
   std::unique_ptr<Strategy::Strategy> BluePlayer;
+
+  size_t round = 1;
 };

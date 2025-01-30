@@ -10,7 +10,9 @@ GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
       BluePlayer(std::move(bluePlayer)),
       GameInstance(Game::Game::WithRandomCards()) {}
 
-void GameMaster::Render() const { std::cout << GameInstance; }
+void GameMaster::Render() const {
+  std::cout << "Round " << round << ':' << std::endl << GameInstance;
+}
 
 void GameMaster::Update() {
   if (IsFinished()) return;
@@ -30,7 +32,7 @@ void GameMaster::Update() {
           std::vformat("Invalid color {}", std::make_format_args(colorNum)));
   }
 
-  GameInstance.DoMove(move);
+  round += GameInstance.DoMove(move);
 }
 
 std::optional<Color> GameMaster::IsFinished() const {
