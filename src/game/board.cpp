@@ -1,14 +1,24 @@
 #include "board.h"
 
+#include "../util/ansiColor.h"
+
 namespace Game {
 
-std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
-  const char character =
-      !tile.has_value() ? '.'
-                        : (tile->IsMaster() ? 'm' : 's') +
-                              ('A' - 'a') * (tile->GetColor() == Color::Red);
+static std::ostream& ColorPiece(std::ostream& stream, const Piece piece) {
+  const AnsiColor::Foreground fgColor = AnsiColor::Foreground::White;
+  const AnsiColor::Background bgColor = piece.GetColor() == Color::Red
+                                            ? AnsiColor::Background::Red
+                                            : AnsiColor::Background::Blue;
 
-  return stream << character;
+  return stream << AnsiColor::Color(fgColor, bgColor);
+}
+
+std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
+  if (!tile.has_value()) return stream << '.';
+
+  const char character = (tile->IsMaster() ? 'm' : 's') +
+                         ('A' - 'a') * (tile->GetColor() == Color::Red);
+  return ColorPiece(stream, *tile) << character << AnsiColor::Reset();
 }
 
 Board::Board() { Reset(); }
@@ -138,7 +148,7 @@ std::ostream& Board::StreamPlayerRow(std::ostream& stream, const Color player,
                                      size_t& pawnIndex) const {
   for (const Tile& tile : *GetRow(row)) {
     if (tile && tile->GetColor() == player && !tile->IsMaster()) {
-      stream << ++pawnIndex;
+      ColorPiece(stream, *tile) << ++pawnIndex << AnsiColor::Reset();
     } else {
       stream << tile;
     }

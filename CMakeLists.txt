@@ -15,6 +15,7 @@ set(Src
         src/game/card.cpp
         src/game/move.cpp
 
+        src/util/ansiColor.cpp
         src/util/color.cpp
         src/util/coordinate.cpp
         src/util/offset.cpp
@@ -33,6 +34,7 @@ set(Header
         src/game/card.h
         src/game/move.h
 
+        src/util/ansiColor.h
         src/util/color.h
         src/util/coordinate.h
         src/util/offset.h

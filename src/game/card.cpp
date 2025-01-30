@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "../util/ansiColor.h"
+
 namespace Game {
 
 std::vector<Offset> Card::GetMoves(CardType card) {
@@ -99,9 +101,13 @@ std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
     const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
 
     if (offsetId != offsets.end()) {
-      stream << std::distance(offsets.begin(), offsetId);
+      stream << AnsiColor::Color(AnsiColor::Foreground::White,
+                                 AnsiColor::Background::Gray)
+             << std::distance(offsets.begin(), offsetId) << AnsiColor::Reset();
+    } else if (offset.dx == 0 && row == 0) {
+      stream << AnsiColor::Invert() << ' ' << AnsiColor::Reset();
     } else {
-      stream << ((offset.dx == 0 && row == 0) ? 'X' : '.');
+      stream << '.';
     }
   }
 
@@ -109,23 +115,12 @@ std::ostream& Card::StreamRow(std::ostream& stream, int8_t row,
 }
 
 std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
-  const std::vector<Offset> offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
   Offset offset{.dx = -2 * sign, .dy = -2 * sign};
 
   stream << std::endl;
   for (; abs(offset.dy) <= 2; offset.dy += sign) {
-    for (; abs(offset.dx) <= 2; offset.dx += sign) {
-      const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
-
-      if (offsetId != offsets.end()) {
-        stream << std::distance(offsets.begin(), offsetId);
-      } else {
-        stream << ((offset.dx == 0 && offset.dy == 0) ? 'X' : '.');
-      }
-    }
-
-    stream << std::endl;
+    StreamRow(stream, offset.dy, rotate) << std::endl;
   }
 
   return stream;

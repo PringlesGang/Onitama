@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "ansiColor.h"
+
 Color operator~(const Color& orig) {
   return orig == Color::Red ? Color::Blue : Color::Red;
 }
@@ -11,9 +13,11 @@ Color operator~(const Color& orig) {
 std::ostream& operator<<(std::ostream& stream, Color color) {
   switch (color) {
     case Color::Blue:
-      return stream << "Blue";
+      return stream << AnsiColor::Color(AnsiColor::Foreground::Blue) << "Blue"
+                    << AnsiColor::Reset();
     case Color::Red:
-      return stream << "Red";
+      return stream << AnsiColor::Color(AnsiColor::Foreground::Red) << "Red"
+                    << AnsiColor::Reset();
 
     default:
       size_t colorNum = (size_t)color;
