@@ -1,18 +1,20 @@
-#include <utility>
+#include <iostream>
 
-#include "gameMaster.h"
-#include "strategies/human.h"
-#include "strategies/random.h"
+#include "cli.h"
 
 int main(int argc, char* argv[]) {
-  GameMaster game = GameMaster(std::make_unique<Strategy::Random>(),
-                               std::make_unique<Strategy::Random>());
+  while (true) {
+    std::optional<std::function<void()>> command;
+    do {
+      std::string input;
+      std::getline(std::cin, input);
 
-  do {
-    game.Render();
-    game.Update();
-  } while (!game.IsFinished());
-  game.Render();
+      if (input == "exit" || input == "e") return 0;
 
-  return 0;
+      command = Cli::Parse(input);
+    } while (!command);
+
+    (*command)();
+    std::cout << std::endl;
+  }
 }

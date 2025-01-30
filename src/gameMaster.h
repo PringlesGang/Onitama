@@ -8,7 +8,11 @@
 class GameMaster {
  public:
   GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
-             std::unique_ptr<Strategy::Strategy> bluePlayer);
+             std::unique_ptr<Strategy::Strategy> bluePlayer,
+             bool repeatCards = false);
+  GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+             std::unique_ptr<Strategy::Strategy> bluePlayer,
+             std::array<Game::Card, CARD_COUNT> cards);
 
   void Render() const;
   void Update();

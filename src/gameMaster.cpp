@@ -5,10 +5,18 @@
 #include <stdexcept>
 
 GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
-                       std::unique_ptr<Strategy::Strategy> bluePlayer)
+                       std::unique_ptr<Strategy::Strategy> bluePlayer,
+                       bool repeatCards)
     : RedPlayer(std::move(redPlayer)),
       BluePlayer(std::move(bluePlayer)),
-      GameInstance(Game::Game::WithRandomCards()) {}
+      GameInstance(Game::Game::WithRandomCards(repeatCards)) {}
+
+GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+                       std::unique_ptr<Strategy::Strategy> bluePlayer,
+                       std::array<Game::Card, CARD_COUNT> cards)
+    : RedPlayer(std::move(redPlayer)),
+      BluePlayer(std::move(bluePlayer)),
+      GameInstance(Game::Game(cards)) {}
 
 void GameMaster::Render() const {
   std::cout << std::format("Round {}:", round) << std::endl << GameInstance;

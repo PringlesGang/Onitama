@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 
 project("onitama")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 set(Src
         src/main.cpp
+        src/cli.cpp
         src/gameMaster.cpp
 
         src/game/game.cpp
@@ -26,6 +27,7 @@ set(Src
 
 set(Header
         src/gameMaster.h
+        src/cli.h
         src/constants.h
 
         src/game/game.h
