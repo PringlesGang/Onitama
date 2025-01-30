@@ -11,12 +11,18 @@
 namespace Cli {
 
 void Help() {
-  std::cout << "- help" << std::endl
-            << "- game red_strategy blue_strategy (--duplicate-cards) "
-               "(--repeat repeat_count) (--cards set_aside "
-               "r1 r2 b1 b2)"
-            << std::endl
-            << "- exit" << std::endl;
+  const std::array<const std::string, 5> commands = {
+      "help",
+      ("game red_strategy blue_strategy (--duplicate-cards)"
+       "(--repeat repeat_count)(--cards set_aside r1 r2 b1 b2)"),
+      "strategies",
+      "cards",
+      "exit",
+  };
+
+  for (const std::string& command : commands) {
+    std::cout << std::format("- {}", command) << std::endl;
+  }
 }
 
 void Game(const GameArgs args) {
@@ -45,6 +51,31 @@ void Game(const GameArgs args) {
   }
 }
 
+void Strategies() {
+  const std::array<const std::string, 2> strategies = {
+      "human",
+      "random",
+  };
+
+  for (const std::string& strategy : strategies) {
+    std::cout << std::format("- {}", strategy) << std::endl;
+  }
+}
+
+void Cards() {
+  const std::array<const std::string, (size_t)Game::CardType::CardTypeCount>
+      cards = {
+          "Boar",     "Cobra",  "Crab",    "Crane", "Dragon", "Eel",
+          "Elephant", "Frog",   "Goose",   "Horse", "Mantis", "Monkey",
+          "Ox",       "Rabbit", "Rooster", "Tiger",
+      };
+  for (size_t cardId = 0; cardId < (size_t)Game::CardType::CardTypeCount;
+       cardId++) {
+    std::cout << cards[cardId] << ':';
+    Game::Card(Game::CardType(cardId)).Stream(std::cout, false) << std::endl;
+  }
+}
+
 static std::string ToLower(std::string input) {
   std::string lowered = "";
   for (char& character : input) lowered += tolower(character);
@@ -64,6 +95,8 @@ Command Parse(const std::string& input) {
   if (matched != 0 && matched != EOF) {
     if (option == "help") return Help;
     if (option == "game") return ParseGame(remaining);
+    if (option == "strategies") return Strategies;
+    if (option == "cards") return Cards;
 
     std::cout << std::format("Unknown command \"{}\"!", option) << std::endl;
   } else {

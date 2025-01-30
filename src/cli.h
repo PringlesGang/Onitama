@@ -25,6 +25,8 @@ struct GameArgs {
 
 void Help();
 void Game(const GameArgs args);
+void Strategies();
+void Cards();
 
 static std::string ToLower(std::string input);
 
