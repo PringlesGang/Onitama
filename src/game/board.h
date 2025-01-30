@@ -25,6 +25,7 @@ class Board {
   void Reset();
   bool DoMove(Coordinate source, Offset offset);
 
+  std::span<const Tile, BOARD_SIZE> GetGrid() const { return Grid; }
   std::optional<Tile> GetTile(Coordinate coordinate) const;
   std::optional<std::span<const Tile, BOARD_DIMENSIONS>> GetRow(
       size_t row) const;

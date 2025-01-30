@@ -47,10 +47,6 @@ std::span<const Card, HAND_SIZE> Game::GetCurrentHand() const {
   return GetHand(CurrentPlayer);
 }
 
-Card Game::GetSetAsideCard() const { return SetAsideCard; }
-
-Color Game::GetCurrentPlayer() const { return CurrentPlayer; }
-
 std::unordered_set<Move> Game::GetValidMoves() const {
   std::vector<Coordinate> pieceLocations =
       Board.GetPieceCoordinates(CurrentPlayer);
@@ -131,8 +127,6 @@ bool Game::DoMove(Move move) {
 
   return true;
 }
-
-std::optional<Color> Game::IsFinished() const { return Board.IsFinished(); }
 
 std::ostream& operator<<(std::ostream& stream, const Game& game) {
   const std::span<Card, HAND_SIZE> topHand =

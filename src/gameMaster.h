@@ -14,6 +14,9 @@ class GameMaster {
   void Update();
   std::optional<Color> IsFinished() const;
 
+  size_t GetRound() const { return round; }
+  const Game::Game& GetGame() const { return GameInstance; }
+
  private:
   Game::Game GameInstance;
 
