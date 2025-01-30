@@ -165,7 +165,13 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   if (game.CurrentPlayer != TopPlayer) stream << cardNumberString;
   game.StreamHand(stream, bottomHand, false);
 
-  stream << "Current player: " << game.CurrentPlayer << std::endl;
+  const std::optional<Color> finished = game.IsFinished();
+  if (finished) {
+    stream << "Winner: " << *finished << std::endl;
+  } else {
+    stream << "Current player: " << game.CurrentPlayer << std::endl;
+  }
+
   return stream << std::endl;
 }
 
