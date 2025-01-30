@@ -2,10 +2,11 @@
 
 #include "gameMaster.h"
 #include "strategies/human.h"
+#include "strategies/random.h"
 
 int main(int argc, char* argv[]) {
-  GameMaster game = GameMaster(std::make_unique<Strategy::Human>(),
-                               std::make_unique<Strategy::Human>());
+  GameMaster game = GameMaster(std::make_unique<Strategy::Random>(),
+                               std::make_unique<Strategy::Random>());
 
   do {
     game.Render();

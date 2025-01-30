@@ -20,6 +20,7 @@ set(Src
         src/util/offset.cpp
 
         src/strategies/human.cpp
+        src/strategies/random.cpp
 )
 
 set(Header
@@ -38,6 +39,7 @@ set(Header
 
         src/strategies/strategy.h
         src/strategies/human.h
+        src/strategies/random.h
 )
 
 add_executable("onitama" ${Src} ${Header})
