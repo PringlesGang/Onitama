@@ -2,7 +2,6 @@
 
 #include <format>
 #include <iostream>
-#include <string>
 
 #include "../constants.h"
 
@@ -21,7 +20,8 @@ Game::Move Human::GetMove(const Game::Game& game) {
       std::string input;
       getline(std::cin, input);
 
-      move = ParseMove(input, game);
+      std::istringstream stream(std::move(input));
+      move = ParseMove(stream, game);
     } while (!move);
   } else {
     do {
@@ -32,30 +32,31 @@ Game::Move Human::GetMove(const Game::Game& game) {
       std::string input;
       getline(std::cin, input);
 
-      move = ParseCard(input, game);
+      std::istringstream stream(std::move(input));
+      move = ParseCard(stream, game);
     } while (!move);
   }
 
   return *move;
 }
 
-std::optional<Game::Move> Human::ParseMove(const std::string& string,
+std::optional<Game::Move> Human::ParseMove(std::istringstream& input,
                                            const Game::Game& game) {
   char pawnId;
-  unsigned int cardNum;
-  unsigned int offsetNum;
-
-  const size_t found =
-      std::sscanf(string.c_str(), "%c %u %u", &pawnId, &cardNum, &offsetNum);
-
-  if (found != 3) {
-    std::cout << "Failed to parse move!" << std::endl;
+  if (!(input >> pawnId)) {
+    std::cout << "Failed to parse pawn ID!" << std::endl;
     return std::nullopt;
   }
 
   const bool master = pawnId == 'm' || pawnId == 'M';
-  if (!master && (pawnId < '0' || pawnId > '9')) {
-    std::cout << std::format("Invalid pawn ID: {}!", pawnId) << std::endl;
+  if (!master && (pawnId < '0' || pawnId >= '0' + BOARD_DIMENSIONS)) {
+    std::cout << std::format("Invalid pawn ID \'{}\'!", pawnId) << std::endl;
+    return std::nullopt;
+  }
+
+  size_t cardNum;
+  if (!(input >> cardNum)) {
+    std::cout << "Failed to parse card number!" << std::endl;
     return std::nullopt;
   }
 
@@ -66,25 +67,29 @@ std::optional<Game::Move> Human::ParseMove(const std::string& string,
     return std::nullopt;
   }
 
+  size_t offsetNum;
+  if (!(input >> offsetNum)) {
+    std::cout << "Failed to parse offset number!" << std::endl;
+    return std::nullopt;
+  }
+
   const Game::Move move{.PawnId = (master ? size_t{0} : pawnId - '0'),
                         .UsedCard = game.GetCurrentHand()[cardNum],
                         .OffsetId = offsetNum};
 
   const std::optional<const std::string> errorMsg = game.IsInvalidMove(move);
   if (errorMsg) {
-    std::cout << *errorMsg << std::endl;
+    std::cout << errorMsg.value() << std::endl;
     return std::nullopt;
   }
 
   return move;
 }
 
-std::optional<Game::Move> Human::ParseCard(const std::string& string,
+std::optional<Game::Move> Human::ParseCard(std::istringstream& input,
                                            const Game::Game& game) {
-  unsigned int cardNum;
-  const size_t found = std::sscanf(string.c_str(), "%u", &cardNum);
-
-  if (found != 1) {
+  size_t cardNum;
+  if (!(input >> cardNum)) {
     std::cout << "Failed to parse card number!" << std::endl;
     return std::nullopt;
   }
