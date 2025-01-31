@@ -2,7 +2,7 @@
 
 #include <array>
 #include <iostream>
-#include <sstream>
+#include <iterator>
 
 #include "gameMaster.h"
 #include "strategies/human.h"
@@ -26,7 +26,7 @@ void Help() {
 }
 
 void Game(const GameArgs args) {
-  for (size_t game = 1; game <= args.Repeat; game++) {
+  for (size_t game = 1; game <= args.RepeatCount; game++) {
     std::unique_ptr<GameMaster> master;
 
     if (args.Cards) {
@@ -37,8 +37,9 @@ void Game(const GameArgs args) {
           args.RedStrategy(), args.BlueStrategy(), args.RepeatCards);
     }
 
-    if (args.Repeat > 1) {
-      std::cout << std::format("Game {}/{}:", game, args.Repeat) << std::endl;
+    if (args.RepeatCount > 1) {
+      std::cout << std::format("Game {}/{}:", game, args.RepeatCount)
+                << std::endl;
     }
 
     do {
@@ -82,56 +83,42 @@ static std::string ToLower(std::string input) {
   return lowered;
 }
 
-Command Parse(const std::string& input) {
+Command Parse(const std::istringstream& command) {
   std::string option;
-  int read = input.size();
 
-  std::string lowered = ToLower(input);
-  const size_t matched =
-      std::sscanf(lowered.c_str(), "%s %n", &option[0], &read);
-  option = option.c_str();
-  const std::string remaining = input.substr(read);
+  std::istringstream lowered = std::istringstream(ToLower(command.str()));
+  lowered >> option;
 
-  if (matched != 0 && matched != EOF) {
+  if (option == "") {
+    std::cout << "Failed to parse command!" << std::endl;
+  } else {
     if (option == "help") return Help;
-    if (option == "game") return ParseGame(remaining);
+    if (option == "game") return ParseGame(lowered);
     if (option == "strategies") return Strategies;
     if (option == "cards") return Cards;
 
     std::cout << std::format("Unknown command \"{}\"!", option) << std::endl;
-  } else {
-    std::cout << "Failed to parse command!" << std::endl;
   }
 
   return std::nullopt;
 }
 
-static Command ParseGame(const std::string& input) {
-  std::string argsParsedInput = input;
+static Command ParseGame(std::istringstream& command) {
   GameArgs args{};
-  if (!ParseGameOptionalArgs(argsParsedInput, args)) return std::nullopt;
+  if (!ParseGameOptionalArgs(command, args)) return std::nullopt;
 
   std::string redStrategyString;
   std::string blueStrategyString;
-  int read = argsParsedInput.size();
 
-  const size_t matched =
-      std::sscanf(argsParsedInput.c_str(), "%s %s %n", &redStrategyString[0],
-                  &blueStrategyString[0], &read);
-  redStrategyString = redStrategyString.c_str();
-  blueStrategyString = blueStrategyString.c_str();
-  std::string remaining = input.substr(read);
+  command >> redStrategyString >> blueStrategyString;
 
-  switch (matched) {
-    case EOF:
-    case 0:
-      std::cout << "No strategy provided!" << std::endl;
-      return std::nullopt;
-    case 1:
-      std::cout << "No blue strategy provided!" << std::endl;
-      return std::nullopt;
-    default:
-      break;
+  if (redStrategyString.empty()) {
+    std::cout << "No strategy provided!" << std::endl;
+    return std::nullopt;
+  }
+  if (blueStrategyString.empty()) {
+    std::cout << "No blue strategy provided!" << std::endl;
+    return std::nullopt;
   }
 
   const std::optional<StrategyFactory> redStrategy =
@@ -143,72 +130,56 @@ static Command ParseGame(const std::string& input) {
   args.RedStrategy = *redStrategy;
   args.BlueStrategy = *blueStrategy;
 
-  if (!ParseGameOptionalArgs(remaining, args)) return std::nullopt;
+  if (!ParseGameOptionalArgs(command, args)) return std::nullopt;
+
+  std::string remaining;
+  command >> remaining;
+  if (!remaining.empty()) {
+    std::cout << std::format("Unknown argument {}!", remaining) << std::endl;
+    return std::nullopt;
+  }
 
   return [args] { return Game(args); };
 }
 
-static bool ParseGameCards(std::string& input, GameArgs& args) {
-  std::array<std::string, 5> cards;
-  int read = input.size();
+static bool ParseGameCards(std::istringstream& command, GameArgs& args) {
+  args.Cards = std::array<Game::Card, CARD_COUNT>();
+  for (Game::Card& card : *args.Cards) {
+    std::string cardString;
+    command >> cardString;
 
-  const size_t matched = std::sscanf(input.c_str(), "%s %s %s %s %s %n",
-                                     &cards[0][0], &cards[1][0], &cards[2][0],
-                                     &cards[3][0], &cards[4][0], &read);
-  for (std::string& card : cards) card = card.c_str();
-  const std::string remaining = input.substr(read);
-
-  if (matched < 5 || matched == EOF) {
-    std::cout << "Did not provide enough cards!" << std::endl;
-    return false;
-  }
-
-  args.Cards = std::array<Game::Card, 5>();
-  auto cardsIt = args.Cards->begin();
-  for (const std::string& card : cards) {
-    const std::optional<Game::Card> parsedCard = ParseCard(card);
-
+    std::optional<Game::Card> parsedCard = ParseCard(cardString);
     if (!parsedCard) return false;
-    *cardsIt = *parsedCard;
-    cardsIt++;
+
+    card = parsedCard.value();
   }
 
   return true;
 }
 
-static bool ParseGameOptionalArgs(std::string& input, GameArgs& args) {
+static bool ParseGameOptionalArgs(std::istringstream& command, GameArgs& args) {
   std::string arg;
-  int read = input.size();
+  command >> arg;
 
-  const size_t matched = std::sscanf(input.c_str(), "%s %n", &arg[0], &read);
-  arg = arg.c_str();
-  std::string remaining = input.substr(read);
-
-  if (matched == 0 || matched == EOF) return true;
+  if (arg.empty()) return true;
 
   if (arg == "--repeat" || arg == "-n") {
-    unsigned int count;
-
-    const size_t matched2 =
-        std::sscanf(remaining.c_str(), "%u %n", &count, &read);
-    remaining = remaining.substr(read);
-
-    if (matched2 == 0 || matched2 == EOF) {
-      std::cout << "No repeat count provided!" << std::endl;
+    if (!(command >> args.RepeatCount)) {
+      std::cout << "Failed to parse repeat count!" << std::endl;
       return false;
     }
-
-    args.Repeat = count;
-    input = remaining;
   } else if (arg == "--duplicate-cards" || arg == "-d") {
     args.RepeatCards = true;
-    input = remaining;
   } else if (arg == "--cards" || arg == "-c") {
-    if (!ParseGameCards(remaining, args)) return false;
-    input = remaining;
+    if (!ParseGameCards(command, args)) return false;
+  } else {
+    // Un-parse the argument
+    for (size_t i = 0; i < arg.size(); i++) command.unget();
+
+    return true;
   }
 
-  return ParseGameOptionalArgs(remaining, args);
+  return ParseGameOptionalArgs(command, args);
 }
 
 std::optional<StrategyFactory> ParseStrategy(const std::string& name) {

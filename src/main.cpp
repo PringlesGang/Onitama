@@ -15,7 +15,7 @@ void CommandLoop() {
 
       if (input == "exit" || input == "e") return;
 
-      command = Cli::Parse(input);
+      command = Cli::Parse(std::istringstream(input));
     } while (!command);
 
     (*command)();
@@ -35,7 +35,8 @@ int main(int argc, char* argv[]) {
       argument += std::string(argv[i]);
     }
 
-    std::optional<std::function<void()>> command = Cli::Parse(argument);
+    std::optional<std::function<void()>> command =
+        Cli::Parse(std::istringstream(argument));
     if (command) (*command)();
   }
 
