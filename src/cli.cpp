@@ -10,17 +10,20 @@
 
 namespace Cli {
 
-void Help() {
-  const std::array<const std::string, 5> commands = {
-      "help",
-      ("game red_strategy blue_strategy (--duplicate-cards) "
-       "(--repeat repeat_count) (--cards set_aside r1 r2 b1 b2)"),
-      "strategies",
-      "cards",
-      "exit",
-  };
+constexpr std::string_view HELP_COMMAND = "help";
+constexpr std::string_view GAME_COMMAND =
+    "game red_strategy blue_strategy (--duplicate cards) "
+    "(--repeat repeat_count) (--cards set_aside r1 r2 b1 b2)";
+constexpr std::string_view STRATEGIES_COMMAND = "strategies";
+constexpr std::string_view CARDS_COMMAND = "cards";
+constexpr std::string_view EXIT_COMMAND = "exit";
 
-  for (const std::string& command : commands) {
+void Help() {
+  const std::array<const std::string_view, 5> commands = {
+      HELP_COMMAND, GAME_COMMAND, STRATEGIES_COMMAND, CARDS_COMMAND,
+      EXIT_COMMAND};
+
+  for (const std::string_view& command : commands) {
     std::cout << std::format("- {}", command) << std::endl;
   }
 }
@@ -93,7 +96,11 @@ Command Parse(const std::istringstream& command) {
     std::cout << "Failed to parse command!" << std::endl;
   } else {
     if (option == "help") return Help;
-    if (option == "game") return ParseGame(lowered);
+    if (option == "game") {
+      Command parsed = ParseGame(lowered);
+      if (!parsed) std::cout << GAME_COMMAND << std::endl;
+      return parsed;
+    }
     if (option == "strategies") return Strategies;
     if (option == "cards") return Cards;
 
