@@ -1,5 +1,6 @@
 #include "strategies.h"
 
+#include <array>
 #include <iostream>
 
 #include "../strategies/human.h"
@@ -8,15 +9,28 @@
 
 namespace Cli {
 
-void ExecuteStrategies() {
-  const std::array<const std::string, 3> strategies = {
-      "human",
-      "random",
-      "montecarlo",
-  };
+const static std::array<StrategyParser, 3> Strategies = {
+    StrategyParser{.Name = Strategy::Human::GetName(),
+                   .Parser = Strategy::Human::Parse,
+                   .Command = Strategy::Human::GetCommand(),
+                   .Description = Strategy::Human::GetDescription()},
 
-  for (const std::string& strategy : strategies) {
-    std::cout << std::format("- {}", strategy) << std::endl;
+    StrategyParser{.Name = Strategy::Random::GetName(),
+                   .Parser = Strategy::Random::Parse,
+                   .Command = Strategy::Random::GetCommand(),
+                   .Description = Strategy::Random::GetDescription()},
+
+    StrategyParser{.Name = Strategy::MonteCarlo::GetName(),
+                   .Parser = Strategy::MonteCarlo::Parse,
+                   .Command = Strategy::MonteCarlo::GetCommand(),
+                   .Description = Strategy::MonteCarlo::GetDescription()},
+};
+
+void ExecuteStrategies() {
+  for (const StrategyParser& strategy : Strategies) {
+    std::cout << std::format("- {}\n{}\n\n", strategy.Name,
+                             strategy.Description)
+              << std::endl;
   }
 }
 
@@ -27,16 +41,14 @@ std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
     return std::nullopt;
   };
 
-  if (name == "human") {
-    return [] { return std::make_unique<Strategy::Human>(); };
-  }
+  for (const StrategyParser& strategy : Strategies) {
+    if (name != strategy.Name) continue;
 
-  if (name == "random") {
-    return [] { return std::make_unique<Strategy::Random>(); };
-  }
+    const std::optional<StrategyFactory> result = strategy.Parser(command);
 
-  if (name == "montecarlo") {
-    return [] { return std::make_unique<Strategy::MonteCarlo>(50); };
+    if (!result) std::cout << strategy.Command << std::endl;
+
+    return result;
   }
 
   std::cout << std::format("Invalid strategy name \"{}\"!", name) << std::endl;

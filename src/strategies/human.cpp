@@ -108,4 +108,17 @@ std::optional<Game::Move> Human::ParseCard(std::istringstream& input,
   };
 }
 
+std::optional<std::function<std::unique_ptr<Human>()>> Human::Parse(
+    std::istringstream& command) {
+  return std::make_unique<Human>;
+}
+
+std::string Human::GetName() { return "human"; }
+
+std::string Human::GetCommand() { return GetName(); }
+
+std::string Human::GetDescription() {
+  return "Asks user for each move through command-line input.";
+}
+
 }  // namespace Strategy

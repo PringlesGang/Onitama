@@ -5,7 +5,8 @@
 
 namespace Cli {
 
-struct GameArgs {
+#pragma warning(suppress : 4091)
+static struct GameArgs {
   StrategyFactory RedStrategy;
   StrategyFactory BlueStrategy;
 
