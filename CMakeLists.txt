@@ -7,7 +7,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 set(Src
         src/main.cpp
-        src/cli.cpp
         src/gameMaster.cpp
 
         src/game/game.cpp
@@ -24,11 +23,16 @@ set(Src
         src/strategies/human.cpp
         src/strategies/random.cpp
         src/strategies/monteCarlo.cpp
+
+        src/cli/cli.cpp
+        src/cli/command.cpp
+        src/cli/cards.cpp
+        src/cli/game.cpp
+        src/cli/strategies.cpp
 )
 
 set(Header
         src/gameMaster.h
-        src/cli.h
         src/constants.h
 
         src/game/game.h
@@ -46,6 +50,12 @@ set(Header
         src/strategies/human.h
         src/strategies/random.h
         src/strategies/monteCarlo.h
+
+        src/cli/cli.h
+        src/cli/command.h
+        src/cli/cards.h
+        src/cli/game.h
+        src/cli/strategies.h
 )
 
 add_executable("onitama" ${Src} ${Header})

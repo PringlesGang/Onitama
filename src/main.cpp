@@ -1,12 +1,14 @@
 #include <iostream>
 
-#include "cli.h"
+#include "cli/cli.h"
 
 void WelcomeMessage() {
   std::cout << "Onitama analyzer v0.1.0" << std::endl << std::endl;
 }
 
 void CommandLoop() {
+  Cli::Cli cli;
+
   while (true) {
     std::optional<std::function<void()>> command;
     do {
@@ -15,7 +17,8 @@ void CommandLoop() {
 
       if (input == "exit" || input == "e") return;
 
-      command = Cli::Parse(std::istringstream(input));
+      std::istringstream stream = std::istringstream(input);
+      command = cli.Parse(stream);
     } while (!command);
 
     (*command)();
@@ -29,14 +32,17 @@ int main(int argc, char* argv[]) {
   if (argc <= 1) {
     CommandLoop();
   } else {
+    Cli::Cli cli;
+
     std::string argument = "";
     for (size_t i = 1; i < argc; i++) {
       if (i != 1) argument += " ";
       argument += std::string(argv[i]);
     }
 
-    std::optional<std::function<void()>> command =
-        Cli::Parse(std::istringstream(argument));
+    std::istringstream stream(argument);
+    std::optional<Cli::Thunk> command = cli.Parse(stream);
+
     if (command) (*command)();
   }
 
