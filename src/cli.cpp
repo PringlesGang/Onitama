@@ -6,6 +6,7 @@
 
 #include "gameMaster.h"
 #include "strategies/human.h"
+#include "strategies/monteCarlo.h"
 #include "strategies/random.h"
 
 namespace Cli {
@@ -196,6 +197,10 @@ std::optional<StrategyFactory> ParseStrategy(const std::string& name) {
 
   if (name == "random") {
     return [] { return std::make_unique<Strategy::Random>(); };
+  }
+
+  if (name == "montecarlo") {
+    return [] { return std::make_unique<Strategy::MonteCarlo>(50); };
   }
 
   std::cout << std::format("Invalid strategy name \"{}\"!", name) << std::endl;

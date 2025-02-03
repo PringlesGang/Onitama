@@ -9,6 +9,11 @@ namespace Game {
 Game::Game(std::array<Card, CARD_COUNT> cards)
     : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {}
 
+Game::Game(const Game& other)
+    : Board(other.Board),
+      Cards(other.Cards),
+      CurrentPlayer(other.CurrentPlayer) {}
+
 Game Game::WithRandomCards(const bool repeatCards) {
   std::array<Card, CARD_COUNT> cards;
 
