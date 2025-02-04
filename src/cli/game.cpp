@@ -24,6 +24,8 @@ void ExecuteGame(const GameArgs args) {
                 << std::endl;
     }
 
+    master->PrintType = args.PrintType;
+
     do {
       master->Render();
       master->Update();
@@ -41,7 +43,8 @@ std::string GameCommand::GetCommand() const {
       "{} red_strategy blue_strategy "
       "(--duplicate-cards) "
       "(--repeat repeat_count) "
-      "(--cards set_aside r1 r2 b1 b2)",
+      "(--cards set_aside r1 r2 b1 b2) "
+      "(--data)",
       GetName());
 }
 
@@ -54,7 +57,9 @@ std::string GameCommand::GetHelp() const {
          "random cards will be chosen.\n"
 
          "By default, the random cards do not allow for repeats. "
-         "`--duplicate-cards` suppresses this.";
+         "`--duplicate-cards` suppresses this.\n"
+
+         "Use `--data` to only print csv data.";
 }
 
 std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
@@ -105,6 +110,8 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
     args.RepeatCards = true;
   } else if (arg == "--cards" || arg == "-c") {
     if (!ParseCards(command, args)) return false;
+  } else if (arg == "--data" || arg == "-d") {
+    args.PrintType = PrintType::Data;
   } else {
     Unparse(command, arg);
     return true;

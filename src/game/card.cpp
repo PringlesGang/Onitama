@@ -82,6 +82,47 @@ Color Card::GetColor(CardType card) {
   }
 }
 
+std::string Card::GetName(CardType card) {
+  switch (card) {
+    case CardType::Boar:
+      return "boar";
+    case CardType::Cobra:
+      return "cobra";
+    case CardType::Crab:
+      return "crab";
+    case CardType::Crane:
+      return "crane";
+    case CardType::Dragon:
+      return "dragon";
+    case CardType::Eel:
+      return "eel";
+    case CardType::Elephant:
+      return "elephant";
+    case CardType::Frog:
+      return "frog";
+    case CardType::Goose:
+      return "goose";
+    case CardType::Horse:
+      return "horse";
+    case CardType::Mantis:
+      return "mantis";
+    case CardType::Monkey:
+      return "monkey";
+    case CardType::Ox:
+      return "ox";
+    case CardType::Rabbit:
+      return "rabbit";
+    case CardType::Rooster:
+      return "rooster";
+    case CardType::Tiger:
+      return "tiger";
+
+    default:
+      const size_t cardNum = (size_t)card;
+      throw std::runtime_error(std::format("Invalid card type {}", cardNum));
+  }
+}
+
 bool Card::HasMove(const Offset offset) const {
   const std::vector moves = GetMoves();
   return std::find(moves.begin(), moves.end(), offset) != moves.end();

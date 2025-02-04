@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../gameMaster.h"
 #include "command.h"
 #include "strategies.h"
 
@@ -12,6 +13,8 @@ static struct GameArgs {
 
   size_t RepeatCount = 1;
   bool RepeatCards = false;
+
+  PrintType PrintType = PrintType::Board;
 
   std::optional<std::array<Game::Card, CARD_COUNT>> Cards;
 };

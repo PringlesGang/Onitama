@@ -1,9 +1,15 @@
 #pragma once
 
 #include <memory>
+#include <stack>
 
 #include "game/game.h"
 #include "strategies/strategy.h"
+
+enum class PrintType {
+  Board,
+  Data,
+};
 
 class GameMaster {
  public:
@@ -18,8 +24,10 @@ class GameMaster {
   void Update();
   std::optional<Color> IsFinished() const;
 
-  size_t GetRound() const { return round; }
+  size_t GetRound() const { return Round; }
   const Game::Game& GetGame() const { return GameInstance; }
+
+  PrintType PrintType = PrintType::Board;
 
  private:
   Game::Game GameInstance;
@@ -27,5 +35,9 @@ class GameMaster {
   std::unique_ptr<Strategy::Strategy> RedPlayer;
   std::unique_ptr<Strategy::Strategy> BluePlayer;
 
-  size_t round = 1;
+  size_t Round = 1;
+  std::stack<Game::Move> MoveHistory;
+
+  void PrintData() const;
+  void PrintBoard() const;
 };

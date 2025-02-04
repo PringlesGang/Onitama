@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <string>
 #include <vector>
 
 #include "../util/offset.h"
@@ -31,9 +32,11 @@ enum class CardType {
 struct Card {
   static std::vector<Offset> GetMoves(const CardType card);
   static Color GetColor(const CardType card);
+  static std::string GetName(const CardType card);
 
   Color GetColor() const { return GetColor(Type); };
   std::vector<Offset> GetMoves() const { return GetMoves(Type); };
+  std::string GetName() const { return GetName(Type); };
   bool HasMove(const Offset offset) const;
 
   bool operator==(const Card& other) const { return Type == other.Type; }

@@ -18,8 +18,34 @@ GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
       BluePlayer(std::move(bluePlayer)),
       GameInstance(Game::Game(cards)) {}
 
+void GameMaster::PrintData() const {
+  if (MoveHistory.empty()) {
+    for (Game::Card card : GameInstance.GetCards()) {
+      std::cout << std::format("{},", card.GetName());
+    }
+    std::cout << std::endl;
+  } else {
+    Game::Move move = MoveHistory.top();
+    std::cout << std::format("{},{},{},", move.PawnId, move.UsedCard.GetName(),
+                             move.OffsetId)
+              << std::endl;
+  }
+}
+
+void GameMaster::PrintBoard() const {
+  std::cout << std::format("Round {}:", Round) << std::endl << GameInstance;
+}
+
 void GameMaster::Render() const {
-  std::cout << std::format("Round {}:", round) << std::endl << GameInstance;
+  switch (PrintType) {
+    case PrintType::Board:
+      PrintBoard();
+      break;
+
+    case PrintType::Data:
+      PrintData();
+      break;
+  }
 }
 
 void GameMaster::Update() {
@@ -39,7 +65,10 @@ void GameMaster::Update() {
       throw std::runtime_error(std::format("Invalid color {}", colorNum));
   }
 
-  round += GameInstance.DoMove(move);
+  if (GameInstance.DoMove(move)) {
+    Round++;
+    MoveHistory.push(move);
+  }
 }
 
 std::optional<Color> GameMaster::IsFinished() const {
