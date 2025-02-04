@@ -7,12 +7,16 @@
 namespace Game {
 
 Game::Game(std::array<Card, CARD_COUNT> cards)
-    : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {}
+    : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {
+  SetValidMoves();
+}
 
 Game::Game(const Game& other)
     : Board(other.Board),
       Cards(other.Cards),
-      CurrentPlayer(other.CurrentPlayer) {}
+      CurrentPlayer(other.CurrentPlayer) {
+  SetValidMoves();
+}
 
 Game Game::WithRandomCards(const bool repeatCards) {
   std::array<Card, CARD_COUNT> cards;
@@ -49,14 +53,15 @@ std::span<const Card, HAND_SIZE> Game::GetCurrentHand() const {
   return GetHand(CurrentPlayer);
 }
 
-std::unordered_set<Move> Game::GetValidMoves() const {
+void Game::SetValidMoves() {
   const std::vector<Coordinate> pieceLocations =
       Board.GetPieceCoordinates(CurrentPlayer);
 
   const std::span<const Card, HAND_SIZE>& hand =
       CurrentPlayer == Color::Red ? RedHand : BlueHand;
 
-  std::unordered_set<Move> validMoves;
+  ValidMoves.clear();
+
   for (size_t pawnId = 0; pawnId < pieceLocations.size(); pawnId++) {
     for (Card card : hand) {
       const size_t offsetCount = card.GetMoves().size();
@@ -67,17 +72,40 @@ std::unordered_set<Move> Game::GetValidMoves() const {
             .OffsetId = offsetId,
         };
 
-        if (!IsInvalidMove(move)) {
-          validMoves.insert(move);
+        if (IsValidMove(move)) {
+          ValidMoves.emplace(std::move(move));
         }
       }
     }
   }
+}
 
-  return validMoves;
+bool Game::IsValidMove(const Move move) const {
+  const std::vector<Coordinate> pawnLocations =
+      Board.GetPieceCoordinates(CurrentPlayer);
+  if (move.PawnId >= pawnLocations.size()) return false;
+
+  const std::vector<Offset> offsets = move.UsedCard.GetMoves();
+  if (move.OffsetId >= offsets.size()) return false;
+
+  const std::span<const Card, HAND_SIZE> hand = GetHand(CurrentPlayer);
+  if (std::find(hand.begin(), hand.end(), move.UsedCard) == hand.end())
+    return false;
+
+  const Offset orientedOffset = offsets[move.OffsetId].Orient(CurrentPlayer);
+  const std::optional<const Coordinate> destCoordinate =
+      pawnLocations[move.PawnId].try_add(orientedOffset);
+  if (!Board.OnBoard(destCoordinate)) return false;
+
+  const Tile destTile = Board.GetTile(*destCoordinate).value();
+  if (destTile && destTile->GetColor() == CurrentPlayer) return false;
+
+  return true;
 }
 
 std::optional<std::string> Game::IsInvalidMove(const Move move) const {
+  if (IsValidMoveFast(move)) return std::nullopt;
+
   const std::vector<Coordinate> pawnLocations =
       Board.GetPieceCoordinates(CurrentPlayer);
   if (move.PawnId >= pawnLocations.size()) return "Pawn does not exist!";
@@ -101,11 +129,15 @@ std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   return std::nullopt;
 }
 
+bool Game::IsValidMoveFast(const Move move) const {
+  return ValidMoves.contains(move);
+}
+
 bool Game::DoMove(const Move move) {
   const size_t validMoveCount = GetValidMoves().size();
 
   if (validMoveCount > 0) {
-    if (IsInvalidMove(move)) return false;
+    if (!IsValidMoveFast(move)) return false;
 
     const Coordinate startCoordinate =
         Board.GetPieceCoordinates(CurrentPlayer)[move.PawnId];
@@ -123,6 +155,7 @@ bool Game::DoMove(const Move move) {
   std::swap(SetAsideCard, *usedCardIt);
 
   CurrentPlayer = ~CurrentPlayer;
+  SetValidMoves();
 
   return true;
 }

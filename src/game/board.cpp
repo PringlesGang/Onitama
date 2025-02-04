@@ -23,9 +23,14 @@ std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
 
 Board::Board() { Reset(); }
 
-Board::Board(const std::array<Tile, BOARD_SIZE>& grid) : Grid(grid) {}
+Board::Board(const std::array<Tile, BOARD_SIZE>& grid) : Grid(grid) {
+  SetPieceCoordinates();
+}
 
-Board::Board(const Board& other) : Grid(other.Grid) {}
+Board::Board(const Board& other)
+    : RedLocations(other.RedLocations), BlueLocations(other.BlueLocations) {
+  memcpy(Grid.data(), other.Grid.data(), Grid.size() * sizeof(Tile));
+}
 
 void Board::Reset() {
   constexpr size_t temple = BOARD_DIMENSIONS / 2;
@@ -35,6 +40,8 @@ void Board::Reset() {
     (*this)[BOARD_DIMENSIONS - 1][x].emplace(~TopPlayer, x == temple);
     for (size_t y = 1; y < BOARD_DIMENSIONS - 1; y++) (*this)[y][x].reset();
   }
+
+  SetPieceCoordinates();
 }
 
 bool Board::DoMove(const Coordinate source, const Offset offset) {
@@ -54,6 +61,8 @@ bool Board::DoMove(const Coordinate source, const Offset offset) {
   if (destTile) destTile.reset();  // Capture
   srcTile.swap(destTile);
 
+  SetPieceCoordinates();
+
   return true;
 }
 
@@ -72,22 +81,44 @@ std::optional<std::span<const Tile, BOARD_DIMENSIONS>> Board::GetRow(
 }
 
 std::vector<Coordinate> Board::GetPieceCoordinates(const Color color) const {
-  std::vector<Coordinate> coordinates;
+  switch (color) {
+    case Color::Blue:
+      return BlueLocations;
+    case Color::Red:
+      return RedLocations;
 
-  for (size_t i = 0; i < BOARD_SIZE; i++) {
-    if (Grid[i] && Grid[i]->GetColor() == color) {
+    default:
+      size_t colorNum = (size_t)color;
+      throw std::runtime_error(std::format("Invalid color {}", colorNum));
+  }
+}
+
+void Board::SetPieceCoordinates() {
+  RedLocations.clear();
+  BlueLocations.clear();
+
+  size_t x = 0;
+  size_t y = 0;
+
+  for (const std::optional<Piece> tile : Grid) {
+    if (tile) {
+      std::vector<Coordinate>& locations =
+          tile->GetColor() == Color::Red ? RedLocations : BlueLocations;
+
       // Place master in the front
-      if (Grid[i]->IsMaster()) {
-        coordinates.insert(
-            coordinates.begin(),
-            Coordinate{i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS});
+      if (tile->IsMaster()) {
+        locations.insert(locations.begin(), Coordinate{x, y});
       } else {
-        coordinates.emplace_back(i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS);
+        locations.emplace_back(x, y);
       }
     }
-  }
 
-  return coordinates;
+    x++;
+    if (x == BOARD_DIMENSIONS) {
+      x = 0;
+      y++;
+    }
+  }
 }
 
 bool Board::OnBoard(const std::optional<const Coordinate> coordinate) const {

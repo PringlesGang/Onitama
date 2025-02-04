@@ -37,6 +37,8 @@ Game::Move MonteCarlo::GetMove(const Game::Game& game) {
       bestMove = move;
       bestMoveWinCount = winCount;
     }
+
+    if (winCount == RepeatCount) break;  // Cannot improve upon this
   }
 
   return bestMove;

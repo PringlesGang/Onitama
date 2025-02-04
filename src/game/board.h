@@ -41,6 +41,11 @@ class Board {
  private:
   std::array<Tile, BOARD_SIZE> Grid;
 
+  std::vector<Coordinate> RedLocations;
+  std::vector<Coordinate> BlueLocations;
+
+  void SetPieceCoordinates();
+
   Tile& operator[](const Coordinate coordinate);
   std::span<Tile, BOARD_DIMENSIONS> operator[](const size_t row);
 };

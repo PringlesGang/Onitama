@@ -29,14 +29,18 @@ class Game {
   Card GetSetAsideCard() const { return SetAsideCard; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
 
-  std::unordered_set<Move> GetValidMoves() const;
+  std::unordered_set<Move> GetValidMoves() const { return ValidMoves; };
   std::optional<std::string> IsInvalidMove(const Move move) const;
+  bool IsValidMoveFast(const Move move) const;
   std::optional<Color> IsFinished() const { return Board.IsFinished(); }
   bool DoMove(const Move move);
 
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
 
  private:
+  bool IsValidMove(const Move move) const;
+  void SetValidMoves();
+
   Board Board;
   std::array<Card, CARD_COUNT> Cards;
   Color CurrentPlayer;
@@ -46,6 +50,8 @@ class Game {
       std::span<Card, HAND_SIZE>(&Cards[1], HAND_SIZE);
   const std::span<Card, HAND_SIZE> BlueHand =
       std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE);
+
+  std::unordered_set<Move> ValidMoves;
 
   std::ostream& StreamHand(std::ostream& stream,
                            const std::span<const Card, HAND_SIZE> hand,
