@@ -23,6 +23,7 @@ set(Src
         src/strategies/human.cpp
         src/strategies/random.cpp
         src/strategies/monteCarlo.cpp
+        src/strategies/minMax.cpp
 
         src/cli/cli.cpp
         src/cli/command.cpp
@@ -50,6 +51,7 @@ set(Header
         src/strategies/human.h
         src/strategies/random.h
         src/strategies/monteCarlo.h
+        src/strategies/minMax.h
 
         src/cli/cli.h
         src/cli/command.h

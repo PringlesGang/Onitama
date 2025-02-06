@@ -1,0 +1,112 @@
+#include "minMax.h"
+
+#include <future>
+#include <iostream>
+#include <sstream>
+
+namespace Strategy {
+
+WinState operator-(const WinState original) {
+  return WinState(-(int8_t)original);
+}
+
+bool operator<(const WinState lhs, const WinState rhs) {
+  return (int8_t)lhs < (int8_t)rhs;
+};
+
+MinMax::MinMax(const std::optional<const size_t> maxDepth)
+    : MaxDepth(maxDepth) {}
+
+Game::Move MinMax::GetMove(const Game::Game& game) {
+  const std::unordered_set<Game::Move> moves = game.GetValidMoves();
+
+  std::vector<std::pair<Game::Move, std::future<WinState>>> futures;
+  futures.reserve(moves.size());
+
+  for (Game::Move move : moves) {
+    Game::Game nextState = Game::Game(game);
+    nextState.DoMove(move);
+
+    futures.emplace_back(
+        move, std::async(std::launch::async, &MinMax::PlayRecursive, this,
+                         std::move(nextState), 0));
+  }
+
+  bool firstDone = false;
+  WinState bestMoveValue;
+  Game::Move bestMove;
+
+  for (auto& [move, future] : futures) {
+    const WinState value = -future.get();
+    if (!firstDone || value > bestMoveValue) {
+      bestMoveValue = value;
+      bestMove = move;
+      firstDone = true;
+    }
+  }
+
+  return bestMove;
+}
+
+WinState MinMax::PlayRecursive(Game::Game game, const size_t depth) const {
+  if (depth == MaxDepth) return WinState::Unknown;
+
+  const std::optional<Color> winner = game.IsFinished();
+  if (winner) {
+    return winner.value() == game.GetCurrentPlayer() ? WinState::Won
+                                                     : WinState::Lost;
+  }
+
+  const std::unordered_set<Game::Move> moves = game.GetValidMoves();
+
+  WinState best = WinState::Lost;
+  for (Game::Move move : moves) {
+    Game::Game nextState = Game::Game(game);
+    game.DoMove(move);
+
+    best = std::max(-PlayRecursive(game, depth + 1), best);
+  }
+
+  return best;
+}
+
+std::optional<std::function<std::unique_ptr<MinMax>()>> MinMax::Parse(
+    std::istringstream& command) {
+  std::string argument;
+  if (!(command >> argument)) {
+    std::cout << "Failed to parse MinMax strategy argument!" << std::endl;
+    return std::nullopt;
+  }
+
+  std::optional<size_t> maxDepth;
+  if (argument == "--no-max-depth") {
+    maxDepth = std::nullopt;
+  } else {
+    try {
+      maxDepth = std::stoull(argument);
+    } catch (std::invalid_argument err) {
+      std::cout << std::format(
+                       "Failed to parse max depth {} for MinMax strategy!",
+                       argument)
+                << std::endl;
+      return std::nullopt;
+    }
+  }
+
+  return [maxDepth] { return std::make_unique<MinMax>(maxDepth); };
+}
+
+std::string MinMax::GetName() { return "minmax"; }
+
+std::string MinMax::GetCommand() {
+  return std::format("{} max_depth\n{} --no-max-depth", GetName(), GetName());
+}
+
+std::string MinMax::GetDescription() {
+  return "Recursively seeks out the best strategy for both players. "
+         "Will perform the move that guarantees a win, "
+         "or guarantees a non-loss.\n"
+         "Max search depth is configurable.";
+}
+
+}  // namespace Strategy
