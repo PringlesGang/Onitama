@@ -18,7 +18,12 @@ namespace Game {
 class Game {
  public:
   Game(std::array<Card, CARD_COUNT> cards);
+
   Game(const Game& other);
+  Game(Game&& other);
+
+  Game& operator=(const Game& other);
+  Game& operator=(Game&& other);
 
   static Game WithRandomCards(const bool repeatCards = false);
 

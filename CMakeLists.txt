@@ -11,7 +11,6 @@ set(Src
 
         src/game/game.cpp
         src/game/board.cpp
-        src/game/piece.cpp
         src/game/card.cpp
         src/game/move.cpp
 

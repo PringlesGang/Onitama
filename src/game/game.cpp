@@ -14,8 +14,31 @@ Game::Game(std::array<Card, CARD_COUNT> cards)
 Game::Game(const Game& other)
     : Board(other.Board),
       Cards(other.Cards),
-      CurrentPlayer(other.CurrentPlayer) {
-  SetValidMoves();
+      CurrentPlayer(other.CurrentPlayer),
+      ValidMoves(other.ValidMoves) {}
+
+Game::Game(Game&& other)
+    : Board(std::move(other.Board)),
+      Cards(std::move(other.Cards)),
+      CurrentPlayer(std::move(other.CurrentPlayer)),
+      ValidMoves(std::move(other.ValidMoves)) {}
+
+Game& Game::operator=(const Game& other) {
+  Board = other.Board;
+  Cards = other.Cards;
+  CurrentPlayer = other.CurrentPlayer;
+  ValidMoves = other.ValidMoves;
+
+  return *this;
+}
+
+Game& Game::operator=(Game&& other) {
+  Board = std::move(other.Board);
+  Cards = std::move(other.Cards);
+  CurrentPlayer = std::move(other.CurrentPlayer);
+  ValidMoves = std::move(other.ValidMoves);
+
+  return *this;
 }
 
 Game Game::WithRandomCards(const bool repeatCards) {
@@ -98,7 +121,7 @@ bool Game::IsValidMove(const Move move) const {
   if (!Board.OnBoard(destCoordinate)) return false;
 
   const Tile destTile = Board.GetTile(*destCoordinate).value();
-  if (destTile && destTile->GetColor() == CurrentPlayer) return false;
+  if (destTile && destTile->Color == CurrentPlayer) return false;
 
   return true;
 }
@@ -123,7 +146,7 @@ std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   if (!Board.OnBoard(destCoordinate)) return "Destination not on board!";
 
   const Tile destTile = Board.GetTile(*destCoordinate).value();
-  if (destTile && destTile->GetColor() == CurrentPlayer)
+  if (destTile && destTile->Color == CurrentPlayer)
     return "Cannot capture pawn of the same color!";
 
   return std::nullopt;

@@ -20,7 +20,6 @@ class Board {
  public:
   Board();
   Board(const std::array<Tile, BOARD_SIZE>& grid);
-  Board(const Board& other);
 
   void Reset();
   bool DoMove(const Coordinate source, const Offset offset);

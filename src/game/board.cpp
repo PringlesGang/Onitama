@@ -6,7 +6,7 @@ namespace Game {
 
 static std::ostream& ColorPiece(std::ostream& stream, const Piece piece) {
   const AnsiColor::Foreground fgColor = AnsiColor::Foreground::White;
-  const AnsiColor::Background bgColor = piece.GetColor() == Color::Red
+  const AnsiColor::Background bgColor = piece.Color == Color::Red
                                             ? AnsiColor::Background::Red
                                             : AnsiColor::Background::Blue;
 
@@ -16,8 +16,8 @@ static std::ostream& ColorPiece(std::ostream& stream, const Piece piece) {
 std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
   if (!tile.has_value()) return stream << '.';
 
-  const char character = (tile->IsMaster() ? 'm' : 's') +
-                         ('A' - 'a') * (tile->GetColor() == Color::Red);
+  const char character =
+      (tile->Master ? 'm' : 's') + ('A' - 'a') * (tile->Color == Color::Red);
   return ColorPiece(stream, *tile) << character << AnsiColor::Reset();
 }
 
@@ -25,11 +25,6 @@ Board::Board() { Reset(); }
 
 Board::Board(const std::array<Tile, BOARD_SIZE>& grid) : Grid(grid) {
   SetPieceCoordinates();
-}
-
-Board::Board(const Board& other)
-    : RedLocations(other.RedLocations), BlueLocations(other.BlueLocations) {
-  memcpy(Grid.data(), other.Grid.data(), Grid.size() * sizeof(Tile));
 }
 
 void Board::Reset() {
@@ -55,7 +50,7 @@ bool Board::DoMove(const Coordinate source, const Offset offset) {
 
   // Check whether the destination tile isn't a pawn of the same color
   Tile& destTile = (*this)[*destination];
-  if (destTile && destTile->GetColor() == srcTile->GetColor()) return false;
+  if (destTile && destTile->Color == srcTile->Color) return false;
 
   // Perform move
   if (destTile) destTile.reset();  // Capture
@@ -103,10 +98,10 @@ void Board::SetPieceCoordinates() {
   for (const std::optional<Piece> tile : Grid) {
     if (tile) {
       std::vector<Coordinate>& locations =
-          tile->GetColor() == Color::Red ? RedLocations : BlueLocations;
+          tile->Color == Color::Red ? RedLocations : BlueLocations;
 
       // Place master in the front
-      if (tile->IsMaster()) {
+      if (tile->Master) {
         locations.insert(locations.begin(), Coordinate{x, y});
       } else {
         locations.emplace_back(x, y);
@@ -132,10 +127,10 @@ std::optional<Color> Board::IsFinished() const {
 
   for (size_t i = 0; i < BOARD_SIZE; i++) {
     const Tile tile = Grid[i];
-    if (tile && tile->IsMaster()) {
+    if (tile && tile->Master) {
       const Coordinate coordinate{i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS};
 
-      if (tile->GetColor() == Color::Red)
+      if (tile->Color == Color::Red)
         redMasterPosition = coordinate;
       else
         blueMasterPosition = coordinate;
@@ -181,7 +176,7 @@ std::ostream& Board::StreamPlayerRow(std::ostream& stream, const Color player,
                                      const size_t row,
                                      size_t& pawnIndex) const {
   for (const Tile& tile : *GetRow(row)) {
-    if (tile && tile->GetColor() == player && !tile->IsMaster()) {
+    if (tile && tile->Color == player && !tile->Master) {
       ColorPiece(stream, *tile) << ++pawnIndex << AnsiColor::Reset();
     } else {
       stream << tile;
