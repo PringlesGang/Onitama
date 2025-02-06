@@ -15,7 +15,8 @@ Game::Move Human::GetMove(const Game::Game& game) {
       std::cout << std::endl
                 << "Please enter your move (`{pawn ID} {card number} {offset "
                    "number}`):"
-                << std::endl;
+                << std::endl
+                << "> ";
 
       std::string input;
       getline(std::cin, input);
@@ -27,7 +28,8 @@ Game::Move Human::GetMove(const Game::Game& game) {
     do {
       std::cout << std::endl
                 << "No valid moves. Please choose a card to discard:"
-                << std::endl;
+                << std::endl
+                << "> ";
 
       std::string input;
       getline(std::cin, input);

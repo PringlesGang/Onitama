@@ -12,6 +12,8 @@ void CommandLoop() {
   while (true) {
     std::optional<std::function<void()>> command;
     do {
+      std::cout << "> ";
+
       std::string input;
       std::getline(std::cin, input);
 
