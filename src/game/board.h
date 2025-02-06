@@ -41,7 +41,9 @@ class Board {
   std::array<Tile, BOARD_SIZE> Grid;
 
   std::vector<Coordinate> RedLocations;
+  bool RedMasterCaptured = false;
   std::vector<Coordinate> BlueLocations;
+  bool BlueMasterCaptured = false;
 
   void SetPieceCoordinates();
 

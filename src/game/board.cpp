@@ -91,6 +91,8 @@ std::vector<Coordinate> Board::GetPieceCoordinates(const Color color) const {
 void Board::SetPieceCoordinates() {
   RedLocations.clear();
   BlueLocations.clear();
+  RedMasterCaptured = true;
+  BlueMasterCaptured = true;
 
   size_t x = 0;
   size_t y = 0;
@@ -103,6 +105,13 @@ void Board::SetPieceCoordinates() {
       // Place master in the front
       if (tile->Master) {
         locations.insert(locations.begin(), Coordinate{x, y});
+
+        if (tile->Color == Color::Red) {
+          RedMasterCaptured = false;
+        } else {
+          BlueMasterCaptured = false;
+        }
+
       } else {
         locations.emplace_back(x, y);
       }
@@ -122,28 +131,13 @@ bool Board::OnBoard(const std::optional<const Coordinate> coordinate) const {
 }
 
 std::optional<Color> Board::IsFinished() const {
-  std::optional<Coordinate> redMasterPosition = std::nullopt;
-  std::optional<Coordinate> blueMasterPosition = std::nullopt;
+  if (RedMasterCaptured) return Color::Blue;
+  if (BlueMasterCaptured) return Color::Red;
 
-  for (size_t i = 0; i < BOARD_SIZE; i++) {
-    const Tile tile = Grid[i];
-    if (tile && tile->Master) {
-      const Coordinate coordinate{i % BOARD_DIMENSIONS, i / BOARD_DIMENSIONS};
-
-      if (tile->Color == Color::Red)
-        redMasterPosition = coordinate;
-      else
-        blueMasterPosition = coordinate;
-    }
-  }
-
-  if (!redMasterPosition || !blueMasterPosition)
-    return redMasterPosition ? Color::Red : Color::Blue;
-
-  constexpr size_t temple = BOARD_SIZE / 2;
-  if (redMasterPosition.value() == Coordinate(temple, BOARD_DIMENSIONS - 1))
+  constexpr size_t temple = BOARD_DIMENSIONS / 2;
+  if (RedLocations[0] == Coordinate(temple, BOARD_DIMENSIONS - 1))
     return Color::Red;
-  if (blueMasterPosition.value() == Coordinate(temple, 0)) return Color::Blue;
+  if (BlueLocations[0] == Coordinate(temple, 0)) return Color::Blue;
 
   return std::nullopt;
 }
