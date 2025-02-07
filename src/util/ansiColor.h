@@ -21,7 +21,7 @@ enum class Foreground {
 
 std::string Color(const Foreground fg,
                   const Background bg = Background::Default);
-constexpr std::string Reset() { return "\033[0m"; }
-constexpr std::string Invert() { return "\033[7m"; }
+inline std::string Reset() { return "\033[0m"; }
+inline std::string Invert() { return "\033[7m"; }
 
 }  // namespace AnsiColor
