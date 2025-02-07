@@ -1,5 +1,6 @@
 #include "minMax.h"
 
+#include <format>
 #include <future>
 #include <iostream>
 #include <sstream>

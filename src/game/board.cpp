@@ -1,5 +1,8 @@
 #include "board.h"
 
+#include <algorithm>
+#include <format>
+
 #include "../util/ansiColor.h"
 
 namespace Game {

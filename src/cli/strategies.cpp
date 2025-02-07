@@ -1,6 +1,7 @@
 #include "strategies.h"
 
 #include <array>
+#include <format>
 #include <iostream>
 
 #include "../strategies/human.h"

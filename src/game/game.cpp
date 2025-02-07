@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include <algorithm>
 #include <format>
 #include <random>
 #include <stdexcept>
