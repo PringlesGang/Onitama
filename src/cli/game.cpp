@@ -24,7 +24,7 @@ void ExecuteGame(const GameArgs args) {
                 << std::endl;
     }
 
-    master->PrintType = args.PrintType;
+    master->GameMasterPrintType = args.GameArgsPrintType;
 
     do {
       master->Render();
@@ -111,7 +111,7 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
   } else if (arg == "--cards" || arg == "-c") {
     if (!ParseCards(command, args)) return false;
   } else if (arg == "--data" || arg == "-d") {
-    args.PrintType = PrintType::Data;
+    args.GameArgsPrintType = PrintType::Data;
   } else {
     Unparse(command, arg);
     return true;

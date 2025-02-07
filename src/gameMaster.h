@@ -27,7 +27,7 @@ class GameMaster {
   size_t GetRound() const { return Round; }
   const Game::Game& GetGame() const { return GameInstance; }
 
-  PrintType PrintType = PrintType::Board;
+  PrintType GameMasterPrintType = PrintType::Board;
 
  private:
   Game::Game GameInstance;

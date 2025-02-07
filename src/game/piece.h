@@ -5,7 +5,7 @@
 namespace Game {
 
 struct Piece {
-  Color Color;
+  Color Team;
   bool Master;
 };
 

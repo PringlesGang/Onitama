@@ -4,8 +4,7 @@
 
 namespace Strategy {
 
-#pragma warning(suppress : 4091)
-static enum class WinState {
+enum class WinState {
   Lost = -1,
   Unknown = 0,
   Won = 1,

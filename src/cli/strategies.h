@@ -12,8 +12,7 @@ void ExecuteStrategies();
 typedef std::function<std::unique_ptr<Strategy::Strategy>()> StrategyFactory;
 std::optional<StrategyFactory> ParseStrategy(std::istringstream& command);
 
-#pragma warning(suppress : 4091)
-static struct StrategyParser {
+struct StrategyParser {
   const std::string Name;
   const std::function<std::optional<StrategyFactory>(std::istringstream&)>
       Parser;

@@ -6,7 +6,7 @@ namespace Game {
 
 static std::ostream& ColorPiece(std::ostream& stream, const Piece piece) {
   const AnsiColor::Foreground fgColor = AnsiColor::Foreground::White;
-  const AnsiColor::Background bgColor = piece.Color == Color::Red
+  const AnsiColor::Background bgColor = piece.Team == Color::Red
                                             ? AnsiColor::Background::Red
                                             : AnsiColor::Background::Blue;
 
@@ -17,7 +17,7 @@ std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
   if (!tile.has_value()) return stream << '.';
 
   const char character =
-      (tile->Master ? 'm' : 's') + ('A' - 'a') * (tile->Color == Color::Red);
+      (tile->Master ? 'm' : 's') + ('A' - 'a') * (tile->Team == Color::Red);
   return ColorPiece(stream, *tile) << character << AnsiColor::Reset();
 }
 
@@ -50,7 +50,7 @@ bool Board::DoMove(const Coordinate source, const Offset offset) {
 
   // Check whether the destination tile isn't a pawn of the same color
   Tile& destTile = (*this)[*destination];
-  if (destTile && destTile->Color == srcTile->Color) return false;
+  if (destTile && destTile->Team == srcTile->Team) return false;
 
   // Perform move
   if (destTile) destTile.reset();  // Capture
@@ -100,13 +100,13 @@ void Board::SetPieceCoordinates() {
   for (const std::optional<Piece> tile : Grid) {
     if (tile) {
       std::vector<Coordinate>& locations =
-          tile->Color == Color::Red ? RedLocations : BlueLocations;
+          tile->Team == Color::Red ? RedLocations : BlueLocations;
 
       // Place master in the front
       if (tile->Master) {
         locations.insert(locations.begin(), Coordinate{x, y});
 
-        if (tile->Color == Color::Red) {
+        if (tile->Team == Color::Red) {
           RedMasterCaptured = false;
         } else {
           BlueMasterCaptured = false;
@@ -170,7 +170,7 @@ std::ostream& Board::StreamPlayerRow(std::ostream& stream, const Color player,
                                      const size_t row,
                                      size_t& pawnIndex) const {
   for (const Tile& tile : *GetRow(row)) {
-    if (tile && tile->Color == player && !tile->Master) {
+    if (tile && tile->Team == player && !tile->Master) {
       ColorPiece(stream, *tile) << ++pawnIndex << AnsiColor::Reset();
     } else {
       stream << tile;

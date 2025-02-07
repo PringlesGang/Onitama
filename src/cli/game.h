@@ -6,15 +6,14 @@
 
 namespace Cli {
 
-#pragma warning(suppress : 4091)
-static struct GameArgs {
+struct GameArgs {
   StrategyFactory RedStrategy;
   StrategyFactory BlueStrategy;
 
   size_t RepeatCount = 1;
   bool RepeatCards = false;
 
-  PrintType PrintType = PrintType::Board;
+  PrintType GameArgsPrintType = PrintType::Board;
 
   std::optional<std::array<Game::Card, CARD_COUNT>> Cards;
 };

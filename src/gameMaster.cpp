@@ -37,7 +37,7 @@ void GameMaster::PrintBoard() const {
 }
 
 void GameMaster::Render() const {
-  switch (PrintType) {
+  switch (GameMasterPrintType) {
     case PrintType::Board:
       PrintBoard();
       break;

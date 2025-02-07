@@ -27,7 +27,7 @@ class Game {
 
   static Game WithRandomCards(const bool repeatCards = false);
 
-  const Board& GetBoard() const { return Board; }
+  const Board& GetBoard() const { return GameBoard; }
   std::span<const Card, CARD_COUNT> GetCards() const { return Cards; }
   std::span<const Card, HAND_SIZE> GetHand(const Color color) const;
   std::span<const Card, HAND_SIZE> GetCurrentHand() const;
@@ -37,7 +37,7 @@ class Game {
   std::unordered_set<Move> GetValidMoves() const { return ValidMoves; };
   std::optional<std::string> IsInvalidMove(const Move move) const;
   bool IsValidMoveFast(const Move move) const;
-  std::optional<Color> IsFinished() const { return Board.IsFinished(); }
+  std::optional<Color> IsFinished() const { return GameBoard.IsFinished(); }
   bool DoMove(const Move move);
 
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
@@ -46,7 +46,7 @@ class Game {
   bool IsValidMove(const Move move) const;
   void SetValidMoves();
 
-  Board Board;
+  Board GameBoard;
   std::array<Card, CARD_COUNT> Cards;
   Color CurrentPlayer;
 

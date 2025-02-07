@@ -7,24 +7,24 @@
 namespace Game {
 
 Game::Game(std::array<Card, CARD_COUNT> cards)
-    : Cards(cards), Board(), CurrentPlayer(cards[0].GetColor()) {
+    : Cards(cards), GameBoard(), CurrentPlayer(cards[0].GetColor()) {
   SetValidMoves();
 }
 
 Game::Game(const Game& other)
-    : Board(other.Board),
+    : GameBoard(other.GameBoard),
       Cards(other.Cards),
       CurrentPlayer(other.CurrentPlayer),
       ValidMoves(other.ValidMoves) {}
 
 Game::Game(Game&& other)
-    : Board(std::move(other.Board)),
+    : GameBoard(std::move(other.GameBoard)),
       Cards(std::move(other.Cards)),
       CurrentPlayer(std::move(other.CurrentPlayer)),
       ValidMoves(std::move(other.ValidMoves)) {}
 
 Game& Game::operator=(const Game& other) {
-  Board = other.Board;
+  GameBoard = other.GameBoard;
   Cards = other.Cards;
   CurrentPlayer = other.CurrentPlayer;
   ValidMoves = other.ValidMoves;
@@ -33,7 +33,7 @@ Game& Game::operator=(const Game& other) {
 }
 
 Game& Game::operator=(Game&& other) {
-  Board = std::move(other.Board);
+  GameBoard = std::move(other.GameBoard);
   Cards = std::move(other.Cards);
   CurrentPlayer = std::move(other.CurrentPlayer);
   ValidMoves = std::move(other.ValidMoves);
@@ -78,7 +78,7 @@ std::span<const Card, HAND_SIZE> Game::GetCurrentHand() const {
 
 void Game::SetValidMoves() {
   const std::vector<Coordinate> pieceLocations =
-      Board.GetPieceCoordinates(CurrentPlayer);
+      GameBoard.GetPieceCoordinates(CurrentPlayer);
 
   const std::span<const Card, HAND_SIZE>& hand =
       CurrentPlayer == Color::Red ? RedHand : BlueHand;
@@ -105,7 +105,7 @@ void Game::SetValidMoves() {
 
 bool Game::IsValidMove(const Move move) const {
   const std::vector<Coordinate> pawnLocations =
-      Board.GetPieceCoordinates(CurrentPlayer);
+      GameBoard.GetPieceCoordinates(CurrentPlayer);
   if (move.PawnId >= pawnLocations.size()) return false;
 
   const std::vector<Offset> offsets = move.UsedCard.GetMoves();
@@ -118,10 +118,10 @@ bool Game::IsValidMove(const Move move) const {
   const Offset orientedOffset = offsets[move.OffsetId].Orient(CurrentPlayer);
   const std::optional<const Coordinate> destCoordinate =
       pawnLocations[move.PawnId].try_add(orientedOffset);
-  if (!Board.OnBoard(destCoordinate)) return false;
+  if (!GameBoard.OnBoard(destCoordinate)) return false;
 
-  const Tile destTile = Board.GetTile(*destCoordinate).value();
-  if (destTile && destTile->Color == CurrentPlayer) return false;
+  const Tile destTile = GameBoard.GetTile(*destCoordinate).value();
+  if (destTile && destTile->Team == CurrentPlayer) return false;
 
   return true;
 }
@@ -130,7 +130,7 @@ std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   if (IsValidMoveFast(move)) return std::nullopt;
 
   const std::vector<Coordinate> pawnLocations =
-      Board.GetPieceCoordinates(CurrentPlayer);
+      GameBoard.GetPieceCoordinates(CurrentPlayer);
   if (move.PawnId >= pawnLocations.size()) return "Pawn does not exist!";
 
   const std::vector<Offset> offsets = move.UsedCard.GetMoves();
@@ -143,10 +143,10 @@ std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   const Offset orientedOffset = offsets[move.OffsetId].Orient(CurrentPlayer);
   const std::optional<const Coordinate> destCoordinate =
       pawnLocations[move.PawnId].try_add(orientedOffset);
-  if (!Board.OnBoard(destCoordinate)) return "Destination not on board!";
+  if (!GameBoard.OnBoard(destCoordinate)) return "Destination not on board!";
 
-  const Tile destTile = Board.GetTile(*destCoordinate).value();
-  if (destTile && destTile->Color == CurrentPlayer)
+  const Tile destTile = GameBoard.GetTile(*destCoordinate).value();
+  if (destTile && destTile->Team == CurrentPlayer)
     return "Cannot capture pawn of the same color!";
 
   return std::nullopt;
@@ -163,11 +163,11 @@ bool Game::DoMove(const Move move) {
     if (!IsValidMoveFast(move)) return false;
 
     const Coordinate startCoordinate =
-        Board.GetPieceCoordinates(CurrentPlayer)[move.PawnId];
+        GameBoard.GetPieceCoordinates(CurrentPlayer)[move.PawnId];
     const Offset offset =
         move.UsedCard.GetMoves()[move.OffsetId].Orient(CurrentPlayer);
 
-    Board.DoMove(startCoordinate, offset);
+    GameBoard.DoMove(startCoordinate, offset);
   }
 
   const std::span<Card, HAND_SIZE> hand =
@@ -199,7 +199,7 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
 
   size_t pawnIndex = 0;
   for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
-    game.Board.StreamPlayerRow(stream, game.CurrentPlayer, row, pawnIndex);
+    game.GameBoard.StreamPlayerRow(stream, game.CurrentPlayer, row, pawnIndex);
     stream << "  ";
 
     const bool reverse = game.CurrentPlayer == TopPlayer;
