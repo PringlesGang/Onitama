@@ -134,7 +134,7 @@ std::ostream& Card::StreamRow(std::ostream& stream, const int8_t row,
   const std::vector<Offset> offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
 
-  for (Offset offset{.dx = -2 * sign, .dy = row}; abs(offset.dx) <= 2;
+  for (Offset offset{.dx = (int8_t)(-2 * sign), .dy = row}; abs(offset.dx) <= 2;
        offset.dx += sign) {
     const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
 
