@@ -29,6 +29,9 @@ set(Src
         src/cli/cards.cpp
         src/cli/game.cpp
         src/cli/strategies.cpp
+        src/cli/experiment.cpp
+
+        src/experiments/fairCards.cpp
 )
 
 set(Header
@@ -57,6 +60,9 @@ set(Header
         src/cli/cards.h
         src/cli/game.h
         src/cli/strategies.h
+        src/cli/experiment.h
+
+        src/experiments/fairCards.h
 )
 
 add_executable("onitama" ${Src} ${Header})

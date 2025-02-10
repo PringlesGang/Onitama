@@ -2,6 +2,7 @@
 
 #include "cards.h"
 #include "command.h"
+#include "experiment.h"
 #include "game.h"
 #include "strategies.h"
 
@@ -18,10 +19,11 @@ class Cli : public Command {
   void ExecuteHelp() const;
 
  private:
-  const std::array<const std::unique_ptr<const Command>, 3> commands = {
+  const std::array<const std::unique_ptr<const Command>, 4> commands = {
       std::make_unique<CardsCommand>(),
       std::make_unique<GameCommand>(),
       std::make_unique<StrategiesCommand>(),
+      std::make_unique<ExperimentCommand>(),
   };
 };
 
