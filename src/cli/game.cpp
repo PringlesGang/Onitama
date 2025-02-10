@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include <format>
+#include <future>
 #include <iostream>
 
 #include "../gameMaster.h"
@@ -8,40 +9,72 @@
 
 namespace Cli {
 
+static Color RunGame(const GameArgs args, std::ostream* stream) {
+  std::unique_ptr<GameMaster> master;
+
+  if (args.Cards) {
+    master = std::make_unique<GameMaster>(args.RedStrategy(),
+                                          args.BlueStrategy(), *args.Cards);
+  } else {
+    master = std::make_unique<GameMaster>(
+        args.RedStrategy(), args.BlueStrategy(), args.RepeatCards);
+  }
+
+  master->GameMasterPrintType = args.GameArgsPrintType;
+
+  do {
+    master->Render(*stream);
+    master->Update();
+  } while (!master->IsFinished());
+  master->Render(*stream);
+
+  return master->IsFinished().value();
+}
+
 void ExecuteGame(const GameArgs args) {
   std::pair<size_t, size_t> wins;
 
-  for (size_t game = 1; game <= args.RepeatCount; game++) {
-    std::unique_ptr<GameMaster> master;
+  if (args.Multithread) {
+    std::vector<std::stringstream> streams;
+    std::vector<std::future<Color>> futures;
+    streams.resize(args.RepeatCount);
+    futures.reserve(args.RepeatCount);
 
-    if (args.Cards) {
-      master = std::make_unique<GameMaster>(args.RedStrategy(),
-                                            args.BlueStrategy(), *args.Cards);
-    } else {
-      master = std::make_unique<GameMaster>(
-          args.RedStrategy(), args.BlueStrategy(), args.RepeatCards);
+    for (size_t game = 0; game < args.RepeatCount; game++) {
+      futures.emplace_back(
+          std::async(std::launch::async, RunGame, args, &streams[game]));
     }
 
-    if (args.RepeatCount > 1) {
-      std::cout << std::format("Game {}/{}:", game, args.RepeatCount)
-                << std::endl;
+    for (size_t game = 0; game < args.RepeatCount; game++) {
+      if (futures[game].get() == Color::Red) {
+        wins.first++;
+      } else {
+        wins.second++;
+      }
+
+      if (args.RepeatCount > 1) {
+        std::cout << std::format("Game {}/{}:", game + 1, args.RepeatCount)
+                  << std::endl;
+      }
+      std::cout << streams[game].str() << std::endl;
     }
+  } else {
+    for (size_t game = 1; game <= args.RepeatCount; game++) {
+      if (args.RepeatCount > 1) {
+        std::cout << std::format("Game {}/{}:", game, args.RepeatCount)
+                  << std::endl;
+      }
 
-    master->GameMasterPrintType = args.GameArgsPrintType;
+      const Color winner = RunGame(args, &std::cout);
 
-    do {
-      master->Render();
-      master->Update();
-    } while (!master->IsFinished());
-    master->Render();
+      if (winner == Color::Red) {
+        wins.first++;
+      } else {
+        wins.second++;
+      }
 
-    if (master->IsFinished().value() == Color::Red) {
-      wins.first++;
-    } else {
-      wins.second++;
+      std::cout << std::endl;
     }
-
-    std::cout << std::endl << std::endl;
   }
 
   if (args.GameArgsPrintType == PrintType::Wins) {
@@ -61,8 +94,8 @@ std::string GameCommand::GetCommand() const {
       "(--duplicate-cards) "
       "(--repeat repeat_count) "
       "(--cards set_aside r1 r2 b1 b2) "
-      "(--print-type type)",
-      GetName());
+      "(--print-type type) ",
+      "(--multithread)", GetName());
 }
 
 std::string GameCommand::GetHelp() const {
@@ -153,6 +186,8 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
     if (!ParseCards(command, args)) return false;
   } else if (arg == "--print-type" || arg == "-p") {
     if (!ParsePrintType(command, args)) return false;
+  } else if (arg == "--multithread" || arg == "-m") {
+    args.Multithread = true;
   } else {
     Unparse(command, arg);
     return true;

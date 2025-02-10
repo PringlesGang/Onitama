@@ -12,6 +12,7 @@ struct GameArgs {
 
   size_t RepeatCount = 1;
   bool RepeatCards = false;
+  bool Multithread = false;
 
   PrintType GameArgsPrintType = PrintType::Board;
 

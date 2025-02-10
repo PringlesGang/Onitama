@@ -18,38 +18,38 @@ GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
       BluePlayer(std::move(bluePlayer)),
       GameInstance(Game::Game(cards)) {}
 
-void GameMaster::PrintData() const {
+void GameMaster::PrintData(std::ostream& stream) const {
   if (MoveHistory.empty()) {
     for (Game::Card card : GameInstance.GetCards()) {
-      std::cout << std::format("{},", card.GetName());
+      stream << std::format("{},", card.GetName());
     }
-    std::cout << std::endl;
+    stream << std::endl;
   } else {
     Game::Move move = MoveHistory.top();
-    std::cout << std::format("{},{},{},", move.PawnId, move.UsedCard.GetName(),
-                             move.OffsetId)
-              << std::endl;
+    stream << std::format("{},{},{},", move.PawnId, move.UsedCard.GetName(),
+                          move.OffsetId)
+           << std::endl;
   }
 }
 
-void GameMaster::PrintBoard() const {
-  std::cout << std::format("Round {}:", Round) << std::endl << GameInstance;
+void GameMaster::PrintBoard(std::ostream& stream) const {
+  stream << std::format("Round {}:", Round) << std::endl << GameInstance;
 }
 
-void GameMaster::Render() const {
+void GameMaster::Render(std::ostream& stream) const {
   switch (GameMasterPrintType) {
     case PrintType::Board:
-      PrintBoard();
+      PrintBoard(stream);
       break;
 
     case PrintType::Data:
-      PrintData();
+      PrintData(stream);
       break;
 
     case PrintType::Wins: {
       const std::optional<Color> winner = IsFinished();
       if (winner) {
-        std::cout << "Winner: " << winner.value() << std::endl;
+        stream << "Winner: " << winner.value() << std::endl;
       }
 
       break;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <stack>
 
@@ -22,7 +23,7 @@ class GameMaster {
              std::unique_ptr<Strategy::Strategy> bluePlayer,
              std::array<Game::Card, CARD_COUNT> cards);
 
-  void Render() const;
+  void Render(std::ostream& stream = std::cout) const;
   void Update();
   std::optional<Color> IsFinished() const;
 
@@ -40,6 +41,6 @@ class GameMaster {
   size_t Round = 1;
   std::stack<Game::Move> MoveHistory;
 
-  void PrintData() const;
-  void PrintBoard() const;
+  void PrintData(std::ostream& stream = std::cout) const;
+  void PrintBoard(std::ostream& stream = std::cout) const;
 };
