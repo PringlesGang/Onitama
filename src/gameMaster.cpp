@@ -45,6 +45,19 @@ void GameMaster::Render() const {
     case PrintType::Data:
       PrintData();
       break;
+
+    case PrintType::Wins: {
+      const std::optional<Color> winner = IsFinished();
+      if (winner) {
+        std::cout << "Winner: " << winner.value() << std::endl;
+      }
+
+      break;
+    }
+
+    case PrintType::None:
+    default:
+      break;
   }
 }
 

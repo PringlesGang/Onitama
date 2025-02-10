@@ -7,8 +7,10 @@
 #include "strategies/strategy.h"
 
 enum class PrintType {
+  None,
   Board,
   Data,
+  Wins,
 };
 
 class GameMaster {

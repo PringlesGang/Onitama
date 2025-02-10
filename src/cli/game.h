@@ -30,6 +30,7 @@ class GameCommand : public Command {
 
  private:
   static bool ParseCards(std::istringstream& command, GameArgs& args);
+  static bool ParsePrintType(std::istringstream& command, GameArgs& args);
   static bool ParseOptionalArgs(std::istringstream& command, GameArgs& args);
 };
 

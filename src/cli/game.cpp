@@ -9,6 +9,8 @@
 namespace Cli {
 
 void ExecuteGame(const GameArgs args) {
+  std::pair<size_t, size_t> wins;
+
   for (size_t game = 1; game <= args.RepeatCount; game++) {
     std::unique_ptr<GameMaster> master;
 
@@ -33,7 +35,21 @@ void ExecuteGame(const GameArgs args) {
     } while (!master->IsFinished());
     master->Render();
 
+    if (master->IsFinished().value() == Color::Red) {
+      wins.first++;
+    } else {
+      wins.second++;
+    }
+
     std::cout << std::endl << std::endl;
+  }
+
+  if (args.GameArgsPrintType == PrintType::Wins) {
+    std::cout << std::format("Red won {}/{} games; blue won {}/{} games.",
+                             wins.first, args.RepeatCount, wins.second,
+                             args.RepeatCount)
+              << std::endl
+              << std::endl;
   }
 }
 
@@ -45,7 +61,7 @@ std::string GameCommand::GetCommand() const {
       "(--duplicate-cards) "
       "(--repeat repeat_count) "
       "(--cards set_aside r1 r2 b1 b2) "
-      "(--data)",
+      "(--print-type type)",
       GetName());
 }
 
@@ -60,7 +76,7 @@ std::string GameCommand::GetHelp() const {
          "By default, the random cards do not allow for repeats. "
          "`--duplicate-cards` suppresses this.\n"
 
-         "Use `--data` to only print csv data.";
+         "Use `--print-type` to specify in what output the game should give.";
 }
 
 std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
@@ -95,6 +111,30 @@ bool GameCommand::ParseCards(std::istringstream& command, GameArgs& args) {
   return true;
 }
 
+bool GameCommand::ParsePrintType(std::istringstream& command, GameArgs& args) {
+  std::string arg;
+
+  if (!(command >> arg)) {
+    std::cout << "Failed to parse print type!" << std::endl;
+    return false;
+  }
+
+  if (arg == "board") {
+    args.GameArgsPrintType = PrintType::Board;
+  } else if (arg == "data") {
+    args.GameArgsPrintType = PrintType::Data;
+  } else if (arg == "wins") {
+    args.GameArgsPrintType = PrintType::Wins;
+  } else if (arg == "none") {
+    args.GameArgsPrintType = PrintType::None;
+  } else {
+    std::cout << std::format("Unknown print type \"{}\"", arg) << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 bool GameCommand::ParseOptionalArgs(std::istringstream& command,
                                     GameArgs& args) {
   std::string arg;
@@ -111,8 +151,8 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
     args.RepeatCards = true;
   } else if (arg == "--cards" || arg == "-c") {
     if (!ParseCards(command, args)) return false;
-  } else if (arg == "--data" || arg == "-d") {
-    args.GameArgsPrintType = PrintType::Data;
+  } else if (arg == "--print-type" || arg == "-p") {
+    if (!ParsePrintType(command, args)) return false;
   } else {
     Unparse(command, arg);
     return true;
