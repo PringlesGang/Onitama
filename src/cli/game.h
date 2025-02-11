@@ -19,7 +19,11 @@ struct GameArgs {
   std::optional<std::array<Game::Card, CARD_COUNT>> Cards;
 };
 
-void ExecuteGame(const GameArgs args);
+struct ExecuteGameInfo {
+  std::pair<size_t, size_t> Wins;
+};
+
+ExecuteGameInfo ExecuteGame(const GameArgs args);
 
 class GameCommand : public Command {
  public:

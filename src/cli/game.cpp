@@ -31,8 +31,9 @@ static Color RunGame(const GameArgs args, std::ostream* stream) {
   return master->IsFinished().value();
 }
 
-void ExecuteGame(const GameArgs args) {
-  std::pair<size_t, size_t> wins;
+ExecuteGameInfo ExecuteGame(const GameArgs args) {
+  ExecuteGameInfo info{};
+  const bool print = args.GameArgsPrintType != PrintType::None;
 
   if (args.Multithread) {
     std::vector<std::stringstream> streams;
@@ -47,20 +48,22 @@ void ExecuteGame(const GameArgs args) {
 
     for (size_t game = 0; game < args.RepeatCount; game++) {
       if (futures[game].get() == Color::Red) {
-        wins.first++;
+        info.Wins.first++;
       } else {
-        wins.second++;
+        info.Wins.second++;
       }
 
-      if (args.RepeatCount > 1) {
-        std::cout << std::format("Game {}/{}:", game + 1, args.RepeatCount)
-                  << std::endl;
+      if (print) {
+        if (args.RepeatCount > 1) {
+          std::cout << std::format("Game {}/{}:", game + 1, args.RepeatCount)
+                    << std::endl;
+        }
+        std::cout << streams[game].str() << std::endl;
       }
-      std::cout << streams[game].str() << std::endl;
     }
   } else {
     for (size_t game = 1; game <= args.RepeatCount; game++) {
-      if (args.RepeatCount > 1) {
+      if (print && args.RepeatCount > 1) {
         std::cout << std::format("Game {}/{}:", game, args.RepeatCount)
                   << std::endl;
       }
@@ -68,22 +71,24 @@ void ExecuteGame(const GameArgs args) {
       const Color winner = RunGame(args, &std::cout);
 
       if (winner == Color::Red) {
-        wins.first++;
+        info.Wins.first++;
       } else {
-        wins.second++;
+        info.Wins.second++;
       }
 
-      std::cout << std::endl;
+      if (print) std::cout << std::endl;
     }
   }
 
   if (args.GameArgsPrintType == PrintType::Wins) {
     std::cout << std::format("Red won {}/{} games; blue won {}/{} games.",
-                             wins.first, args.RepeatCount, wins.second,
-                             args.RepeatCount)
+                             info.Wins.first, args.RepeatCount,
+                             info.Wins.second, args.RepeatCount)
               << std::endl
               << std::endl;
   }
+
+  return info;
 }
 
 std::string GameCommand::GetName() const { return "game"; }

@@ -36,16 +36,23 @@ void Execute(size_t repeatCount) {
   std::vector<std::array<Game::Card, CARD_COUNT>> combinations =
       GetCombinations();
 
+  // Print header
+  std::cout << std::format("Fair cards experiment with repeat count {}:",
+                           repeatCount)
+            << std::endl;
+  std::cout << "co. num, co. count, ";
+  for (size_t i = 1; i <= CARD_COUNT; i++)
+    std::cout << std::format("crd{}, ", i);
+  std::cout << "red wins, blue wins" << std::endl;
+
   size_t combinationNumber = 0;
   for (std::array<Game::Card, CARD_COUNT> cards : combinations) {
-    std::cout << std::format("Combination {}/{}:", ++combinationNumber,
-                             combinations.size())
-              << std::endl;
+    std::cout << std::format("{:04d}, {}, ", ++combinationNumber,
+                             combinations.size());
 
     for (Game::Card card : cards) {
       std::cout << std::format("{}, ", card.GetName());
     }
-    std::cout << std::endl << std::endl;
 
     Cli::GameArgs args{
         .RedStrategy = [] { return std::make_unique<Strategy::Random>(); },
@@ -54,15 +61,14 @@ void Execute(size_t repeatCount) {
         .RepeatCount = repeatCount,
         .Multithread = true,
 
-        .GameArgsPrintType = PrintType::Wins,
+        .GameArgsPrintType = PrintType::None,
 
         .Cards = cards,
     };
 
-    Cli::ExecuteGame(args);
+    Cli::ExecuteGameInfo info = Cli::ExecuteGame(args);
 
-    std::cout << "========================================================="
-              << std::endl
+    std::cout << std::format("{}, {}", info.Wins.first, info.Wins.second)
               << std::endl;
   }
 }
