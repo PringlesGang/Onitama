@@ -63,9 +63,9 @@ WinState MinMax::PlayRecursive(Game::Game game, const size_t depth) const {
   WinState best = WinState::Lost;
   for (const Game::Move move : moves) {
     Game::Game nextState = Game::Game(game);
-    game.DoMove(move);
+    nextState.DoMove(move);
 
-    best = std::max(-PlayRecursive(game, depth + 1), best);
+    best = std::max(-PlayRecursive(std::move(nextState), depth + 1), best);
   }
 
   return best;
