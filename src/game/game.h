@@ -34,7 +34,7 @@ class Game {
   Card GetSetAsideCard() const { return SetAsideCard; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
 
-  std::unordered_set<Move> GetValidMoves() const { return ValidMoves; };
+  const std::unordered_set<Move>& GetValidMoves() const { return ValidMoves; };
   std::optional<std::string> IsInvalidMove(const Move move) const;
   bool IsValidMoveFast(const Move move) const;
   std::optional<Color> IsFinished() const { return GameBoard.IsFinished(); }

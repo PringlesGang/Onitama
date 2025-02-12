@@ -8,17 +8,21 @@ namespace Strategy {
 MonteCarlo::MonteCarlo(size_t repeatCount) : RepeatCount(repeatCount) {}
 
 Game::Move MonteCarlo::GetMove(const Game::Game& game) {
-  std::unordered_set<Game::Move> validMoves = game.GetValidMoves();
+  const bool validMoveExists = !game.GetValidMoves().empty();
 
-  if (validMoves.empty()) {
+  std::unordered_set<Game::Move> cardMoves;
+  if (!validMoveExists) {
     for (Game::Card card : game.GetCurrentHand()) {
-      validMoves.insert(Game::Move{
+      cardMoves.insert(Game::Move{
           .PawnId = 0,
           .UsedCard = card,
           .OffsetId = 0,
       });
     }
   }
+
+  const std::unordered_set<Game::Move>& validMoves =
+      validMoveExists ? game.GetValidMoves() : cardMoves;
 
   Game::Move bestMove;
   size_t bestMoveWinCount = 0;

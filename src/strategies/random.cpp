@@ -5,7 +5,7 @@ namespace Strategy {
 Random::Random() : Generator(RandomDevice()) {}
 
 Game::Move Random::GetMove(const Game::Game& game) {
-  const std::unordered_set validMoves = game.GetValidMoves();
+  const std::unordered_set<Game::Move>& validMoves = game.GetValidMoves();
   const size_t moveCount = validMoves.empty() ? HAND_SIZE : validMoves.size();
 
   std::uniform_int_distribution<size_t> randomMove(0, moveCount - 1);

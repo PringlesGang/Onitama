@@ -28,7 +28,7 @@ class Board {
   std::optional<Tile> GetTile(const Coordinate coordinate) const;
   std::optional<std::span<const Tile, BOARD_DIMENSIONS>> GetRow(
       const size_t row) const;
-  std::vector<Coordinate> GetPieceCoordinates(const Color color) const;
+  const std::vector<Coordinate>& GetPieceCoordinates(const Color color) const;
 
   bool OnBoard(const std::optional<const Coordinate> coordinate) const;
   std::optional<Color> IsFinished() const;

@@ -19,7 +19,7 @@ MinMax::MinMax(const std::optional<const size_t> maxDepth)
     : MaxDepth(maxDepth) {}
 
 Game::Move MinMax::GetMove(const Game::Game& game) {
-  const std::unordered_set<Game::Move> moves = game.GetValidMoves();
+  const std::unordered_set<Game::Move>& moves = game.GetValidMoves();
 
   std::vector<std::pair<Game::Move, std::future<WinState>>> futures;
   futures.reserve(moves.size());
@@ -58,10 +58,10 @@ WinState MinMax::PlayRecursive(Game::Game game, const size_t depth) const {
                                                      : WinState::Lost;
   }
 
-  const std::unordered_set<Game::Move> moves = game.GetValidMoves();
+  const std::unordered_set<Game::Move>& moves = game.GetValidMoves();
 
   WinState best = WinState::Lost;
-  for (Game::Move move : moves) {
+  for (const Game::Move move : moves) {
     Game::Game nextState = Game::Game(game);
     game.DoMove(move);
 

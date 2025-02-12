@@ -78,7 +78,7 @@ std::span<const Card, HAND_SIZE> Game::GetCurrentHand() const {
 }
 
 void Game::SetValidMoves() {
-  const std::vector<Coordinate> pieceLocations =
+  const std::vector<Coordinate>& pieceLocations =
       GameBoard.GetPieceCoordinates(CurrentPlayer);
 
   const std::span<const Card, HAND_SIZE>& hand =
@@ -105,7 +105,7 @@ void Game::SetValidMoves() {
 }
 
 bool Game::IsValidMove(const Move move) const {
-  const std::vector<Coordinate> pawnLocations =
+  const std::vector<Coordinate>& pawnLocations =
       GameBoard.GetPieceCoordinates(CurrentPlayer);
   if (move.PawnId >= pawnLocations.size()) return false;
 
@@ -130,7 +130,7 @@ bool Game::IsValidMove(const Move move) const {
 std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   if (IsValidMoveFast(move)) return std::nullopt;
 
-  const std::vector<Coordinate> pawnLocations =
+  const std::vector<Coordinate>& pawnLocations =
       GameBoard.GetPieceCoordinates(CurrentPlayer);
   if (move.PawnId >= pawnLocations.size()) return "Pawn does not exist!";
 

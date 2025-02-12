@@ -78,7 +78,8 @@ std::optional<std::span<const Tile, BOARD_DIMENSIONS>> Board::GetRow(
                                                  BOARD_DIMENSIONS);
 }
 
-std::vector<Coordinate> Board::GetPieceCoordinates(const Color color) const {
+const std::vector<Coordinate>& Board::GetPieceCoordinates(
+    const Color color) const {
   switch (color) {
     case Color::Blue:
       return BlueLocations;
