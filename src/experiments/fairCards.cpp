@@ -32,7 +32,7 @@ static std::vector<std::array<Game::Card, CARD_COUNT>> GetCombinations() {
   return combinations;
 }
 
-void Execute(size_t repeatCount) {
+void Execute(const size_t repeatCount, const Cli::StrategyFactory strategy) {
   std::vector<std::array<Game::Card, CARD_COUNT>> combinations =
       GetCombinations();
 
@@ -55,8 +55,8 @@ void Execute(size_t repeatCount) {
     }
 
     Cli::GameArgs args{
-        .RedStrategy = [] { return std::make_unique<Strategy::Random>(); },
-        .BlueStrategy = [] { return std::make_unique<Strategy::Random>(); },
+        .RedStrategy = strategy,
+        .BlueStrategy = strategy,
 
         .RepeatCount = repeatCount,
         .Multithread = true,
@@ -87,7 +87,11 @@ std::optional<Cli::Thunk> Parse(std::istringstream& command) {
     return std::nullopt;
   }
 
-  return [repeatCount] { return Execute(repeatCount); };
+  const std::optional<Cli::StrategyFactory> strategy =
+      Cli::ParseStrategy(command);
+  if (!strategy) return std::nullopt;
+
+  return [repeatCount, strategy] { return Execute(repeatCount, *strategy); };
 }
 
 }  // namespace FairCards
