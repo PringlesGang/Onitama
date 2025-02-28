@@ -16,10 +16,12 @@ enum class PrintType {
 
 class GameMaster {
  public:
-  GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+  GameMaster(const size_t width, const size_t height,
+             std::unique_ptr<Strategy::Strategy> redPlayer,
              std::unique_ptr<Strategy::Strategy> bluePlayer,
              bool repeatCards = false);
-  GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+  GameMaster(const size_t width, const size_t height,
+             std::unique_ptr<Strategy::Strategy> redPlayer,
              std::unique_ptr<Strategy::Strategy> bluePlayer,
              std::array<Game::Card, CARD_COUNT> cards);
 

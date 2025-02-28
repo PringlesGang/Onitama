@@ -17,15 +17,14 @@ namespace Game {
 
 class Game {
  public:
-  Game(std::array<Card, CARD_COUNT> cards);
+  Game(const size_t width, const size_t height,
+       std::array<Card, CARD_COUNT> cards);
 
   Game(const Game& other);
   Game(Game&& other);
 
-  Game& operator=(const Game& other);
-  Game& operator=(Game&& other);
-
-  static Game WithRandomCards(const bool repeatCards = false);
+  static Game WithRandomCards(const size_t width, const size_t height,
+                              const bool repeatCards = false);
 
   const Board& GetBoard() const { return GameBoard; }
   std::span<const Card, CARD_COUNT> GetCards() const { return Cards; }
@@ -33,6 +32,11 @@ class Game {
   std::span<const Card, HAND_SIZE> GetCurrentHand() const;
   Card GetSetAsideCard() const { return SetAsideCard; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
+
+  size_t GetPawnCount() const { return GetPawnCount(CurrentPlayer); }
+  size_t GetPawnCount(const Color color) const {
+    return GameBoard.GetPieceCoordinates(color).size();
+  }
 
   const std::unordered_set<Move>& GetValidMoves() const { return ValidMoves; };
   std::optional<std::string> IsInvalidMove(const Move move) const;

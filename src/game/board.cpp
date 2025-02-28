@@ -1,6 +1,7 @@
 #include "board.h"
 
 #include <algorithm>
+#include <cassert>
 #include <format>
 
 #include "../util/ansiColor.h"
@@ -24,19 +25,27 @@ std::ostream& operator<<(std::ostream& stream, const Tile& tile) {
   return ColorPiece(stream, *tile) << character << AnsiColor::Reset();
 }
 
-Board::Board() { Reset(); }
+Board::Board(const size_t width, const size_t height)
+    : Width(width), Height(height), Grid(width * height) {
+  Reset();
+}
 
-Board::Board(const std::array<Tile, BOARD_SIZE>& grid) : Grid(grid) {
+Board::Board(const std::vector<Tile>& grid, const size_t width,
+             const size_t height)
+    : Grid(grid), Width(width), Height(height) {
+  assert(Width * Height == grid.size());
   SetPieceCoordinates();
 }
 
 void Board::Reset() {
-  constexpr size_t temple = BOARD_DIMENSIONS / 2;
+  const size_t temple = Width / 2;
 
-  for (size_t x = 0; x < BOARD_DIMENSIONS; x++) {
-    (*this)[0][x].emplace(TopPlayer, x == temple);
-    (*this)[BOARD_DIMENSIONS - 1][x].emplace(~TopPlayer, x == temple);
-    for (size_t y = 1; y < BOARD_DIMENSIONS - 1; y++) (*this)[y][x].reset();
+  for (size_t x = 0; x < Width; x++) {
+    Grid[GetTileId(Coordinate{x, 0})].emplace(TopPlayer, x == temple);
+    Grid[GetTileId(Coordinate{x, Height - 1})].emplace(~TopPlayer, x == temple);
+
+    for (size_t y = 1; y < Height - 1; y++)
+      Grid[GetTileId(Coordinate{x, y})].reset();
   }
 
   SetPieceCoordinates();
@@ -67,15 +76,13 @@ bool Board::DoMove(const Coordinate source, const Offset offset) {
 std::optional<Tile> Board::GetTile(const Coordinate coordinate) const {
   if (!OnBoard(coordinate)) return std::nullopt;
 
-  return Grid[coordinate.y * BOARD_DIMENSIONS + coordinate.x];
+  return GetTileUnchecked(coordinate);
 }
 
-std::optional<std::span<const Tile, BOARD_DIMENSIONS>> Board::GetRow(
-    const size_t row) const {
-  if (row >= BOARD_DIMENSIONS) return std::nullopt;
+std::optional<std::span<const Tile>> Board::GetRow(const size_t row) const {
+  if (row >= Height) return std::nullopt;
 
-  return std::span<const Tile, BOARD_DIMENSIONS>(&Grid[row * BOARD_DIMENSIONS],
-                                                 BOARD_DIMENSIONS);
+  return std::span<const Tile>(&Grid[row * Width], Width);
 }
 
 const std::vector<Coordinate>& Board::GetPieceCoordinates(
@@ -122,7 +129,7 @@ void Board::SetPieceCoordinates() {
     }
 
     x++;
-    if (x == BOARD_DIMENSIONS) {
+    if (x == Width) {
       x = 0;
       y++;
     }
@@ -130,40 +137,37 @@ void Board::SetPieceCoordinates() {
 }
 
 bool Board::OnBoard(const std::optional<const Coordinate> coordinate) const {
-  return coordinate && coordinate->x < BOARD_DIMENSIONS &&
-         coordinate->y < BOARD_DIMENSIONS;
+  return coordinate && coordinate->x < Width && coordinate->y < Height;
 }
 
 std::optional<Color> Board::IsFinished() const {
   if (RedMasterCaptured) return Color::Blue;
   if (BlueMasterCaptured) return Color::Red;
 
-  constexpr size_t temple = BOARD_DIMENSIONS / 2;
-  if (RedLocations[0] == Coordinate(temple, BOARD_DIMENSIONS - 1))
-    return Color::Red;
+  const size_t temple = Width / 2;
+  if (RedLocations[0] == Coordinate(temple, Height - 1)) return Color::Red;
   if (BlueLocations[0] == Coordinate(temple, 0)) return Color::Blue;
 
   return std::nullopt;
 }
 
 Tile& Board::operator[](const Coordinate coordinate) {
-  return Grid[coordinate.y * BOARD_DIMENSIONS + coordinate.x];
+  return Grid[coordinate.y * Width + coordinate.x];
 }
 
-std::span<Tile, BOARD_DIMENSIONS> Board::operator[](const size_t row) {
-  return std::span<Tile, BOARD_DIMENSIONS>(&Grid[row * BOARD_DIMENSIONS],
-                                           BOARD_DIMENSIONS);
+std::span<Tile> Board::operator[](const size_t row) {
+  return std::span<Tile>(&Grid[row * Width], Width);
 }
 
 std::ostream& operator<<(std::ostream& stream,
-                         const std::span<const Tile, BOARD_DIMENSIONS> row) {
+                         const std::span<const Tile> row) {
   for (const Tile& tile : row) stream << tile;
   return stream;
 }
 
 std::ostream& operator<<(std::ostream& stream, const Board& board) {
   stream << std::endl;
-  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+  for (size_t row = 0; row < board.Height; row++) {
     stream << *board.GetRow(row) << std::endl;
   }
 
@@ -189,7 +193,7 @@ std::ostream& Board::StreamPlayer(std::ostream& stream,
   stream << std::endl;
   size_t pawnIndex = 0;
 
-  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+  for (size_t row = 0; row < Height; row++) {
     StreamPlayerRow(stream, player, row, pawnIndex);
     stream << std::endl;
   }

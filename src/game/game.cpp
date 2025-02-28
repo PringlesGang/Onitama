@@ -7,8 +7,11 @@
 
 namespace Game {
 
-Game::Game(std::array<Card, CARD_COUNT> cards)
-    : Cards(cards), GameBoard(), CurrentPlayer(cards[0].GetColor()) {
+Game::Game(const size_t width, const size_t height,
+           std::array<Card, CARD_COUNT> cards)
+    : Cards(cards),
+      GameBoard(width, height),
+      CurrentPlayer(cards[0].GetColor()) {
   SetValidMoves();
 }
 
@@ -24,25 +27,8 @@ Game::Game(Game&& other)
       CurrentPlayer(std::move(other.CurrentPlayer)),
       ValidMoves(std::move(other.ValidMoves)) {}
 
-Game& Game::operator=(const Game& other) {
-  GameBoard = other.GameBoard;
-  Cards = other.Cards;
-  CurrentPlayer = other.CurrentPlayer;
-  ValidMoves = other.ValidMoves;
-
-  return *this;
-}
-
-Game& Game::operator=(Game&& other) {
-  GameBoard = std::move(other.GameBoard);
-  Cards = std::move(other.Cards);
-  CurrentPlayer = std::move(other.CurrentPlayer);
-  ValidMoves = std::move(other.ValidMoves);
-
-  return *this;
-}
-
-Game Game::WithRandomCards(const bool repeatCards) {
+Game Game::WithRandomCards(const size_t width, const size_t height,
+                           const bool repeatCards) {
   std::array<Card, CARD_COUNT> cards;
 
   std::random_device randomDevice;
@@ -57,7 +43,7 @@ Game Game::WithRandomCards(const bool repeatCards) {
              std::find(cards.begin(), cardIt, *cardIt) != cardIt);
   }
 
-  return Game(cards);
+  return Game(width, height, cards);
 }
 
 std::span<const Card, HAND_SIZE> Game::GetHand(const Color color) const {
@@ -199,7 +185,7 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   game.StreamHand(stream, topHand, true);
 
   size_t pawnIndex = 0;
-  for (size_t row = 0; row < BOARD_DIMENSIONS; row++) {
+  for (size_t row = 0; row < game.GameBoard.GetDimensions().second; row++) {
     game.GameBoard.StreamPlayerRow(stream, game.CurrentPlayer, row, pawnIndex);
     stream << "  ";
 

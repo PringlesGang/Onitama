@@ -10,6 +10,9 @@ struct GameArgs {
   StrategyFactory RedStrategy;
   StrategyFactory BlueStrategy;
 
+  size_t Width = 5;
+  size_t Height = 5;
+
   size_t RepeatCount = 1;
   bool RepeatCards = false;
   bool Multithread = false;

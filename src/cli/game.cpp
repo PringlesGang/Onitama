@@ -13,11 +13,13 @@ static Color RunGame(const GameArgs args, std::ostream* stream) {
   std::unique_ptr<GameMaster> master;
 
   if (args.Cards) {
-    master = std::make_unique<GameMaster>(args.RedStrategy(),
+    master = std::make_unique<GameMaster>(args.Width, args.Height,
+                                          args.RedStrategy(),
                                           args.BlueStrategy(), *args.Cards);
   } else {
     master = std::make_unique<GameMaster>(
-        args.RedStrategy(), args.BlueStrategy(), args.RepeatCards);
+        args.Width, args.Height, args.RedStrategy(), args.BlueStrategy(),
+        args.RepeatCards);
   }
 
   master->GameMasterPrintType = args.GameArgsPrintType;
@@ -99,14 +101,17 @@ std::string GameCommand::GetCommand() const {
       "(--duplicate-cards) "
       "(--repeat repeat_count) "
       "(--cards set_aside r1 r2 b1 b2) "
-      "(--print-type type) ",
-      "(--multithread)", GetName());
+      "(--print-type type) "
+      "(--multithread) "
+      "(--size width height)",
+      GetName());
 }
 
 std::string GameCommand::GetHelp() const {
   return "Plays a game with the provided strategies.\n"
 
          "If `--repeat` is supplied, the game is played `repeat_count` times.\n"
+         "With --multithread these games are run on different threads.\n"
 
          "With `--cards` the game cards can be specified. If not supplied, "
          "random cards will be chosen.\n"
@@ -114,7 +119,10 @@ std::string GameCommand::GetHelp() const {
          "By default, the random cards do not allow for repeats. "
          "`--duplicate-cards` suppresses this.\n"
 
-         "Use `--print-type` to specify in what output the game should give.";
+         "Use `--print-type` to specify in what output the game should give.\n"
+
+         "The size of the board can be altered using --size, "
+         "with a default of 5x5.";
 }
 
 std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
@@ -185,14 +193,35 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
       std::cout << "Failed to parse repeat count!" << std::endl;
       return false;
     }
+
   } else if (arg == "--duplicate-cards" || arg == "-d") {
     args.RepeatCards = true;
+
   } else if (arg == "--cards" || arg == "-c") {
     if (!ParseCards(command, args)) return false;
+
   } else if (arg == "--print-type" || arg == "-p") {
     if (!ParsePrintType(command, args)) return false;
+
   } else if (arg == "--multithread" || arg == "-m") {
     args.Multithread = true;
+
+  } else if (arg == "--size" || arg == "-s") {
+    if (!(command >> args.Width)) {
+      std::cout << "Failed to parse board width!" << std::endl;
+      return false;
+    }
+
+    if (!(command >> args.Height)) {
+      std::cout << "Failed to parse board height!" << std::endl;
+      return false;
+    }
+
+    if (args.Width < 1 || args.Height < 2) {
+      std::cout << "The board needs to be at least 1x2!" << std::endl;
+      return false;
+    }
+
   } else {
     Unparse(command, arg);
     return true;

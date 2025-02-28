@@ -4,19 +4,21 @@
 #include <iostream>
 #include <stdexcept>
 
-GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+GameMaster::GameMaster(const size_t width, const size_t height,
+                       std::unique_ptr<Strategy::Strategy> redPlayer,
                        std::unique_ptr<Strategy::Strategy> bluePlayer,
                        bool repeatCards)
     : RedPlayer(std::move(redPlayer)),
       BluePlayer(std::move(bluePlayer)),
-      GameInstance(Game::Game::WithRandomCards(repeatCards)) {}
+      GameInstance(Game::Game::WithRandomCards(width, height, repeatCards)) {}
 
-GameMaster::GameMaster(std::unique_ptr<Strategy::Strategy> redPlayer,
+GameMaster::GameMaster(const size_t width, const size_t height,
+                       std::unique_ptr<Strategy::Strategy> redPlayer,
                        std::unique_ptr<Strategy::Strategy> bluePlayer,
                        std::array<Game::Card, CARD_COUNT> cards)
     : RedPlayer(std::move(redPlayer)),
       BluePlayer(std::move(bluePlayer)),
-      GameInstance(Game::Game(cards)) {}
+      GameInstance(Game::Game(width, height, cards)) {}
 
 void GameMaster::PrintData(std::ostream& stream) const {
   if (MoveHistory.empty()) {

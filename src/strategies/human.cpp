@@ -51,7 +51,7 @@ std::optional<Game::Move> Human::ParseMove(std::istringstream& input,
   }
 
   const bool master = pawnId == 'm' || pawnId == 'M';
-  if (!master && (pawnId < '0' || pawnId >= '0' + BOARD_DIMENSIONS)) {
+  if (!master && (pawnId < '0' || pawnId >= '0' + game.GetPawnCount())) {
     std::cout << std::format("Invalid pawn ID \'{}\'!", pawnId) << std::endl;
     return std::nullopt;
   }
