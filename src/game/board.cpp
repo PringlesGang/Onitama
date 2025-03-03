@@ -37,31 +37,64 @@ Board::Board(const std::vector<Tile>& grid, const size_t width,
   SetPieceCoordinates();
 }
 
+Board::Board(const Board& other)
+    : Grid(other.Grid),
+      Width(other.Width),
+      Height(other.Height),
+      RedLocations(other.RedLocations),
+      BlueLocations(other.BlueLocations),
+      RedMasterCaptured(other.RedMasterCaptured),
+      BlueMasterCaptured(other.BlueMasterCaptured) {}
+
+Board::Board(Board&& other)
+    : Grid(std::move(other.Grid)),
+      Width(std::move(other.Width)),
+      Height(std::move(other.Height)),
+      RedLocations(std::move(other.RedLocations)),
+      BlueLocations(std::move(other.BlueLocations)),
+      RedMasterCaptured(std::move(other.RedMasterCaptured)),
+      BlueMasterCaptured(std::move(other.BlueMasterCaptured)) {}
+
 void Board::Reset() {
+  RedLocations.clear();
+  BlueLocations.clear();
+  RedMasterCaptured = false;
+  BlueMasterCaptured = false;
+
   const size_t temple = Width / 2;
+
+  std::vector<Coordinate>& topLocations = ColorToLocations.at(TopPlayer);
+  std::vector<Coordinate>& bottomLocations = ColorToLocations.at(~TopPlayer);
+
+  topLocations.emplace_back(Coordinate{temple, 0});
+  bottomLocations.emplace_back(Coordinate{temple, Height - 1});
 
   for (size_t x = 0; x < Width; x++) {
     Grid[GetTileId(Coordinate{x, 0})].emplace(TopPlayer, x == temple);
     Grid[GetTileId(Coordinate{x, Height - 1})].emplace(~TopPlayer, x == temple);
 
+    if (x != temple) {
+      topLocations.emplace_back(Coordinate{x, 0});
+      bottomLocations.emplace_back(Coordinate{x, Height - 1});
+    }
+
     for (size_t y = 1; y < Height - 1; y++)
       Grid[GetTileId(Coordinate{x, y})].reset();
   }
-
-  SetPieceCoordinates();
 }
 
 bool Board::DoMove(const Coordinate source, const Offset offset) {
-  // Check whether destination is on the board
+  if (!OnBoard(source)) return false;
+
   std::optional<Coordinate> destination = source.try_add(offset);
   if (!OnBoard(destination)) return false;
 
   // Check whether the source tile is a pawn
-  Tile& srcTile = (*this)[source];
+  Tile& srcTile = Grid[GetTileId(source)];
   if (!srcTile) return false;
 
   // Check whether the destination tile isn't a pawn of the same color
-  Tile& destTile = (*this)[*destination];
+  Tile& destTile = Grid[GetTileId(destination.value())];
   if (destTile && destTile->Team == srcTile->Team) return false;
 
   // Perform move
@@ -85,20 +118,6 @@ std::optional<std::span<const Tile>> Board::GetRow(const size_t row) const {
   return std::span<const Tile>(&Grid[row * Width], Width);
 }
 
-const std::vector<Coordinate>& Board::GetPieceCoordinates(
-    const Color color) const {
-  switch (color) {
-    case Color::Blue:
-      return BlueLocations;
-    case Color::Red:
-      return RedLocations;
-
-    default:
-      size_t colorNum = (size_t)color;
-      throw std::runtime_error(std::format("Invalid color {}", colorNum));
-  }
-}
-
 void Board::SetPieceCoordinates() {
   RedLocations.clear();
   BlueLocations.clear();
@@ -110,8 +129,7 @@ void Board::SetPieceCoordinates() {
 
   for (const std::optional<Piece> tile : Grid) {
     if (tile) {
-      std::vector<Coordinate>& locations =
-          tile->Team == Color::Red ? RedLocations : BlueLocations;
+      std::vector<Coordinate>& locations = ColorToLocations.at(tile->Team);
 
       // Place master in the front
       if (tile->Master) {
@@ -145,14 +163,12 @@ std::optional<Color> Board::IsFinished() const {
   if (BlueMasterCaptured) return Color::Red;
 
   const size_t temple = Width / 2;
-  if (RedLocations[0] == Coordinate(temple, Height - 1)) return Color::Red;
-  if (BlueLocations[0] == Coordinate(temple, 0)) return Color::Blue;
+  if (ColorToLocations.at(TopPlayer)[0] == Coordinate{temple, Height - 1})
+    return TopPlayer;
+  if (ColorToLocations.at(~TopPlayer)[0] == Coordinate{temple, 0})
+    return ~TopPlayer;
 
   return std::nullopt;
-}
-
-Tile& Board::operator[](const Coordinate coordinate) {
-  return Grid[coordinate.y * Width + coordinate.x];
 }
 
 std::span<Tile> Board::operator[](const size_t row) {

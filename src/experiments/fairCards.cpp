@@ -29,7 +29,7 @@ static std::vector<std::array<Game::Card, CARD_COUNT>> GetCombinations() {
   std::vector<std::array<Game::Card, CARD_COUNT>> combinations;
   AddCombinations(combinations, std::array<Game::Card, CARD_COUNT>(), 0);
 
-  return combinations;
+  return std::move(combinations);
 }
 
 void Execute(const size_t repeatCount, const Cli::StrategyFactory strategy) {

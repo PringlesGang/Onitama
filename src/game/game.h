@@ -5,6 +5,7 @@
 #include <ostream>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "../constants.h"
@@ -28,27 +29,38 @@ class Game {
 
   const Board& GetBoard() const { return GameBoard; }
   std::span<const Card, CARD_COUNT> GetCards() const { return Cards; }
-  std::span<const Card, HAND_SIZE> GetHand(const Color color) const;
-  std::span<const Card, HAND_SIZE> GetCurrentHand() const;
+  std::span<const Card, HAND_SIZE> GetHand(const Color color) const {
+    return ColorToHand.at(color);
+  }
+  std::span<const Card, HAND_SIZE> GetHand() const {
+    return GetHand(CurrentPlayer);
+  }
   Card GetSetAsideCard() const { return SetAsideCard; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
 
+  const std::vector<Coordinate>& GetPawnCoordinates() const {
+    return GetPawnCoordinates(CurrentPlayer);
+  }
+  const std::vector<Coordinate>& GetPawnCoordinates(Color color) const {
+    return GameBoard.GetPawnCoordinates(color);
+  }
+
   size_t GetPawnCount() const { return GetPawnCount(CurrentPlayer); }
   size_t GetPawnCount(const Color color) const {
-    return GameBoard.GetPieceCoordinates(color).size();
+    return GameBoard.GetPawnCoordinates(color).size();
   }
 
   const std::unordered_set<Move>& GetValidMoves() const { return ValidMoves; };
   bool HasValidMoves() const { return HasValidMovesVal; }
   std::optional<std::string> IsInvalidMove(const Move move) const;
-  bool IsValidMoveFast(const Move move) const;
+  bool IsValidMove(const Move move) const { return ValidMoves.contains(move); }
   std::optional<Color> IsFinished() const { return GameBoard.IsFinished(); }
   bool DoMove(const Move move);
 
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
 
  private:
-  bool IsValidMove(const Move move) const;
+  bool CheckIsValidMove(const Move move) const;
   void SetValidMoves();
 
   Board GameBoard;
@@ -56,10 +68,11 @@ class Game {
   Color CurrentPlayer;
 
   Card& SetAsideCard = Cards[0];
-  const std::span<Card, HAND_SIZE> RedHand =
-      std::span<Card, HAND_SIZE>(&Cards[1], HAND_SIZE);
-  const std::span<Card, HAND_SIZE> BlueHand =
-      std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE);
+  const std::unordered_map<Color, std::span<Card, HAND_SIZE>> ColorToHand = {
+      {Color::Red, std::span<Card, HAND_SIZE>(&Cards[1], HAND_SIZE)},
+      {Color::Blue,
+       std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE)},
+  };
 
   std::unordered_set<Move> ValidMoves;
   bool HasValidMovesVal;

@@ -75,7 +75,7 @@ std::optional<Game::Move> Human::ParseMove(std::istringstream& input,
     return std::nullopt;
   }
 
-  const size_t offsetCount = game.GetCurrentHand()[cardNum].GetMoves().size();
+  const size_t offsetCount = game.GetHand()[cardNum].GetMoves().size();
   if (offsetNum >= offsetCount) {
     std::cout << std::format("Pick an offset number between 0 and {}!",
                              offsetCount - 1)
@@ -84,7 +84,7 @@ std::optional<Game::Move> Human::ParseMove(std::istringstream& input,
   }
 
   const Game::Move move{.PawnId = (master ? size_t{0} : pawnId - '0'),
-                        .UsedCard = game.GetCurrentHand()[cardNum],
+                        .UsedCard = game.GetHand()[cardNum],
                         .OffsetId = offsetNum};
 
   const std::optional<const std::string> errorMsg = game.IsInvalidMove(move);
@@ -111,7 +111,7 @@ std::optional<Game::Move> Human::ParseCard(std::istringstream& input,
     return std::nullopt;
   }
 
-  return Game::Move{.UsedCard = game.GetCurrentHand()[cardNum]};
+  return Game::Move{.UsedCard = game.GetHand()[cardNum]};
 }
 
 std::optional<std::function<std::unique_ptr<Human>()>> Human::Parse(

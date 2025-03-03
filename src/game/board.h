@@ -3,6 +3,7 @@
 #include <optional>
 #include <ostream>
 #include <span>
+#include <unordered_map>
 #include <vector>
 
 #include "../constants.h"
@@ -20,6 +21,9 @@ class Board {
   Board(const size_t width, const size_t height);
   Board(const std::vector<Tile>& grid, const size_t width, const size_t height);
 
+  Board(const Board& other);
+  Board(Board&& other);
+
   void Reset();
   bool DoMove(const Coordinate source, const Offset offset);
 
@@ -28,9 +32,11 @@ class Board {
   }
   std::optional<Tile> GetTile(const Coordinate coordinate) const;
   std::optional<std::span<const Tile>> GetRow(const size_t row) const;
-  const std::vector<Coordinate>& GetPieceCoordinates(const Color color) const;
+  const std::vector<Coordinate>& GetPawnCoordinates(const Color color) const {
+    return ColorToLocations.at(color);
+  };
   const std::pair<size_t, size_t> GetDimensions() const {
-    return std::pair(Width, Height);
+    return {Width, Height};
   };
 
   bool OnBoard(const std::optional<const Coordinate> coordinate) const;
@@ -51,6 +57,10 @@ class Board {
   bool RedMasterCaptured = false;
   std::vector<Coordinate> BlueLocations;
   bool BlueMasterCaptured = false;
+  const std::unordered_map<Color, std::vector<Coordinate>&> ColorToLocations = {
+      {Color::Red, RedLocations},
+      {Color::Blue, BlueLocations},
+  };
 
   void SetPieceCoordinates();
 
@@ -62,7 +72,9 @@ class Board {
     return Grid[GetTileId(coordinate)];
   }
 
-  Tile& operator[](const Coordinate coordinate);
+  Tile& operator[](const Coordinate coordinate) {
+    return Grid[GetTileId(coordinate)];
+  };
   std::span<Tile> operator[](const size_t row);
 };
 
