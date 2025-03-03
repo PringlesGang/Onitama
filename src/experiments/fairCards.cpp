@@ -33,7 +33,7 @@ static std::vector<std::array<Game::Card, CARD_COUNT>> GetCombinations() {
 }
 
 void Execute(const size_t repeatCount, const Cli::StrategyFactory strategy) {
-  std::vector<std::array<Game::Card, CARD_COUNT>> combinations =
+  const std::vector<std::array<Game::Card, CARD_COUNT>> combinations =
       GetCombinations();
 
   // Print header
@@ -66,7 +66,7 @@ void Execute(const size_t repeatCount, const Cli::StrategyFactory strategy) {
         .Cards = cards,
     };
 
-    Cli::ExecuteGameInfo info = Cli::ExecuteGame(args);
+    const Cli::ExecuteGameInfo info = Cli::ExecuteGame(args);
 
     std::cout << std::format("{}, {}", info.Wins.first, info.Wins.second)
               << std::endl;

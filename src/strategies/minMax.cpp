@@ -33,16 +33,15 @@ Game::Move MinMax::GetMove(const Game::Game& game) {
                          std::move(nextState), 0));
   }
 
-  bool firstDone = false;
-  WinState bestMoveValue;
-  Game::Move bestMove;
+  WinState bestMoveValue = WinState::Lost;
+  Game::Move bestMove = *moves.begin();
 
   for (auto& [move, future] : futures) {
     const WinState value = -future.get();
-    if (!firstDone || value > bestMoveValue) {
+
+    if (value > bestMoveValue) {
       bestMoveValue = value;
       bestMove = move;
-      firstDone = true;
     }
   }
 
