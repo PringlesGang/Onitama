@@ -8,9 +8,9 @@ namespace Strategy {
 MonteCarlo::MonteCarlo(size_t repeatCount) : RepeatCount(repeatCount) {}
 
 Game::Move MonteCarlo::GetMove(const Game::Game& game) {
-  const std::unordered_set<Game::Move>& validMoves = game.GetValidMoves();
+  const std::vector<Game::Move>& validMoves = game.GetValidMoves();
 
-  Game::Move bestMove = *validMoves.begin();
+  Game::Move bestMove = validMoves[0];
   size_t bestMoveWinCount = 0;
 
   for (Game::Move move : validMoves) {

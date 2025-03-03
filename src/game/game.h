@@ -6,7 +6,6 @@
 #include <span>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "../constants.h"
 #include "../util/color.h"
@@ -50,10 +49,13 @@ class Game {
     return GameBoard.GetPawnCoordinates(color).size();
   }
 
-  const std::unordered_set<Move>& GetValidMoves() const { return ValidMoves; };
+  const std::vector<Move>& GetValidMoves() const { return ValidMoves; };
   bool HasValidMoves() const { return HasValidMovesVal; }
   std::optional<std::string> IsInvalidMove(const Move move) const;
-  bool IsValidMove(const Move move) const { return ValidMoves.contains(move); }
+  bool IsValidMove(const Move move) const {
+    return std::find(ValidMoves.begin(), ValidMoves.end(), move) !=
+           ValidMoves.end();
+  }
   std::optional<Color> IsFinished() const { return GameBoard.IsFinished(); }
   bool DoMove(const Move move);
 
@@ -74,7 +76,7 @@ class Game {
        std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE)},
   };
 
-  std::unordered_set<Move> ValidMoves;
+  std::vector<Move> ValidMoves;
   bool HasValidMovesVal;
 
   std::ostream& StreamHand(std::ostream& stream,

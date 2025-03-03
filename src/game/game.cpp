@@ -64,7 +64,7 @@ void Game::SetValidMoves() {
         };
 
         if (CheckIsValidMove(move)) {
-          ValidMoves.emplace(std::move(move));
+          ValidMoves.emplace_back(std::move(move));
         }
       }
     }
@@ -76,7 +76,7 @@ void Game::SetValidMoves() {
     ValidMoves.reserve(HAND_SIZE);
 
     for (Card card : GetHand()) {
-      ValidMoves.emplace(Move{.UsedCard = card});
+      ValidMoves.emplace_back(Move{.UsedCard = card});
     }
   }
 }
