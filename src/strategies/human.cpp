@@ -10,7 +10,7 @@ namespace Strategy {
 Game::Move Human::GetMove(const Game::Game& game) {
   std::optional<Game::Move> move;
 
-  if (game.GetValidMoves().size() > 0) {
+  if (game.HasValidMoves()) {
     do {
       std::cout << std::endl
                 << "Please enter your move (`{pawn ID} {card number} {offset "
@@ -39,7 +39,7 @@ Game::Move Human::GetMove(const Game::Game& game) {
     } while (!move);
   }
 
-  return *move;
+  return move.value();
 }
 
 std::optional<Game::Move> Human::ParseMove(std::istringstream& input,
@@ -75,6 +75,14 @@ std::optional<Game::Move> Human::ParseMove(std::istringstream& input,
     return std::nullopt;
   }
 
+  const size_t offsetCount = game.GetCurrentHand()[cardNum].GetMoves().size();
+  if (offsetNum >= offsetCount) {
+    std::cout << std::format("Pick an offset number between 0 and {}!",
+                             offsetCount - 1)
+              << std::endl;
+    return std::nullopt;
+  }
+
   const Game::Move move{.PawnId = (master ? size_t{0} : pawnId - '0'),
                         .UsedCard = game.GetCurrentHand()[cardNum],
                         .OffsetId = offsetNum};
@@ -103,11 +111,7 @@ std::optional<Game::Move> Human::ParseCard(std::istringstream& input,
     return std::nullopt;
   }
 
-  return Game::Move{
-      .PawnId = 0,
-      .UsedCard = game.GetCurrentHand()[cardNum],
-      .OffsetId = 0,
-  };
+  return Game::Move{.UsedCard = game.GetCurrentHand()[cardNum]};
 }
 
 std::optional<std::function<std::unique_ptr<Human>()>> Human::Parse(

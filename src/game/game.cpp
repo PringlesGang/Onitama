@@ -88,6 +88,16 @@ void Game::SetValidMoves() {
       }
     }
   }
+
+  // No valid moves; add cards
+  HasValidMovesVal = !ValidMoves.empty();
+  if (!HasValidMovesVal) {
+    ValidMoves.reserve(HAND_SIZE);
+
+    for (Card card : GetCurrentHand()) {
+      ValidMoves.emplace(Move{.UsedCard = card});
+    }
+  }
 }
 
 bool Game::IsValidMove(const Move move) const {

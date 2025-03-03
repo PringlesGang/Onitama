@@ -7,9 +7,9 @@
 namespace Game {
 
 struct Move {
-  size_t PawnId;
+  size_t PawnId = 0;
   Card UsedCard;
-  size_t OffsetId;
+  size_t OffsetId = 0;
 
   bool operator==(const Move& move) const;
 };
