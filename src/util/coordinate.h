@@ -10,7 +10,6 @@ struct Coordinate {
   Coordinate operator+(const Coordinate other) const;
   void operator+=(const Coordinate other);
   bool operator==(const Coordinate other) const;
-  void operator=(const Coordinate other);
 
   std::optional<Coordinate> try_add(const Offset direction) const;
 

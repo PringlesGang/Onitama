@@ -27,10 +27,11 @@ class GameMaster {
 
   void Render(std::ostream& stream = std::cout) const;
   void Update();
-  std::optional<Color> IsFinished() const;
+  std::optional<Color> IsFinished() const { return GameInstance.IsFinished(); }
 
   size_t GetRound() const { return Round; }
   const Game::Game& GetGame() const { return GameInstance; }
+  const std::stack<Game::Move>& GetMoveHistory() const { return MoveHistory; }
 
   PrintType GameMasterPrintType = PrintType::Board;
 

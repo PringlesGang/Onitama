@@ -85,7 +85,3 @@ void GameMaster::Update() {
     MoveHistory.push(move);
   }
 }
-
-std::optional<Color> GameMaster::IsFinished() const {
-  return GameInstance.IsFinished();
-}
