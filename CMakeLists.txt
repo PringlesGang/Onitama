@@ -18,6 +18,7 @@ set(Src
         src/util/color.cpp
         src/util/coordinate.cpp
         src/util/offset.cpp
+        src/util/winState.cpp
 
         src/strategies/human.cpp
         src/strategies/random.cpp
@@ -48,6 +49,7 @@ set(Header
         src/util/color.h
         src/util/coordinate.h
         src/util/offset.h
+        src/util/winState.h
 
         src/strategies/strategy.h
         src/strategies/human.h

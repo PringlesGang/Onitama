@@ -1,17 +1,11 @@
+#pragma once
+
 #include <functional>
 
+#include "../util/winState.h"
 #include "strategy.h"
 
 namespace Strategy {
-
-enum class WinState {
-  Lost = -1,
-  Unknown = 0,
-  Won = 1,
-};
-
-static WinState operator-(const WinState original);
-static bool operator<(const WinState lhs, const WinState rhs);
 
 class MinMax : public Strategy {
  public:
