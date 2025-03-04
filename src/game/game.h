@@ -49,6 +49,11 @@ class Game {
     return GameBoard.GetPawnCoordinates(color);
   }
 
+  bool MasterCaptured() const { return MasterCaptured(CurrentPlayer); }
+  bool MasterCaptured(Color color) const {
+    return GameBoard.MasterCaptured(color);
+  }
+
   size_t GetPawnCount() const { return GetPawnCount(CurrentPlayer); }
   size_t GetPawnCount(const Color color) const {
     return GameBoard.GetPawnCoordinates(color).size();

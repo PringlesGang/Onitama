@@ -38,6 +38,9 @@ class Board {
   const std::pair<size_t, size_t> GetDimensions() const {
     return {Width, Height};
   };
+  bool MasterCaptured(Color color) const {
+    return color == Color::Red ? RedMasterCaptured : BlueMasterCaptured;
+  }
 
   bool OnBoard(const std::optional<const Coordinate> coordinate) const;
   std::optional<Color> IsFinished() const;
