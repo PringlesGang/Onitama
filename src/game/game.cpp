@@ -48,6 +48,10 @@ Game Game::WithRandomCards(const size_t width, const size_t height,
   return Game(width, height, std::move(cards));
 }
 
+bool Game::operator==(const Game& other) const {
+  return std::hash<Game>{}(*this) == std::hash<Game>{}(other);
+}
+
 void Game::SetValidMoves() {
   const std::span<const Card, HAND_SIZE>& hand = GetHand();
 

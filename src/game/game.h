@@ -26,6 +26,8 @@ class Game {
   static Game WithRandomCards(const size_t width, const size_t height,
                               const bool repeatCards = false);
 
+  bool operator==(const Game& other) const;
+
   const Board& GetBoard() const { return GameBoard; }
   std::span<const Card, CARD_COUNT> GetCards() const { return Cards; }
   std::span<const Card, HAND_SIZE> GetHand(const Color color) const {
@@ -36,6 +38,9 @@ class Game {
   }
   Card GetSetAsideCard() const { return SetAsideCard; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
+  std::pair<size_t, size_t> GetDimensions() const {
+    return GameBoard.GetDimensions();
+  }
 
   const std::vector<Coordinate>& GetPawnCoordinates() const {
     return GetPawnCoordinates(CurrentPlayer);
@@ -85,3 +90,40 @@ class Game {
 };
 
 }  // namespace Game
+
+template <>
+struct std::hash<Game::Game> {
+  size_t operator()(const Game::Game& game) const noexcept {
+    constexpr size_t playerBitSize = 1;
+    const bool playerBit = game.GetCurrentPlayer() == TopPlayer;
+
+    constexpr size_t cardTypeBitLength = 4;
+    constexpr size_t cardOrderSize = cardTypeBitLength * (HAND_SIZE + 1);
+    size_t cardOrder = (size_t)game.GetSetAsideCard().Type;
+
+    const std::span<const Game::Card, HAND_SIZE> cards = game.GetHand();
+    for (const Game::Card card : cards) {
+      cardOrder = (cardOrder << cardTypeBitLength) | (size_t)card.Type;
+    }
+
+    constexpr size_t dimensionBitLength = 3;
+    size_t locations = 0;
+
+    const std::vector<Coordinate>& topLocations =
+        game.GetPawnCoordinates(TopPlayer);
+    for (const Coordinate location : topLocations) {
+      locations = (locations << dimensionBitLength * 2) |
+                  (location.x << dimensionBitLength) | location.y;
+    }
+
+    const std::vector<Coordinate>& bottomLocations =
+        game.GetPawnCoordinates(~TopPlayer);
+    for (const Coordinate location : bottomLocations) {
+      locations = (locations << dimensionBitLength * 2) |
+                  (location.x << dimensionBitLength) | location.y;
+    }
+
+    return (size_t)playerBit | (cardOrder << playerBitSize) |
+           (locations << (playerBitSize + cardOrderSize));
+  }
+};
