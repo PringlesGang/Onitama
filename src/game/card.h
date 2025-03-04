@@ -128,7 +128,7 @@ struct Card {
 
   bool operator==(const Card& other) const { return Type == other.Type; }
 
-  CardType Type = CardType(0);
+  CardType Type = CardType::CardTypeCount;
 
   std::ostream& StreamRow(std::ostream& stream, const int8_t row,
                           const bool rotate = false) const;

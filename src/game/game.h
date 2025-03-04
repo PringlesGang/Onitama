@@ -27,7 +27,9 @@ class Game {
 
   static Game WithRandomCards(const size_t width, const size_t height,
                               const bool repeatCards = false);
-  static Game FromHash(const size_t hash);
+  static Game FromHash(const size_t hash,
+                       const std::array<Card, CARD_COUNT>& cards,
+                       const size_t width, const size_t height);
 
   bool operator==(const Game& other) const;
 
