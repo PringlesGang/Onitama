@@ -133,9 +133,13 @@ std::optional<std::string> Game::IsInvalidMove(const Move move) const {
   return std::nullopt;
 }
 
-bool Game::DoMove(const Move move) {
+void Game::DoMove(const Move move) {
   if (HasValidMoves()) {
-    if (!IsValidMove(move)) return false;
+    if (!IsValidMove(move)) {
+      const std::string message =
+          IsInvalidMove(move).value_or("Attempted to perform invalid move!");
+      throw std::runtime_error(message);
+    }
 
     const Coordinate startCoordinate = GetPawnCoordinates()[move.PawnId];
     const Offset offset =
@@ -147,13 +151,12 @@ bool Game::DoMove(const Move move) {
   const std::span<Card, HAND_SIZE> hand = ColorToHand.at(CurrentPlayer);
   const auto usedCardIt = std::find(hand.begin(), hand.end(), move.UsedCard);
 
-  if (usedCardIt == hand.end()) return false;
+  if (usedCardIt == hand.end())
+    throw std::runtime_error("Attempted to discard non-owned card!");
   std::swap(SetAsideCard, *usedCardIt);
 
   CurrentPlayer = ~CurrentPlayer;
   SetValidMoves();
-
-  return true;
 }
 
 std::ostream& operator<<(std::ostream& stream, const Game& game) {

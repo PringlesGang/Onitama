@@ -25,7 +25,7 @@ class Board {
   Board(Board&& other);
 
   void Reset();
-  bool DoMove(const Coordinate source, const Offset offset);
+  void DoMove(const Coordinate source, const Offset offset);
 
   std::span<const Tile> GetGrid() const {
     return std::span<const Tile>(Grid.begin(), Width * Height);

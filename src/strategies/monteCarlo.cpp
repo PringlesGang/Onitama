@@ -18,7 +18,7 @@ Game::Move MonteCarlo::GetMove(const Game::Game& game) {
 
     for (size_t i = 0; i < RepeatCount; i++) {
       Game::Game nextState = Game::Game(game);
-      if (!nextState.DoMove(move)) continue;
+      nextState.DoMove(move);
 
       winCount += RunSimulation(nextState) == game.GetCurrentPlayer();
     }

@@ -62,7 +62,7 @@ class Game {
            ValidMoves.end();
   }
   std::optional<Color> IsFinished() const { return GameBoard.IsFinished(); }
-  bool DoMove(const Move move);
+  void DoMove(const Move move);
 
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
 

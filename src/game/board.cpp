@@ -83,27 +83,16 @@ void Board::Reset() {
   }
 }
 
-bool Board::DoMove(const Coordinate source, const Offset offset) {
-  if (!OnBoard(source)) return false;
+void Board::DoMove(const Coordinate source, const Offset offset) {
+  const Coordinate destination = source.try_add(offset).value();
 
-  std::optional<Coordinate> destination = source.try_add(offset);
-  if (!OnBoard(destination)) return false;
-
-  // Check whether the source tile is a pawn
   Tile& srcTile = Grid[GetTileId(source)];
-  if (!srcTile) return false;
+  Tile& destTile = Grid[GetTileId(destination)];
 
-  // Check whether the destination tile isn't a pawn of the same color
-  Tile& destTile = Grid[GetTileId(destination.value())];
-  if (destTile && destTile->Team == srcTile->Team) return false;
-
-  // Perform move
   if (destTile) destTile.reset();  // Capture
   srcTile.swap(destTile);
 
   SetPieceCoordinates();
-
-  return true;
 }
 
 std::optional<Tile> Board::GetTile(const Coordinate coordinate) const {

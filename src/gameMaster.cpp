@@ -80,8 +80,7 @@ void GameMaster::Update() {
       throw std::runtime_error(std::format("Invalid color {}", colorNum));
   }
 
-  if (GameInstance.DoMove(move)) {
-    Round++;
-    MoveHistory.push(move);
-  }
+  GameInstance.DoMove(move);
+  Round++;
+  MoveHistory.push(move);
 }

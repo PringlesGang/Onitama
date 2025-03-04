@@ -18,7 +18,7 @@ std::weak_ptr<const GameStateInfo> GameStateGraph::Add(Game::Game&& game) {
   const std::vector<Game::Move>& validMoves = game.GetValidMoves();
   for (const Game::Move move : validMoves) {
     Game::Game nextState(game);
-    if (!nextState.DoMove(move)) continue;
+    nextState.DoMove(move);
 
     // Traverse further
     std::shared_ptr<const GameStateInfo> nextInfo =
