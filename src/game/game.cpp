@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include <algorithm>
+#include <bit>
 #include <format>
 #include <random>
 #include <stdexcept>
@@ -12,6 +13,14 @@ Game::Game(const size_t width, const size_t height,
     : Cards(cards),
       GameBoard(width, height),
       CurrentPlayer(cards[0].GetColor()) {
+  SetValidMoves();
+}
+
+Game::Game(Board&& board, std::array<Card, CARD_COUNT>&& cards,
+           Color&& currentPlayer)
+    : GameBoard(std::move(board)),
+      Cards(std::move(cards)),
+      CurrentPlayer(std::move(currentPlayer)) {
   SetValidMoves();
 }
 
@@ -46,6 +55,47 @@ Game Game::WithRandomCards(const size_t width, const size_t height,
   }
 
   return Game(width, height, std::move(cards));
+}
+
+static constexpr size_t ReadBitMask(size_t& input, const size_t length) {
+  const size_t result = input & ((1 << length) - 1);
+  input >>= length;
+  return result;
+}
+
+Game Game::FromHash(size_t hash) {
+  // Current player
+  constexpr size_t playerSize = 1;
+  Color player = ReadBitMask(hash, playerSize) ? TopPlayer : ~TopPlayer;
+
+  // Card distribution
+  std::array<Card, CARD_COUNT> cards;
+  constexpr size_t cardSize =
+      std::bit_width((size_t)CardType::CardTypeCount - 1);
+  for (size_t card = 0; card < CARD_COUNT; card++) {
+    cards[card] = Card((CardType)ReadBitMask(hash, cardSize));
+  }
+
+  // Board dimensions
+  constexpr size_t dimensionSize = std::bit_width(MAX_DIMENSION);
+  const size_t width = ReadBitMask(hash, dimensionSize);
+  const size_t height = ReadBitMask(hash, dimensionSize);
+
+  // Pawn locations
+  const size_t coordinateSize = std::bit_width(width * height);
+  const size_t captured = width * height;
+
+  std::vector<Tile> grid(width * height);
+  for (size_t pawn = 0; pawn < width * 2; pawn++) {
+    const Color pawnColor = pawn < width ? TopPlayer : ~TopPlayer;
+    const size_t offset = ReadBitMask(hash, coordinateSize);
+
+    if (offset != captured)
+      grid[offset] = Piece{.Team = pawnColor, .Master = pawn % width == 0};
+  }
+  Board board(std::move(grid), width, height);
+
+  return Game(std::move(board), std::move(cards), std::move(player));
 }
 
 bool Game::operator==(const Game& other) const {
@@ -213,3 +263,64 @@ std::ostream& Game::StreamHand(std::ostream& stream,
 }
 
 }  // namespace Game
+
+static void AddBits(size_t& input, const size_t bits, size_t& inputSize,
+                    const size_t bitsSize) {
+  input |= bits << inputSize;
+  inputSize += bitsSize;
+}
+
+size_t std::hash<Game::Game>::operator()(
+    const Game::Game& game) const noexcept {
+  // For 5x5 hash is of size 1 + 5 * 4 + 2 * 5 + 10 * 5 = 81;
+  // 17 more than the 64 bits provided by size_t
+  // (and 65 more than the 16 bits guaranteed by size_t)
+
+  size_t hash = 0;
+  size_t hashSize = 0;
+
+  // Current player
+  constexpr size_t playerSize = 1;
+  const size_t player = game.GetCurrentPlayer() == TopPlayer;
+  AddBits(hash, player, hashSize, playerSize);
+
+  // Card distribution
+  constexpr size_t cardSize =
+      std::bit_width((size_t)Game::CardType::CardTypeCount - 1);
+  const std::span<const Game::Card, CARD_COUNT> cards = game.GetCards();
+  for (const Game::Card card : cards) {
+    AddBits(hash, (size_t)card.Type, hashSize, cardSize);
+  }
+
+  // Board dimensions
+  constexpr size_t dimensionSize = std::bit_width(MAX_DIMENSION);
+  const std::pair<size_t, size_t> dimensions = game.GetDimensions();
+  AddBits(hash, dimensions.first, hashSize, dimensionSize);
+  AddBits(hash, dimensions.second, hashSize, dimensionSize);
+
+  // Pawn locations
+  // Extra bit value representation for 'captured'
+  const size_t captured = dimensions.first * dimensions.second;
+  const size_t coordinateSize = std::bit_width(captured);
+
+  for (size_t playerId = 0; playerId < 2; playerId++) {
+    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+
+    if (game.MasterCaptured(player)) {
+      AddBits(hash, captured, hashSize, coordinateSize);
+    }
+
+    const std::vector<Coordinate>& locations = game.GetPawnCoordinates(player);
+    for (const Coordinate location : locations) {
+      const size_t offset = location.x + location.y * dimensions.first;
+      AddBits(hash, offset, hashSize, coordinateSize);
+    }
+
+    for (size_t i = locations.size() + game.MasterCaptured();
+         i < dimensions.first; i++) {
+      AddBits(hash, captured, hashSize, coordinateSize);
+    }
+  }
+
+  return hash;
+}
