@@ -7,11 +7,12 @@
 #include "../strategies/human.h"
 #include "../strategies/minMax.h"
 #include "../strategies/monteCarlo.h"
+#include "../strategies/positional.h"
 #include "../strategies/random.h"
 
 namespace Cli {
 
-const static std::array<StrategyParser, 4> Strategies = {
+const static std::array<StrategyParser, 5> Strategies = {
     StrategyParser{.Name = Strategy::Human::GetName(),
                    .Parser = Strategy::Human::Parse,
                    .Command = Strategy::Human::GetCommand(),
@@ -31,6 +32,11 @@ const static std::array<StrategyParser, 4> Strategies = {
                    .Parser = Strategy::MinMax::Parse,
                    .Command = Strategy::MinMax::GetCommand(),
                    .Description = Strategy::MinMax::GetDescription()},
+
+    StrategyParser{.Name = Strategy::Positional::GetName(),
+                   .Parser = Strategy::Positional::Parse,
+                   .Command = Strategy::Positional::GetCommand(),
+                   .Description = Strategy::Positional::GetDescription()},
 };
 
 void ExecuteStrategies() {

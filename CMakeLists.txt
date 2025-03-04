@@ -21,6 +21,7 @@ set(Src
         src/util/winState.cpp
 
         src/strategies/human.cpp
+        src/strategies/positional.cpp
         src/strategies/random.cpp
         src/strategies/monteCarlo.cpp
         src/strategies/minMax.cpp
@@ -53,6 +54,7 @@ set(Header
 
         src/strategies/strategy.h
         src/strategies/human.h
+        src/strategies/positional.h
         src/strategies/random.h
         src/strategies/monteCarlo.h
         src/strategies/minMax.h
