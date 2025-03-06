@@ -51,6 +51,7 @@ set(Header
         src/util/coordinate.h
         src/util/offset.h
         src/util/winState.h
+        src/util/base64.h
 
         src/strategies/strategy.h
         src/strategies/human.h
