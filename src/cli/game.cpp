@@ -9,6 +9,12 @@
 
 namespace Cli {
 
+Game::Game GameArgs::ToGame() const {
+  if (Cards) return Game::Game(Width, Height, Cards.value());
+
+  return Game::Game::WithRandomCards(Width, Height, RepeatCards);
+}
+
 static Color RunGame(const GameArgs args, std::ostream* stream) {
   std::unique_ptr<GameMaster> master;
 
@@ -182,6 +188,32 @@ bool GameCommand::ParsePrintType(std::istringstream& command, GameArgs& args) {
   return true;
 }
 
+bool GameCommand::ParseDimensions(std::istringstream& command, GameArgs& args) {
+  if (!(command >> args.Width)) {
+    std::cout << "Failed to parse board width!" << std::endl;
+    return false;
+  }
+
+  if (!(command >> args.Height)) {
+    std::cout << "Failed to parse board height!" << std::endl;
+    return false;
+  }
+
+  if (args.Width < 1 || args.Height < 2) {
+    std::cout << "The board needs to be at least 1x2!" << std::endl;
+    return false;
+  }
+
+  if (args.Width > MAX_DIMENSION || args.Height > MAX_DIMENSION) {
+    std::cout << std::format("The board needs to be at most {}x{}!",
+                             MAX_DIMENSION, MAX_DIMENSION)
+              << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 bool GameCommand::ParseOptionalArgs(std::istringstream& command,
                                     GameArgs& args) {
   std::string arg;
@@ -209,21 +241,7 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
     args.Multithread = true;
 
   } else if (arg == "--size" || arg == "-s") {
-    if (!(command >> args.Width)) {
-      std::cout << "Failed to parse board width!" << std::endl;
-      return false;
-    }
-
-    if (!(command >> args.Height)) {
-      std::cout << "Failed to parse board height!" << std::endl;
-      return false;
-    }
-
-    if (args.Width < 1 || args.Height < 2) {
-      std::cout << "The board needs to be at least 1x2!" << std::endl;
-      return false;
-    }
-
+    if (!ParseDimensions(command, args)) return false;
   } else {
     Unparse(command, arg);
     return true;

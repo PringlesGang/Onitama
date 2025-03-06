@@ -20,6 +20,8 @@ struct GameArgs {
   PrintType GameArgsPrintType = PrintType::Board;
 
   std::optional<std::array<Game::Card, CARD_COUNT>> Cards;
+
+  Game::Game ToGame() const;
 };
 
 struct ExecuteGameInfo {
@@ -36,10 +38,10 @@ class GameCommand : public Command {
   std::string GetCommand() const override;
   std::string GetHelp() const override;
 
- private:
   static bool ParseCards(std::istringstream& command, GameArgs& args);
   static bool ParsePrintType(std::istringstream& command, GameArgs& args);
   static bool ParseOptionalArgs(std::istringstream& command, GameArgs& args);
+  static bool ParseDimensions(std::istringstream& command, GameArgs& args);
 };
 
 }  // namespace Cli

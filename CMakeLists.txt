@@ -36,6 +36,7 @@ set(Src
         src/cli/print.cpp
 
         src/experiments/fairCards.cpp
+        src/experiments/stateGraph.cpp
 )
 
 set(Header
@@ -72,6 +73,7 @@ set(Header
         src/cli/print.h
 
         src/experiments/fairCards.h
+        src/experiments/stateGraph.h
 )
 
 add_executable("onitama" ${Src} ${Header})

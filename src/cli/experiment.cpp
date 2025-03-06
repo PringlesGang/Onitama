@@ -4,15 +4,22 @@
 #include <iostream>
 
 #include "../experiments/fairCards.h"
+#include "../experiments/stateGraph.h"
 
 namespace Cli {
 
-const static std::array<ExperimentParser, 1> Experiments = {
+const static std::array<ExperimentParser, 2> Experiments = {
     ExperimentParser{
         .Name = Experiments::FairCards::Name,
         .Parser = Experiments::FairCards::Parse,
         .Command = Experiments::FairCards::Command,
         .Description = Experiments::FairCards::Description,
+    },
+    ExperimentParser{
+        .Name = Experiments::StateGraph::Name,
+        .Parser = Experiments::StateGraph::Parse,
+        .Command = Experiments::StateGraph::Command,
+        .Description = Experiments::StateGraph::Description,
     },
 };
 
