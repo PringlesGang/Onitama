@@ -136,3 +136,10 @@ struct Card {
 };
 
 }  // namespace Game
+
+template <>
+struct std::hash<Game::Card> {
+  size_t operator()(const Game::Card card) const noexcept {
+    return (size_t)card.Type;
+  }
+};
