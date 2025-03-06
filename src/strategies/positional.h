@@ -13,15 +13,15 @@ class GameStateInfo {
   GameStateInfo(const Game::Game& game);
 
   bool operator==(const GameStateInfo& other) const {
-    return GameStateHash == other.GameStateHash;
+    return Serialization == other.Serialization;
   }
   bool operator==(const Game::Game& game) const {
-    return GameStateHash == std::hash<Game::Game>{}(game);
+    return Serialization == game.Serialize();
   }
 
   Game::Move GetOptimalMove() const { return OptimalMove->first; }
 
-  const size_t GameStateHash;
+  const Game::GameSerialization Serialization;
 
   std::optional<std::pair<Game::Move, std::weak_ptr<const GameStateInfo>>>
       OptimalMove = std::nullopt;
@@ -31,11 +31,7 @@ class GameStateInfo {
 class GameStateGraph {
  public:
   std::optional<std::weak_ptr<const GameStateInfo>> Get(
-      const Game::Game& game) const {
-    return Vertices.contains(game)
-               ? std::optional(std::weak_ptr(Vertices.at(game)))
-               : std::nullopt;
-  };
+      const Game::Game& game) const;
   std::weak_ptr<const GameStateInfo> Add(Game::Game&& game);
 
  private:

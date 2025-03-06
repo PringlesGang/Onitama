@@ -3,11 +3,21 @@
 namespace Strategy {
 
 GameStateInfo::GameStateInfo(const Game::Game& game)
-    : GameStateHash(std::hash<Game::Game>{}(game)),
+    : Serialization(game.Serialize()),
       Quality(game.IsFinished() ? WinState::Lost : WinState::Unknown) {}
 
+std::optional<std::weak_ptr<const GameStateInfo>> GameStateGraph::Get(
+    const Game::Game& game) const {
+  const Game::GameSerialization serialization = game.Serialize();
+  return Vertices.contains(game)
+             ? std::optional(std::weak_ptr(Vertices.at(game)))
+             : std::nullopt;
+};
+
 std::weak_ptr<const GameStateInfo> GameStateGraph::Add(Game::Game&& game) {
-  if (Vertices.contains(game)) return Vertices.at(game);
+  const std::optional<std::weak_ptr<const GameStateInfo>> storedInfo =
+      Get(game);
+  if (storedInfo) return storedInfo.value();
 
   std::shared_ptr<GameStateInfo> info = std::make_shared<GameStateInfo>(game);
   Vertices.emplace(game, info);
