@@ -40,7 +40,7 @@ std::weak_ptr<const GameStateInfo> GameStateGraph::Add(Game::Game&& game) {
   return info;
 }
 
-Positional::Positional() : Graph(std::make_shared<GameStateGraph>()) {}
+Positional::Positional() : Graph(SharedGameStateGraph) {}
 
 Positional::Positional(std::shared_ptr<GameStateGraph> graph) : Graph(graph) {}
 

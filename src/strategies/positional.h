@@ -42,6 +42,9 @@ class GameStateGraph {
   std::unordered_map<Game::Game, std::shared_ptr<GameStateInfo>> Vertices;
 };
 
+inline std::shared_ptr<GameStateGraph> SharedGameStateGraph =
+    std::make_shared<GameStateGraph>();
+
 class Positional : public Strategy {
  public:
   Positional();
@@ -57,6 +60,7 @@ class Positional : public Strategy {
   static std::string GetDescription();
 
   std::shared_ptr<const GameStateGraph> GetGraph() const { return Graph; }
+  void SetGraph(std::shared_ptr<GameStateGraph> graph) { Graph = graph; }
 
  private:
   std::shared_ptr<GameStateGraph> Graph;
