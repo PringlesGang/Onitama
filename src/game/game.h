@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <bit>
+#include <bitset>
 #include <optional>
 #include <ostream>
 #include <span>
@@ -15,6 +17,17 @@
 
 namespace Game {
 
+constexpr size_t GAME_SERIALIZATION_SIZE =
+    // Current player
+    std::bit_width(size_t{1}) +
+    // Card distribution
+    std::bit_width((size_t)CardType::CardTypeCount - 1) * CARD_COUNT +
+    // Board dimensions
+    std::bit_width(MAX_DIMENSION) * 2 +
+    // Pawn positions
+    std::bit_width(MAX_DIMENSION * MAX_DIMENSION) * MAX_DIMENSION * 2;
+typedef std::bitset<GAME_SERIALIZATION_SIZE> GameSerialization;
+
 class Game {
  public:
   Game(const size_t width, const size_t height,
@@ -27,9 +40,7 @@ class Game {
 
   static Game WithRandomCards(const size_t width, const size_t height,
                               const bool repeatCards = false);
-  static Game FromHash(const size_t hash,
-                       const std::array<Card, CARD_COUNT>& cards,
-                       const size_t width, const size_t height);
+  static Game FromSerialization(GameSerialization serialization);
 
   bool operator==(const Game& other) const;
 
@@ -73,6 +84,8 @@ class Game {
   }
   std::optional<Color> IsFinished() const { return GameBoard.IsFinished(); }
   void DoMove(const Move move);
+
+  GameSerialization Serialize() const;
 
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
 

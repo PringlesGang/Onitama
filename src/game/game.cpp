@@ -1,7 +1,6 @@
 #include "game.h"
 
 #include <algorithm>
-#include <bit>
 #include <format>
 #include <random>
 #include <stdexcept>
@@ -58,34 +57,30 @@ Game Game::WithRandomCards(const size_t width, const size_t height,
   return Game(width, height, std::move(cards));
 }
 
-static constexpr size_t ReadBitMask(size_t& input, const size_t length) {
-  const size_t result = input & ((1 << length) - 1);
+static constexpr size_t ReadBits(GameSerialization& input,
+                                 const size_t length) {
+  const size_t result = input.to_ullong() & ((1 << length) - 1);
   input >>= length;
   return result;
 }
 
-Game Game::FromHash(size_t hash, const std::array<Card, CARD_COUNT>& cards,
-                    const size_t width, const size_t height) {
+Game Game::FromSerialization(GameSerialization serialization) {
   // Current player
   constexpr size_t playerSize = 1;
-  Color player = ReadBitMask(hash, playerSize) ? TopPlayer : ~TopPlayer;
+  Color player = ReadBits(serialization, playerSize) ? TopPlayer : ~TopPlayer;
 
   // Card distribution
-  std::array<Card, CARD_COUNT> orderedCards;
+  std::array<Card, CARD_COUNT> cards;
   constexpr size_t cardSize =
       std::bit_width((size_t)CardType::CardTypeCount - 1);
-  auto card = orderedCards.begin();
-  for (; card - orderedCards.begin() < CARD_COUNT - HAND_SIZE; card++) {
-    *card = Card((CardType)ReadBitMask(hash, cardSize));
+  for (Card& card : cards) {
+    card = Card((CardType)ReadBits(serialization, cardSize));
   }
 
-  const auto notUsedYet = [orderedCards](const Card card) {
-    return std::find(orderedCards.begin(), orderedCards.end(), card) ==
-           orderedCards.end();
-  };
-  for (; card < orderedCards.end(); card++) {
-    *card = *std::find_if(cards.begin(), cards.end(), notUsedYet);
-  }
+  // Board dimensions
+  constexpr size_t dimensionsSize = std::bit_width(MAX_DIMENSION);
+  const size_t width = ReadBits(serialization, dimensionsSize);
+  const size_t height = ReadBits(serialization, dimensionsSize);
 
   // Pawn locations
   constexpr size_t captured = MAX_DIMENSION * MAX_DIMENSION;
@@ -94,14 +89,15 @@ Game Game::FromHash(size_t hash, const std::array<Card, CARD_COUNT>& cards,
   std::vector<Tile> grid(width * height);
   for (size_t pawn = 0; pawn < width * 2; pawn++) {
     const Color pawnColor = pawn < width ? TopPlayer : ~TopPlayer;
-    const size_t offset = ReadBitMask(hash, coordinateSize);
+    const bool isMaster = pawn % width == 0;
 
+    const size_t offset = ReadBits(serialization, coordinateSize);
     if (offset != captured)
-      grid[offset] = Piece{.Team = pawnColor, .Master = pawn % width == 0};
+      grid[offset] = Piece{.Team = pawnColor, .Master = isMaster};
   }
-  Board board(std::move(grid), width, height);
+  Board board(std::move(grid), std::move(width), std::move(height));
 
-  return Game(std::move(board), std::move(orderedCards), std::move(player));
+  return Game(std::move(board), std::move(cards), std::move(player));
 }
 
 bool Game::operator==(const Game& other) const {
@@ -290,57 +286,86 @@ std::ostream& Game::StreamHand(std::ostream& stream,
   return stream << std::endl;
 }
 
-}  // namespace Game
-
-static void AddBits(size_t& input, const size_t bits, size_t& inputSize,
-                    const size_t bitsSize) {
+static void AddBits(GameSerialization& input, const size_t bits,
+                    size_t& inputSize, const size_t bitsSize) {
   input |= bits << inputSize;
   inputSize += bitsSize;
 }
 
-size_t std::hash<Game::Game>::operator()(
-    const Game::Game& game) const noexcept {
-  // Hash is of size 1 + 3 * 4 + 10 * 5 = 63;
-  // 1 fewer than the 64 bits provided by size_t
-  // (and 47 more than the 16 bits guaranteed by size_t)
+GameSerialization Game::Serialize() const {
+  const auto [width, height] = GetDimensions();
+  if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+    const std::string msg = std::format(
+        "Tried to serialize board of size {}x{} when max size is {}x{}!", width,
+        height, MAX_DIMENSION, MAX_DIMENSION);
+    throw std::runtime_error(msg);
+  }
 
-  size_t hash = 0;
-  size_t hashSize = 0;
+  GameSerialization serialization;
+  size_t size = 0;
 
   // Current player
   constexpr size_t playerSize = 1;
-  const size_t player = game.GetCurrentPlayer() == TopPlayer;
-  AddBits(hash, player, hashSize, playerSize);
+  const size_t player = CurrentPlayer == TopPlayer;
+  AddBits(serialization, player, size, playerSize);
 
   // Card distribution
   constexpr size_t cardSize =
-      std::bit_width((size_t)Game::CardType::CardTypeCount - 1);
-  const std::span<const Game::Card, CARD_COUNT> cards = game.GetCards();
-  for (size_t card = 0; card < CARD_COUNT - HAND_SIZE; card++) {
-    AddBits(hash, (size_t)cards[card].Type, hashSize, cardSize);
+      std::bit_width((size_t)CardType::CardTypeCount - 1);
+  const std::span<const Card, CARD_COUNT> cards = GetCards();
+  for (const Card card : cards) {
+    AddBits(serialization, (size_t)card.Type, size, cardSize);
   }
+
+  // Board dimensions
+  constexpr size_t dimensionSize = std::bit_width(MAX_DIMENSION);
+  AddBits(serialization, width, size, dimensionSize);
+  AddBits(serialization, height, size, dimensionSize);
 
   // Pawn locations
   // Extra bit value representation for 'captured'
-  const size_t captured = MAX_DIMENSION * MAX_DIMENSION;
-  const size_t coordinateSize = std::bit_width(captured);
-  const size_t width = game.GetDimensions().first;
+  constexpr size_t captured = MAX_DIMENSION * MAX_DIMENSION;
+  constexpr size_t coordinateSize = std::bit_width(captured);
 
   for (size_t playerId = 0; playerId < 2; playerId++) {
     const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
 
-    if (game.MasterCaptured(player)) {
-      AddBits(hash, captured, hashSize, coordinateSize);
+    if (MasterCaptured(player)) {
+      AddBits(serialization, captured, size, coordinateSize);
     }
 
-    const std::vector<Coordinate>& locations = game.GetPawnCoordinates(player);
+    const std::vector<Coordinate>& locations = GetPawnCoordinates(player);
     for (const Coordinate location : locations) {
       const size_t offset = location.x + location.y * width;
-      AddBits(hash, offset, hashSize, coordinateSize);
+      AddBits(serialization, offset, size, coordinateSize);
     }
 
-    for (size_t i = locations.size() + game.MasterCaptured(); i < width; i++) {
-      AddBits(hash, captured, hashSize, coordinateSize);
+    // Serialize captured pawns
+    for (size_t i = locations.size() + MasterCaptured(); i < width; i++) {
+      AddBits(serialization, captured, size, coordinateSize);
+    }
+  }
+
+  return serialization;
+}
+
+}  // namespace Game
+
+size_t std::hash<Game::Game>::operator()(
+    const Game::Game& game) const noexcept {
+  // Cards
+  size_t hash = (size_t)game.GetSetAsideCard().Type;
+
+  for (const Game::Card card : game.GetHand()) {
+    hash ^= (size_t)card.Type;
+  }
+
+  // Pawn locations
+  const size_t width = game.GetDimensions().first;
+  for (size_t playerId = 0; playerId < 2; playerId++) {
+    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+    for (const Coordinate coordinate : game.GetPawnCoordinates(player)) {
+      hash ^= coordinate.x + width * coordinate.y;
     }
   }
 
