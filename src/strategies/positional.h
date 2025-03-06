@@ -28,6 +28,14 @@ class GameStateInfo {
   WinState Quality = WinState::Unknown;
 };
 
+struct GameVertexHash {
+  size_t operator()(const Game::Game& game) const;
+};
+
+struct GameVertexEqual {
+  bool operator()(const Game::Game& first, const Game::Game& second) const;
+};
+
 class GameStateGraph {
  public:
   std::optional<std::weak_ptr<const GameStateInfo>> Get(
@@ -35,7 +43,9 @@ class GameStateGraph {
   std::weak_ptr<const GameStateInfo> Add(Game::Game&& game);
 
  private:
-  std::unordered_map<Game::Game, std::shared_ptr<GameStateInfo>> Vertices;
+  std::unordered_map<Game::Game, std::shared_ptr<GameStateInfo>, GameVertexHash,
+                     GameVertexEqual>
+      Vertices;
 };
 
 inline std::shared_ptr<GameStateGraph> SharedGameStateGraph =

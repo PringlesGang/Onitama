@@ -1,5 +1,7 @@
 #include "positional.h"
 
+#include <unordered_set>
+
 namespace Strategy {
 
 GameStateInfo::GameStateInfo(const Game::Game& game)
@@ -48,6 +50,100 @@ std::weak_ptr<const GameStateInfo> GameStateGraph::Add(Game::Game&& game) {
   }
 
   return info;
+}
+
+static bool CompareCoordinates(const Game::Game& first,
+                               const Game::Game& second,
+                               const Color firstPlayer,
+                               const Color secondPlayer) {
+  const bool masterCaptured = first.MasterCaptured(firstPlayer);
+  if (masterCaptured != second.MasterCaptured(secondPlayer)) return false;
+
+  const bool orient = firstPlayer != secondPlayer;
+  const auto [width, height] = second.GetDimensions();
+  const auto orientCoord = [orient, width, height](Coordinate coordinate) {
+    return orient
+               ? Coordinate(width - coordinate.x - 1, height - coordinate.y - 1)
+               : coordinate;
+  };
+
+  const std::vector<Coordinate>& firstCoordinates =
+      first.GetPawnCoordinates(firstPlayer);
+  const std::vector<Coordinate>& secondCoordinates =
+      second.GetPawnCoordinates(secondPlayer);
+
+  if (firstCoordinates.size() != secondCoordinates.size()) return false;
+  if (firstCoordinates.size() == 0) return true;
+
+  if (!masterCaptured &&
+      firstCoordinates[0] != orientCoord(secondCoordinates[0]))
+    return false;
+
+  auto secondCoord = orient ? --secondCoordinates.end()
+                            : secondCoordinates.begin() + !masterCaptured;
+  for (auto firstCoord = firstCoordinates.begin() + !masterCaptured;
+       firstCoord != firstCoordinates.end(); firstCoord++) {
+    if (*firstCoord != orientCoord(*secondCoord)) return false;
+
+    if (!orient || secondCoord != secondCoordinates.begin())
+      secondCoord += orient ? -1 : 1;
+  }
+
+  return true;
+}
+
+bool GameVertexEqual::operator()(const Game::Game& first,
+                                 const Game::Game& second) const {
+  if (first.GetSetAsideCard() != second.GetSetAsideCard()) return false;
+
+  if (first.GetDimensions() != second.GetDimensions()) return false;
+
+  for (size_t playerId = 0; playerId < 2; playerId++) {
+    const Color firstPlayer =
+        playerId == 0 ? first.GetCurrentPlayer() : ~first.GetCurrentPlayer();
+    const Color secondPlayer =
+        playerId == 0 ? second.GetCurrentPlayer() : ~second.GetCurrentPlayer();
+
+    const std::span<const Game::Card, HAND_SIZE> firstHand =
+        first.GetHand(firstPlayer);
+    const std::span<const Game::Card, HAND_SIZE> secondHand =
+        first.GetHand(firstPlayer);
+    if (std::unordered_multiset<Game::Card>(firstHand.begin(),
+                                            firstHand.end()) !=
+        std::unordered_multiset<Game::Card>(secondHand.begin(),
+                                            secondHand.end()))
+      return false;
+
+    if (!CompareCoordinates(first, second, firstPlayer, secondPlayer))
+      return false;
+  }
+
+  return true;
+}
+
+size_t GameVertexHash::operator()(const Game::Game& game) const {
+  // Cards
+  size_t hash = (size_t)game.GetSetAsideCard().Type;
+
+  for (const Game::Card card : game.GetHand(TopPlayer)) {
+    hash ^= (size_t)card.Type;
+  }
+
+  // Pawn locations
+  const auto [width, height] = game.GetDimensions();
+  const size_t boardEnd = width * height - 1;
+
+  const bool orient = TopPlayer == game.GetCurrentPlayer();
+
+  for (size_t playerId = 0; playerId < 2; playerId++) {
+    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+    for (const Coordinate coordinate : game.GetPawnCoordinates(player)) {
+      const size_t offset = coordinate.x + width * coordinate.y;
+      hash ^= orient ? offset : boardEnd - offset;
+    }
+  }
+
+  return hash;
 }
 
 Positional::Positional() : Graph(SharedGameStateGraph) {}
