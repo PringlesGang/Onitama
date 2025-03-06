@@ -26,6 +26,7 @@ std::optional<Game::Card> ParseCard(std::istringstream& command) {
     std::cout << "Failed to parse card!" << std::endl;
     return std::nullopt;
   }
+  Command::ToLower(input);
 
   using namespace Game;
 

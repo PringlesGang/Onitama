@@ -25,21 +25,21 @@ std::string Cli::GetHelp() const {
 std::optional<Thunk> Cli::Parse(std::istringstream& command) const {
   std::string option;
 
-  std::istringstream lowered = std::istringstream(ToLower(command.str()));
-  lowered >> option;
+  command >> option;
+  ToLower(option);
 
   if (option.empty()) {
     std::cout << "Failed to parse command!" << std::endl;
   } else {
     if (option == "help") return std::bind(&Cli::ExecuteHelp, this);
 
-    for (auto command = commands.begin(); command != commands.end();
-         command++) {
-      if (option != (*command)->GetName()) continue;
+    for (auto commandIt = commands.begin(); commandIt != commands.end();
+         commandIt++) {
+      if (option != (*commandIt)->GetName()) continue;
 
-      const std::optional<Thunk> result = (*command)->Parse(lowered);
+      const std::optional<Thunk> result = (*commandIt)->Parse(command);
 
-      if (!result) std::cout << (*command)->GetCommand() << std::endl;
+      if (!result) std::cout << (*commandIt)->GetCommand() << std::endl;
 
       return result;
     }

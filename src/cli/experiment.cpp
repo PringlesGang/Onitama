@@ -31,6 +31,7 @@ std::optional<Thunk> ExperimentCommand::Parse(
     std::cout << "Failed to parse experiment argument!" << std::endl;
     return std::nullopt;
   }
+  ToLower(arg);
 
   if (arg == "--list" || arg == "-l") {
     if (!Terminate(command)) return std::nullopt;

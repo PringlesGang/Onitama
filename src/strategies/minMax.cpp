@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "../cli/command.h"
+
 namespace Strategy {
 
 MinMax::MinMax(const std::optional<const size_t> maxDepth)
@@ -69,6 +71,7 @@ std::optional<std::function<std::unique_ptr<MinMax>()>> MinMax::Parse(
     std::cout << "Failed to parse MinMax strategy argument!" << std::endl;
     return std::nullopt;
   }
+  Cli::Command::ToLower(argument);
 
   std::optional<size_t> maxDepth;
   if (argument == "--no-max-depth") {

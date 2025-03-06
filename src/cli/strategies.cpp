@@ -53,6 +53,7 @@ std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
     std::cout << "No strategy provided!" << std::endl;
     return std::nullopt;
   };
+  Command::ToLower(name);
 
   for (const StrategyParser& strategy : Strategies) {
     if (name != strategy.Name) continue;

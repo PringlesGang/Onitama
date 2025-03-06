@@ -16,7 +16,7 @@ class Command {
   virtual std::string GetCommand() const = 0;
   virtual std::string GetHelp() const = 0;
 
-  static std::string ToLower(const std::string string);
+  static void ToLower(std::string& string);
   static void Unparse(std::istringstream& stream, const std::string& string);
   static bool Terminate(std::istringstream& command);
 };

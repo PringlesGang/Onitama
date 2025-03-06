@@ -164,6 +164,7 @@ bool GameCommand::ParsePrintType(std::istringstream& command, GameArgs& args) {
     std::cout << "Failed to parse print type!" << std::endl;
     return false;
   }
+  ToLower(arg);
 
   if (arg == "board") {
     args.GameArgsPrintType = PrintType::Board;
@@ -185,6 +186,7 @@ bool GameCommand::ParseOptionalArgs(std::istringstream& command,
                                     GameArgs& args) {
   std::string arg;
   command >> arg;
+  ToLower(arg);
 
   if (arg.empty()) return true;
 

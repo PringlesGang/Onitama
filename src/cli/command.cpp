@@ -5,10 +5,8 @@
 
 namespace Cli {
 
-std::string Command::ToLower(const std::string string) {
-  std::string lowered = "";
-  for (char character : string) lowered += tolower(character);
-  return lowered;
+void Command::ToLower(std::string& string) {
+  for (char& character : string) character = tolower(character);
 }
 
 void Command::Unparse(std::istringstream& stream, const std::string& string) {
