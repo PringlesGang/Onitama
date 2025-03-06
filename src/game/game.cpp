@@ -5,6 +5,7 @@
 #include <format>
 #include <random>
 #include <stdexcept>
+#include <unordered_set>
 
 namespace Game {
 
@@ -104,7 +105,29 @@ Game Game::FromHash(size_t hash, const std::array<Card, CARD_COUNT>& cards,
 }
 
 bool Game::operator==(const Game& other) const {
-  return std::hash<Game>{}(*this) == std::hash<Game>{}(other);
+  if (CurrentPlayer != other.CurrentPlayer) return false;
+
+  if (SetAsideCard != other.SetAsideCard) return false;
+
+  if (GetDimensions() != other.GetDimensions()) return false;
+
+  for (size_t playerId = 0; playerId < 2; playerId++) {
+    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+
+    if (MasterCaptured(player) != other.MasterCaptured(player)) return false;
+
+    // Already sorted
+    if (GetPawnCoordinates(player) != other.GetPawnCoordinates(player))
+      return false;
+
+    if (std::unordered_multiset<Card>(GetHand(player).begin(),
+                                      GetHand(player).end()) !=
+        std::unordered_multiset<Card>(other.GetHand(player).begin(),
+                                      other.GetHand(player).end()))
+      return false;
+  }
+
+  return true;
 }
 
 void Game::SetValidMoves() {
