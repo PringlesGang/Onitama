@@ -32,6 +32,7 @@ set(Src
         src/cli/game.cpp
         src/cli/strategies.cpp
         src/cli/experiment.cpp
+        src/cli/print.cpp
 
         src/experiments/fairCards.cpp
 )
@@ -66,6 +67,7 @@ set(Header
         src/cli/game.h
         src/cli/strategies.h
         src/cli/experiment.h
+        src/cli/print.h
 
         src/experiments/fairCards.h
 )

@@ -4,6 +4,7 @@
 #include "command.h"
 #include "experiment.h"
 #include "game.h"
+#include "print.h"
 #include "strategies.h"
 
 namespace Cli {
@@ -19,11 +20,12 @@ class Cli : public Command {
   void ExecuteHelp() const;
 
  private:
-  const std::array<const std::unique_ptr<const Command>, 4> commands = {
+  const std::array<const std::unique_ptr<const Command>, 5> commands = {
       std::make_unique<CardsCommand>(),
       std::make_unique<GameCommand>(),
       std::make_unique<StrategiesCommand>(),
       std::make_unique<ExperimentCommand>(),
+      std::make_unique<PrintCommand>(),
   };
 };
 
