@@ -103,3 +103,22 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --build-config ${{ matrix.build_type }}
+    
+    - if: matrix.cpp_compiler == 'cl'
+      name: Upload MSVC artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Onitama-windows-MSVC.exe
+        path: ${{ steps.strings.outputs.build-output-dir }}/Release/onitama.exe
+    - if: matrix.cpp_compiler == 'g++'
+      name: Upload gcc artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Onitama-linux-gcc
+        path: ${{ steps.strings.outputs.build-output-dir }}/onitama
+    - if: matrix.cpp_compiler == 'clang++'
+      name: Upload clang artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Onitama-linux-clang
+        path: ${{ steps.strings.outputs.build-output-dir }}/onitama
