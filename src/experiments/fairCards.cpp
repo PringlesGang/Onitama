@@ -1,5 +1,7 @@
 #include "fairCards.h"
 
+#include <format>
+
 #include "../cli/game.h"
 #include "../strategies/random.h"
 
