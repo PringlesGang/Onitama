@@ -9,8 +9,38 @@ on:
     branches: [ "main" ]
 
 jobs:
+  lint:
+    name: Lint
+    permissions:
+      checks: write
+      contents: read
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v4
+      - name: Update clang-format
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 19
+          sudo apt install -y clang-format-19
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 1000
+          sudo update-alternatives --set clang-format /usr/bin/clang-format-19
+          sudo update-alternatives --display clang-format
+          clang-format --version
+      
+      - name: Lint
+        uses: wearerequired/lint-action@v2
+        with:
+          clang_format: true
+          clang_format_auto_fix: false
+          continue_on_error: false
+
   build:
     runs-on: ${{ matrix.os }}
+    needs:
+      - lint
 
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
