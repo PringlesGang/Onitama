@@ -1,6 +1,10 @@
 #include "stateGraph.h"
 
+#include <format>
+#include <fstream>
 #include <unordered_set>
+
+#include "base64.h"
 
 namespace StateGraph {
 
@@ -141,6 +145,30 @@ std::weak_ptr<const Vertex> Graph::Add(Game::Game&& game) {
   }
 
   return info;
+}
+
+void Graph::Export(const std::filesystem::path& filePath) const {
+  std::ofstream stream;
+  stream.open(filePath);
+
+  for (auto vertexIt = Vertices.begin(); vertexIt != Vertices.end();
+       vertexIt++) {
+    const Vertex& vertex = *vertexIt->second;
+
+    const std::string serialization = Base64::Encode(vertex.Serialization);
+
+    std::string optimalMove = ",,";
+    if (vertex.OptimalMove) {
+      const Game::Move move = vertex.GetOptimalMove();
+      optimalMove = std::format("{},{},{}", move.PawnId,
+                                (size_t)move.UsedCard.Type, move.OffsetId);
+    }
+
+    const std::string quality = std::to_string((int8_t)vertex.Quality);
+
+    stream << std::format("{},{},{}", serialization, optimalMove, quality)
+           << std::endl;
+  }
 }
 
 }  // namespace StateGraph

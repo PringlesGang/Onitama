@@ -10,52 +10,80 @@
 namespace Experiments {
 namespace StateGraph {
 
-void Execute(Game::Game game) {
-  std::cout << std::format("Generating state graph for {}:\n",
-                           Base64::Encode(game.Serialize()))
-            << game << std::endl;
+void Execute(StateGraphArgs args) {
+  std::cout << std::format(
+                   "Generating state graph for {}:\n",
+                   Base64::Encode(args.StartingConfiguration->Serialize()))
+            << *args.StartingConfiguration << std::endl;
 
-  std::shared_ptr<::StateGraph::Graph> graph =
-      std::make_shared<::StateGraph::Graph>();
+  ::StateGraph::Graph graph;
 
-  graph->Add(Game::Game(game));
+  graph.Add(Game::Game(*args.StartingConfiguration));
 
   const std::shared_ptr<const ::StateGraph::Vertex> vertex =
-      graph->Get(game)->lock();
+      graph.Get(*args.StartingConfiguration)->lock();
 
   switch (vertex->Quality) {
     case WinState::Lost:
       std::cout << "Lost" << std::endl;
-      return;
+      break;
     case WinState::Unknown:
       std::cout << "Tie" << std::endl;
-      return;
+      break;
     case WinState::Won:
       std::cout << "Won" << std::endl;
-      return;
+      break;
   }
+
+  if (args.ExportPath) graph.Export(args.ExportPath.value());
 }
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command) {
-  std::string argument;
-  command >> argument;
+  StateGraphArgs args;
 
-  if (argument.empty()) {
-    std::cout << "No game provided!" << std::endl;
+  // Parse
+  while (true) {
+    std::string argument;
+    command >> argument;
+
+    if (argument.empty()) break;
+
+    if (argument == "--state" || argument == "-s") {
+      const std::optional<Game::GameSerialization> serialization =
+          ParseSerialization(command);
+
+      if (!serialization) return std::nullopt;
+
+      args.StartingConfiguration = std::make_shared<Game::Game>(
+          std::move(Game::Game::FromSerialization(serialization.value())));
+
+    } else if (argument == "--game" || argument == "-g") {
+      if (!ParseGame(command, args)) return std::nullopt;
+
+    } else if (argument == "--export" || argument == "-e") {
+      const std::optional<std::filesystem::path> path = ParsePath(command);
+
+      if (!path) return std::nullopt;
+
+      args.ExportPath = path.value();
+
+    } else {
+      std::cout << std::format("Unknown argument \"{}\"!", argument)
+                << std::endl;
+      return std::nullopt;
+    }
+  }
+
+  // Validate
+  if (args.StartingConfiguration == nullptr) {
+    std::cout << "No starting state provided!" << std::endl;
     return std::nullopt;
   }
 
-  if (argument == "--state") {
-    return ParseSerialization(command);
-  } else if (argument == "--game") {
-    return ParseGame(command);
-  } else {
-    std::cout << std::format("Unknown argument \"{}\"!", argument) << std::endl;
-    return std::nullopt;
-  }
+  return [args] { Execute(args); };
 }
 
-std::optional<Cli::Thunk> ParseGame(std::istringstream& command) {
+bool ParseGame(std::istringstream& command, StateGraphArgs& args) {
   Cli::GameArgs gameArgs;
 
   std::string argument;
@@ -65,34 +93,37 @@ std::optional<Cli::Thunk> ParseGame(std::istringstream& command) {
       gameArgs.RepeatCards = true;
 
     } else if (argument == "--cards" || argument == "-c") {
-      if (!Cli::GameCommand::ParseCards(command, gameArgs)) return std::nullopt;
+      if (!Cli::GameCommand::ParseCards(command, gameArgs)) return false;
 
     } else if (argument == "--size" || argument == "-s") {
-      if (!Cli::GameCommand::ParseDimensions(command, gameArgs))
-        return std::nullopt;
+      if (!Cli::GameCommand::ParseDimensions(command, gameArgs)) return false;
 
     } else {
-      std::cout << std::format("Unknown argument \"{}\"!", argument)
-                << std::endl;
-      return std::nullopt;
+      Cli::Command::Unparse(command, argument);
+      break;
     }
 
     argument.clear();
     command >> argument;
   }
 
-  return [gameArgs] { Execute(std::move(gameArgs.ToGame())); };
+  args.StartingConfiguration = std::make_shared<Game::Game>(gameArgs.ToGame());
+  return true;
 }
 
-std::optional<Cli::Thunk> ParseSerialization(std::istringstream& command) {
+std::optional<Game::GameSerialization> ParseSerialization(
+    std::istringstream& command) {
   std::string serializationString;
   command >> serializationString;
 
-  if (!Cli::Command::Terminate(command)) return std::nullopt;
+  if (serializationString.empty()) {
+    std::cout << "No game serialization provided!" << std::endl;
+    return std::nullopt;
+  }
 
   Game::GameSerialization serialization;
   try {
-    serialization = Base64::Decode<Game::GAME_SERIALIZATION_SIZE>(
+    return Base64::Decode<Game::GAME_SERIALIZATION_SIZE>(
         std::move(serializationString));
   } catch (std::runtime_error err) {
     std::cout << std::format("Failed to parse base64 string \"{}\"",
@@ -100,12 +131,21 @@ std::optional<Cli::Thunk> ParseSerialization(std::istringstream& command) {
               << std::endl;
     return std::nullopt;
   }
+}
+
+std::optional<std::filesystem::path> ParsePath(std::istringstream& command) {
+  std::string path;
+  command >> path;
+
+  if (path.empty()) {
+    std::cout << "No filepath provided!" << std::endl;
+    return std::nullopt;
+  }
 
   try {
-    const Game::Game game = Game::Game::FromSerialization(serialization);
-    return [game] { Execute(game); };
-  } catch (std::runtime_error err) {
-    std::cout << err.what() << std::endl;
+    return std::filesystem::path(path);
+  } catch (std::exception e) {
+    std::cout << "Failed to construct filepath: " << e.what() << std::endl;
     return std::nullopt;
   }
 }

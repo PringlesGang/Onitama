@@ -1,5 +1,7 @@
 #pragma once
 
+#include <filesystem>
+
 #include "../game/game.h"
 #include "winState.h"
 
@@ -38,6 +40,8 @@ class Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
   std::weak_ptr<const Vertex> Add(Game::Game&& game);
+
+  void Export(const std::filesystem::path& filePath) const;
 
  private:
   std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
