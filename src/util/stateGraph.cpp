@@ -2,6 +2,7 @@
 
 #include <format>
 #include <fstream>
+#include <iostream>
 #include <unordered_set>
 
 #include "base64.h"
@@ -11,6 +12,12 @@ namespace StateGraph {
 Vertex::Vertex(const Game::Game& game)
     : Serialization(game.Serialize()),
       Quality(game.IsFinished() ? WinState::Lost : WinState::Unknown) {}
+
+Vertex::Vertex(Game::GameSerialization serialization,
+               std::optional<Game::Move> optimalMove, WinState quality)
+    : Serialization(serialization),
+      OptimalMove(optimalMove),
+      Quality(quality) {}
 
 static bool CompareCoordinates(const Game::Game& first,
                                const Game::Game& second,
@@ -136,8 +143,7 @@ std::weak_ptr<const Vertex> Graph::Add(Game::Game&& game) {
     // Select the best move yet
     if (!info->OptimalMove || info->Quality < nextQuality) {
       info->Quality = nextQuality;
-      info->OptimalMove =
-          std::pair<Game::Move, std::weak_ptr<const Vertex>>(move, nextInfo);
+      info->OptimalMove = move;
     }
 
     // A winning positional strategy has been found
@@ -145,6 +151,136 @@ std::weak_ptr<const Vertex> Graph::Add(Game::Game&& game) {
   }
 
   return info;
+}
+
+static std::optional<Game::Move> ParseMove(std::istringstream& string) {
+  // Pawn id
+  std::string pawnIdString;
+  std::getline(string, pawnIdString, ',');
+
+  std::optional<size_t> pawnId;
+  if (!pawnIdString.empty()) {
+    try {
+      pawnId = std::stoull(pawnIdString);
+    } catch (std::invalid_argument e) {
+      std::cerr << std::format("Failed to parse pawn id \"{}\"", pawnIdString)
+                << std::endl;
+      return std::nullopt;
+    }
+  }
+
+  // Card
+  std::string cardString;
+  std::getline(string, cardString, ',');
+
+  std::optional<Game::Card> card;
+  if (!cardString.empty()) {
+    try {
+      size_t cardType = std::stoull(cardString);
+      card = Game::Card{.Type = (Game::CardType)cardType};
+    } catch (std::invalid_argument e) {
+      std::cerr << std::format("Failed to parse card type \"{}\"", cardString)
+                << std::endl;
+      return std::nullopt;
+    }
+  }
+
+  // Offset id
+  std::string offsetIdString;
+  std::getline(string, offsetIdString, ',');
+
+  std::optional<size_t> offsetId;
+  if (!offsetIdString.empty()) {
+    try {
+      offsetId = std::stoull(offsetIdString);
+    } catch (std::invalid_argument e) {
+      std::cerr << std::format("Failed to parse offset id \"{}\"",
+                               offsetIdString)
+                << std::endl;
+      return std::nullopt;
+    }
+  }
+
+  if (!pawnId && !card && !offsetId) return std::nullopt;
+
+  if (!pawnId) {
+    std::cerr << "Missing pawn id!" << std::endl;
+    return std::nullopt;
+  }
+  if (!card) {
+    std::cerr << "Missing card!" << std::endl;
+    return std::nullopt;
+  }
+  if (!offsetId) {
+    std::cerr << "Missing offset id!" << std::endl;
+    return std::nullopt;
+  }
+
+  return Game::Move{.PawnId = pawnId.value(),
+                    .UsedCard = card.value(),
+                    .OffsetId = offsetId.value()};
+}
+
+static std::optional<Vertex> ParseVertex(std::istringstream string) {
+  // Serialization
+  std::string serializationString;
+  std::getline(string, serializationString, ',');
+
+  if (serializationString.empty()) {
+    std::cerr << "No serialization provided!" << std::endl;
+    return std::nullopt;
+  }
+  Game::GameSerialization serialization;
+
+  try {
+    serialization =
+        Base64::Decode<Game::GAME_SERIALIZATION_SIZE>(serializationString);
+  } catch (std::runtime_error e) {
+    std::cerr << e.what() << std::endl;
+    return std::nullopt;
+  }
+
+  // Optimal move
+  const std::optional<Game::Move> optimalMove = ParseMove(string);
+
+  // Quality
+  std::string qualityValString;
+  std::getline(string, qualityValString);
+
+  WinState quality;
+  try {
+    const int8_t qualityVal = std::stoi(qualityValString);
+    quality = (WinState)qualityVal;
+  } catch (std::invalid_argument e) {
+    std::cerr << std::format("Failed to parse quality \"{}\"", qualityValString)
+              << std::endl;
+    return std::nullopt;
+  }
+
+  return Vertex(std::move(serialization), std::move(optimalMove),
+                std::move(quality));
+}
+
+Graph Graph::Import(const std::filesystem::path& filePath) {
+  std::ifstream stream;
+  stream.open(filePath);
+
+  Graph graph;
+
+  for (std::string vertexString; !stream.eof();
+       std::getline(stream, vertexString)) {
+    if (vertexString.empty()) continue;
+
+    const std::optional<Vertex> vertex =
+        ParseVertex(std::istringstream(vertexString));
+    if (vertex) {
+      graph.Vertices.insert(
+          {Game::Game::FromSerialization(vertex->Serialization),
+           std::make_shared<Vertex>(vertex.value())});
+    }
+  }
+
+  return graph;
 }
 
 void Graph::Export(const std::filesystem::path& filePath) const {
@@ -159,7 +295,7 @@ void Graph::Export(const std::filesystem::path& filePath) const {
 
     std::string optimalMove = ",,";
     if (vertex.OptimalMove) {
-      const Game::Move move = vertex.GetOptimalMove();
+      const Game::Move move = vertex.OptimalMove.value();
       optimalMove = std::format("{},{},{}", move.PawnId,
                                 (size_t)move.UsedCard.Type, move.OffsetId);
     }

@@ -16,7 +16,9 @@ void Execute(StateGraphArgs args) {
                    Base64::Encode(args.StartingConfiguration->Serialize()))
             << *args.StartingConfiguration << std::endl;
 
-  ::StateGraph::Graph graph;
+  ::StateGraph::Graph graph =
+      args.ImportPath ? ::StateGraph::Graph::Import(args.ImportPath.value())
+                      : ::StateGraph::Graph();
 
   graph.Add(Game::Game(*args.StartingConfiguration));
 
@@ -45,6 +47,7 @@ std::optional<Cli::Thunk> Parse(std::istringstream& command) {
   while (true) {
     std::string argument;
     command >> argument;
+    Cli::Command::ToLower(argument);
 
     if (argument.empty()) break;
 
@@ -67,6 +70,13 @@ std::optional<Cli::Thunk> Parse(std::istringstream& command) {
 
       args.ExportPath = path.value();
 
+    } else if (argument == "--import" || argument == "-i") {
+      const std::optional<std::filesystem::path> path = ParsePath(command);
+
+      if (!path) return std::nullopt;
+
+      args.ImportPath = path.value();
+
     } else {
       std::cout << std::format("Unknown argument \"{}\"!", argument)
                 << std::endl;
@@ -88,6 +98,8 @@ bool ParseGame(std::istringstream& command, StateGraphArgs& args) {
 
   std::string argument;
   command >> argument;
+  Cli::Command::ToLower(argument);
+
   while (!argument.empty()) {
     if (argument == "--duplicate-cards" || argument == "-d") {
       gameArgs.RepeatCards = true;

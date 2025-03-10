@@ -12,7 +12,7 @@ std::bitset<N> Decode(const char character) {
   switch (character) {
     case '+':
       return 62;
-    case '-':
+    case '/':
       return 63;
 
     default:

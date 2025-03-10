@@ -11,10 +11,11 @@ namespace StateGraph {
 constexpr inline std::string_view Name = "stategraph";
 
 constexpr inline std::string_view Command =
-    "stategraph --state game_serialization (--export filepath)\n"
+    "stategraph --state game_serialization (--export filepath) (--import "
+    "filepath)\n"
 
     "stategraph --game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
-    "(--size width height) (--export filepath)";
+    "(--size width height) (--export filepath) (--import filepath)";
 
 constexpr inline std::string_view Description =
     "Depending on the arguments, "
@@ -22,11 +23,14 @@ constexpr inline std::string_view Description =
     "- the provided game state;\n"
     "- or the starting configuration with the supplied arguments.\n\n"
 
-    "Will export the graph to the provided filepath.";
+    "Will export the graph to the provided filepath.\n"
+    "Will import the graph from the provided filepath.";
 
 struct StateGraphArgs {
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
+
   std::optional<std::filesystem::path> ExportPath = std::nullopt;
+  std::optional<std::filesystem::path> ImportPath = std::nullopt;
 };
 
 void Execute(StateGraphArgs args);

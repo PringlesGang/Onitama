@@ -13,8 +13,8 @@ Game::Move Positional::GetMove(const Game::Game& game) {
 
   // Either get the pre-computed positional strategy,
   // or compute the positional strategy now
-  return found ? found->lock()->GetOptimalMove()
-               : Graph->Add(Game::Game(game)).lock()->GetOptimalMove();
+  return found ? found->lock()->OptimalMove.value()
+               : Graph->Add(Game::Game(game)).lock()->OptimalMove.value();
 }
 
 std::optional<std::function<std::unique_ptr<Positional>()>> Positional::Parse(

@@ -7,9 +7,11 @@
 
 namespace StateGraph {
 
-class Vertex {
- public:
+struct Vertex {
   Vertex(const Game::Game& game);
+  Vertex(Game::GameSerialization serialization,
+         std::optional<Game::Move> optimalMove = std::nullopt,
+         WinState quality = WinState::Unknown);
 
   bool operator==(const Vertex& other) const {
     return Serialization == other.Serialization;
@@ -18,12 +20,9 @@ class Vertex {
     return Serialization == game.Serialize();
   }
 
-  Game::Move GetOptimalMove() const { return OptimalMove->first; }
-
   const Game::GameSerialization Serialization;
 
-  std::optional<std::pair<Game::Move, std::weak_ptr<const Vertex>>>
-      OptimalMove = std::nullopt;
+  std::optional<Game::Move> OptimalMove = std::nullopt;
   WinState Quality = WinState::Unknown;
 };
 
@@ -41,6 +40,7 @@ class Graph {
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
   std::weak_ptr<const Vertex> Add(Game::Game&& game);
 
+  static Graph Import(const std::filesystem::path& filePath);
   void Export(const std::filesystem::path& filePath) const;
 
  private:
