@@ -182,7 +182,8 @@ std::ostream& operator<<(std::ostream& stream, const Board& board) {
 std::ostream& Board::StreamPlayerRow(std::ostream& stream, const Color player,
                                      const size_t row,
                                      size_t& pawnIndex) const {
-  for (const Tile& tile : *GetRow(row)) {
+  const std::span<const Tile> rowSpan = GetRow(row).value();
+  for (const Tile& tile : rowSpan) {
     if (tile && tile->Team == player && !tile->Master) {
       ColorPiece(stream, *tile) << ++pawnIndex << AnsiColor::Reset();
     } else {

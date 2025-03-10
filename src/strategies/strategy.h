@@ -7,6 +7,8 @@ namespace Strategy {
 
 class Strategy {
  public:
+  virtual ~Strategy() = default;
+
   virtual Game::Move GetMove(const Game::Game& game) = 0;
 };
 

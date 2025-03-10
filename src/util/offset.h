@@ -19,6 +19,6 @@ struct Offset {
 template <>
 struct std::hash<Offset> {
   size_t operator()(const Offset& offset) const noexcept {
-    return ((int16_t)offset.dx) << (8 * sizeof(int8_t)) + offset.dy;
+    return (((int16_t)offset.dx) << (8 * sizeof(int8_t))) + offset.dy;
   }
 };

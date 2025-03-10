@@ -10,6 +10,8 @@ typedef std::function<void()> Thunk;
 
 class Command {
  public:
+  virtual ~Command() = default;
+
   virtual std::optional<Thunk> Parse(std::istringstream& command) const = 0;
 
   virtual std::string GetName() const = 0;
