@@ -20,6 +20,7 @@ set(Src
         src/util/offset.cpp
         src/util/winState.cpp
         src/util/stateGraph.cpp
+        src/util/parse.cpp
 
         src/strategies/human.cpp
         src/strategies/positional.cpp
@@ -56,6 +57,7 @@ set(Header
         src/util/winState.h
         src/util/base64.h
         src/util/stateGraph.h
+        src/util/parse.h
 
         src/strategies/strategy.h
         src/strategies/human.h

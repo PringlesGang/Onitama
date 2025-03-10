@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "../cli/command.h"
+#include "../util/parse.h"
 
 namespace Strategy {
 
@@ -65,13 +66,13 @@ WinState MinMax::PlayRecursive(Game::Game game, const size_t depth) const {
 }
 
 std::optional<std::function<std::unique_ptr<MinMax>()>> MinMax::Parse(
-    std::istringstream& command) {
+    std::istringstream& stream) {
   std::string argument;
-  if (!(command >> argument)) {
+  if (!(stream >> argument)) {
     std::cout << "Failed to parse MinMax strategy argument!" << std::endl;
     return std::nullopt;
   }
-  Cli::Command::ToLower(argument);
+  Parse::ToLower(argument);
 
   std::optional<size_t> maxDepth;
   if (argument == "--no-max-depth") {

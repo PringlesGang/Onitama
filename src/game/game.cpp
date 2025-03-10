@@ -2,9 +2,13 @@
 
 #include <algorithm>
 #include <format>
+#include <iostream>
 #include <random>
 #include <stdexcept>
 #include <unordered_set>
+
+#include "../util/base64.h"
+#include "../util/parse.h"
 
 namespace Game {
 
@@ -98,6 +102,30 @@ Game Game::FromSerialization(GameSerialization serialization) {
   Board board(std::move(grid), std::move(width), std::move(height));
 
   return Game(std::move(board), std::move(cards), std::move(player));
+}
+
+std::optional<GameSerialization> Game::ParseSerialization(
+    std::istringstream& stream) {
+  std::string string;
+  stream >> string;
+
+  if (string.empty()) {
+    std::cerr << "No game serialization provided!" << std::endl;
+    Parse::Unparse(stream, string);
+    return std::nullopt;
+  }
+
+  const std::optional<GameSerialization> serialization =
+      Base64::Decode<GAME_SERIALIZATION_SIZE>(string);
+  if (!serialization) {
+    std::cerr << std::format("Invalid base64 game serialization \"{}\"!",
+                             string)
+              << std::endl;
+    Parse::Unparse(stream, string);
+    return std::nullopt;
+  }
+
+  return serialization;
 }
 
 bool Game::operator==(const Game& other) const {

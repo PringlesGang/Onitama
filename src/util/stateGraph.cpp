@@ -226,19 +226,17 @@ static std::optional<Vertex> ParseVertex(std::istringstream string) {
   std::string serializationString;
   std::getline(string, serializationString, ',');
 
-  if (serializationString.empty()) {
-    std::cerr << "No serialization provided!" << std::endl;
+  std::istringstream serializationStream(serializationString);
+  const std::optional<Game::GameSerialization> parsedSerialization =
+      Game::Game::ParseSerialization(serializationStream);
+  if (!parsedSerialization) {
+    std::cerr << std::format("Failed to parse serialization \"{}\"!",
+                             serializationString)
+              << std::endl;
     return std::nullopt;
   }
-  Game::GameSerialization serialization;
 
-  try {
-    serialization =
-        Base64::Decode<Game::GAME_SERIALIZATION_SIZE>(serializationString);
-  } catch (std::runtime_error e) {
-    std::cerr << e.what() << std::endl;
-    return std::nullopt;
-  }
+  const Game::GameSerialization serialization = parsedSerialization.value();
 
   // Optimal move
   const std::optional<Game::Move> optimalMove = ParseMove(string);

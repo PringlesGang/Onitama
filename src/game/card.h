@@ -1,6 +1,8 @@
 #pragma once
 
+#include <optional>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -113,6 +115,8 @@ const static inline std::unordered_map<CardType, std::string> CardToString{
 };
 
 struct Card {
+  static std::optional<Card> Parse(std::istringstream& stream);
+
   static const std::vector<Offset>& GetMoves(const CardType card) {
     return CardToMoves.at(card);
   }

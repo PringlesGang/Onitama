@@ -4,6 +4,25 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "util/parse.h"
+
+std::optional<PrintType> ParsePrintType(std::string string) {
+  Parse::ToLower(string);
+
+  if (string == "board") {
+    return PrintType::Board;
+  } else if (string == "data") {
+    return PrintType::Data;
+  } else if (string == "wins") {
+    return PrintType::Wins;
+  } else if (string == "none") {
+    return PrintType::None;
+  }
+
+  std::cerr << std::format("Unknown print type \"{}\"", string) << std::endl;
+  return std::nullopt;
+}
+
 GameMaster::GameMaster(const size_t width, const size_t height,
                        std::unique_ptr<Strategy::Strategy> redPlayer,
                        std::unique_ptr<Strategy::Strategy> bluePlayer,
@@ -19,6 +38,13 @@ GameMaster::GameMaster(const size_t width, const size_t height,
     : RedPlayer(std::move(redPlayer)),
       BluePlayer(std::move(bluePlayer)),
       GameInstance(Game::Game(width, height, cards)) {}
+
+GameMaster::GameMaster(Game::Game game,
+                       std::unique_ptr<Strategy::Strategy> redPlayer,
+                       std::unique_ptr<Strategy::Strategy> bluePlayer)
+    : GameInstance(game),
+      RedPlayer(std::move(redPlayer)),
+      BluePlayer(std::move(bluePlayer)) {}
 
 void GameMaster::PrintData(std::ostream& stream) const {
   if (MoveHistory.empty()) {

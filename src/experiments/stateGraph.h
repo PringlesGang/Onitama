@@ -27,6 +27,9 @@ constexpr inline std::string_view Description =
     "Will import the graph from the provided filepath.";
 
 struct StateGraphArgs {
+  bool Parse(std::istringstream& stream);
+  bool IsValid() const;
+
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
 
   std::optional<std::filesystem::path> ExportPath = std::nullopt;
@@ -36,12 +39,6 @@ struct StateGraphArgs {
 void Execute(StateGraphArgs args);
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command);
-
-bool ParseGame(std::istringstream& command, StateGraphArgs& args);
-std::optional<Game::GameSerialization> ParseSerialization(
-    std::istringstream& command);
-
-std::optional<std::filesystem::path> ParsePath(std::istringstream& command);
 
 }  // namespace StateGraph
 }  // namespace Experiments

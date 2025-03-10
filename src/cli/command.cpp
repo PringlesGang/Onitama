@@ -5,24 +5,18 @@
 
 namespace Cli {
 
-void Command::ToLower(std::string& string) {
-  for (char& character : string) character = tolower(character);
-}
+bool Command::Terminate(std::istringstream& stream) {
+  const bool terminated = Parse::Terminate(stream);
 
-void Command::Unparse(std::istringstream& stream, const std::string& string) {
-  for (size_t i = 0; i < string.size(); i++) {
-    stream.unget();
+  if (!terminated) {
+    std::string remaining;
+    stream >> remaining;
+    Parse::Unparse(stream, remaining);
+
+    std::cerr << std::format("Unknown argument \"{}\"", remaining) << std::endl;
   }
-}
 
-bool Command::Terminate(std::istringstream& command) {
-  std::string remaining;
-  command >> remaining;
-
-  if (remaining.empty()) return true;
-
-  std::cout << std::format("Unknown argument \"{}\"!", remaining) << std::endl;
-  return false;
+  return terminated;
 }
 
 }  // namespace Cli

@@ -14,6 +14,8 @@ enum class PrintType {
   Wins,
 };
 
+std::optional<PrintType> ParsePrintType(std::string string);
+
 class GameMaster {
  public:
   GameMaster(const size_t width, const size_t height,
@@ -24,6 +26,8 @@ class GameMaster {
              std::unique_ptr<Strategy::Strategy> redPlayer,
              std::unique_ptr<Strategy::Strategy> bluePlayer,
              std::array<Game::Card, CARD_COUNT> cards);
+  GameMaster(Game::Game game, std::unique_ptr<Strategy::Strategy> redPlayer,
+             std::unique_ptr<Strategy::Strategy> bluePlayer);
 
   void Render(std::ostream& stream = std::cout) const;
   void Update();

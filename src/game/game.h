@@ -42,6 +42,8 @@ class Game {
   static Game WithRandomCards(const size_t width, const size_t height,
                               const bool repeatCards = false);
   static Game FromSerialization(GameSerialization serialization);
+  static std::optional<GameSerialization> ParseSerialization(
+      std::istringstream& stream);
 
   bool operator==(const Game& other) const;
 

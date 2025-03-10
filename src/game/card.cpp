@@ -1,10 +1,46 @@
 #include "card.h"
 
 #include <algorithm>
+#include <format>
+#include <iostream>
 
 #include "../util/ansiColor.h"
+#include "../util/parse.h"
 
 namespace Game {
+
+std::optional<Card> Card::Parse(std::istringstream& stream) {
+  std::string input;
+  stream >> input;
+  Parse::ToLower(input);
+
+  if (input.empty()) {
+    std::cerr << "Tried to parse empty string as card!" << std::endl;
+    return std::nullopt;
+  }
+
+  using namespace Game;
+
+  if (input == "boar") return Card(CardType::Boar);
+  if (input == "cobra") return Card(CardType::Cobra);
+  if (input == "crab") return Card(CardType::Crab);
+  if (input == "crane") return Card(CardType::Crane);
+  if (input == "dragon") return Card(CardType::Dragon);
+  if (input == "eel") return Card(CardType::Eel);
+  if (input == "elephant") return Card(CardType::Elephant);
+  if (input == "frog") return Card(CardType::Frog);
+  if (input == "goose") return Card(CardType::Goose);
+  if (input == "horse") return Card(CardType::Horse);
+  if (input == "mantis") return Card(CardType::Mantis);
+  if (input == "monkey") return Card(CardType::Monkey);
+  if (input == "ox") return Card(CardType::Ox);
+  if (input == "rabbit") return Card(CardType::Rabbit);
+  if (input == "rooster") return Card(CardType::Rooster);
+  if (input == "tiger") return Card(CardType::Tiger);
+
+  std::cerr << std::format("Invalid card name \"{}\"!", input) << std::endl;
+  return std::nullopt;
+}
 
 bool Card::HasMove(const Offset offset) const {
   const std::vector moves = GetMoves();

@@ -43,9 +43,9 @@ Color MonteCarlo::RunSimulation(Game::Game& game) {
 }
 
 std::optional<std::function<std::unique_ptr<MonteCarlo>()>> MonteCarlo::Parse(
-    std::istringstream& command) {
+    std::istringstream& stream) {
   size_t repeatCount;
-  if (!(command >> repeatCount)) {
+  if (!(stream >> repeatCount)) {
     std::cout << "Did not provide valid repeat count for Monte Carlo strategy!"
               << std::endl;
     return std::nullopt;

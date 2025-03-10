@@ -60,12 +60,14 @@ void Execute(const size_t repeatCount, const Cli::StrategyFactory strategy) {
         .RedStrategy = strategy,
         .BlueStrategy = strategy,
 
+        .Configuration{
+            .Cards = cards,
+        },
+
         .RepeatCount = repeatCount,
         .Multithread = true,
 
         .GameArgsPrintType = PrintType::None,
-
-        .Cards = cards,
     };
 
     const Cli::ExecuteGameInfo info = Cli::ExecuteGame(args);

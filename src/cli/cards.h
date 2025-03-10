@@ -7,8 +7,6 @@ namespace Cli {
 
 void ExecuteCards();
 
-std::optional<Game::Card> ParseCard(std::istringstream& command);
-
 class CardsCommand : public Command {
  public:
   std::optional<Thunk> Parse(std::istringstream& command) const override;

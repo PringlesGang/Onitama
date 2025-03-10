@@ -1,27 +1,26 @@
 #pragma once
 
 #include "../gameMaster.h"
+#include "../util/parse.h"
 #include "command.h"
 #include "strategies.h"
 
 namespace Cli {
 
 struct GameArgs {
+ public:
+  bool Parse(std::istringstream& stream);
+  bool IsValid() const;
+
   StrategyFactory RedStrategy;
   StrategyFactory BlueStrategy;
 
-  size_t Width = 5;
-  size_t Height = 5;
+  Parse::GameConfiguration Configuration;
 
   size_t RepeatCount = 1;
-  bool RepeatCards = false;
   bool Multithread = false;
 
   PrintType GameArgsPrintType = PrintType::Board;
-
-  std::optional<std::array<Game::Card, CARD_COUNT>> Cards;
-
-  Game::Game ToGame() const;
 };
 
 struct ExecuteGameInfo {
@@ -37,11 +36,6 @@ class GameCommand : public Command {
   std::string GetName() const override;
   std::string GetCommand() const override;
   std::string GetHelp() const override;
-
-  static bool ParseCards(std::istringstream& command, GameArgs& args);
-  static bool ParsePrintType(std::istringstream& command, GameArgs& args);
-  static bool ParseOptionalArgs(std::istringstream& command, GameArgs& args);
-  static bool ParseDimensions(std::istringstream& command, GameArgs& args);
 };
 
 }  // namespace Cli

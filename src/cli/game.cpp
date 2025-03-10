@@ -9,25 +9,15 @@
 
 namespace Cli {
 
-Game::Game GameArgs::ToGame() const {
-  if (Cards) return Game::Game(Width, Height, Cards.value());
-
-  return Game::Game::WithRandomCards(Width, Height, RepeatCards);
-}
-
 static Color RunGame(const GameArgs args, std::ostream* stream) {
+  if (!args.IsValid())
+    throw std::invalid_argument("Invalid arguments for game!");
+
   std::unique_ptr<GameMaster> master;
 
-  if (args.Cards) {
-    master = std::make_unique<GameMaster>(args.Width, args.Height,
-                                          args.RedStrategy(),
-                                          args.BlueStrategy(), *args.Cards);
-  } else {
-    master = std::make_unique<GameMaster>(
-        args.Width, args.Height, args.RedStrategy(), args.BlueStrategy(),
-        args.RepeatCards);
-  }
-
+  master =
+      std::make_unique<GameMaster>(args.Configuration.ToGame().value(),
+                                   args.RedStrategy(), args.BlueStrategy());
   master->GameMasterPrintType = args.GameArgsPrintType;
 
   do {
@@ -132,8 +122,8 @@ std::string GameCommand::GetHelp() const {
 }
 
 std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
-  GameArgs args{};
-  if (!ParseOptionalArgs(command, args)) return std::nullopt;
+  GameArgs args;
+  if (!args.Parse(command)) return std::nullopt;
 
   const std::optional<StrategyFactory> redStrategy = ParseStrategy(command);
   if (!redStrategy) return std::nullopt;
@@ -144,110 +134,54 @@ std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
   args.RedStrategy = redStrategy.value();
   args.BlueStrategy = blueStrategy.value();
 
-  if (!ParseOptionalArgs(command, args)) return std::nullopt;
+  if (!args.Parse(command)) return std::nullopt;
 
   if (!Terminate(command)) return std::nullopt;
+  if (!args.IsValid()) return std::nullopt;
 
   return [args] { return ExecuteGame(args); };
 }
 
-bool GameCommand::ParseCards(std::istringstream& command, GameArgs& args) {
-  args.Cards = std::array<Game::Card, CARD_COUNT>();
-  for (Game::Card& card : *args.Cards) {
-    const std::optional<Game::Card> parsedCard = ParseCard(command);
-    if (!parsedCard) return false;
+bool GameArgs::Parse(std::istringstream& stream) {
+  if (!Configuration.Parse(stream)) return false;
 
-    card = parsedCard.value();
-  }
-
-  return true;
-}
-
-bool GameCommand::ParsePrintType(std::istringstream& command, GameArgs& args) {
   std::string arg;
-
-  if (!(command >> arg)) {
-    std::cout << "Failed to parse print type!" << std::endl;
-    return false;
-  }
-  ToLower(arg);
-
-  if (arg == "board") {
-    args.GameArgsPrintType = PrintType::Board;
-  } else if (arg == "data") {
-    args.GameArgsPrintType = PrintType::Data;
-  } else if (arg == "wins") {
-    args.GameArgsPrintType = PrintType::Wins;
-  } else if (arg == "none") {
-    args.GameArgsPrintType = PrintType::None;
-  } else {
-    std::cout << std::format("Unknown print type \"{}\"", arg) << std::endl;
-    return false;
-  }
-
-  return true;
-}
-
-bool GameCommand::ParseDimensions(std::istringstream& command, GameArgs& args) {
-  if (!(command >> args.Width)) {
-    std::cout << "Failed to parse board width!" << std::endl;
-    return false;
-  }
-
-  if (!(command >> args.Height)) {
-    std::cout << "Failed to parse board height!" << std::endl;
-    return false;
-  }
-
-  if (args.Width < 1 || args.Height < 2) {
-    std::cout << "The board needs to be at least 1x2!" << std::endl;
-    return false;
-  }
-
-  if (args.Width > MAX_DIMENSION || args.Height > MAX_DIMENSION) {
-    std::cout << std::format("The board needs to be at most {}x{}!",
-                             MAX_DIMENSION, MAX_DIMENSION)
-              << std::endl;
-    return false;
-  }
-
-  return true;
-}
-
-bool GameCommand::ParseOptionalArgs(std::istringstream& command,
-                                    GameArgs& args) {
-  std::string arg;
-  command >> arg;
-  ToLower(arg);
+  stream >> arg;
+  Parse::ToLower(arg);
 
   if (arg.empty()) return true;
 
   if (arg == "--repeat" || arg == "-n") {
-    if (!(command >> args.RepeatCount)) {
-      std::cout << "Failed to parse repeat count!" << std::endl;
+    if (!(stream >> RepeatCount)) {
+      std::cerr << "Failed to parse repeat count!" << std::endl;
       return false;
     }
 
-  } else if (arg == "--duplicate-cards" || arg == "-d") {
-    args.RepeatCards = true;
-
-  } else if (arg == "--cards" || arg == "-c") {
-    if (!ParseCards(command, args)) return false;
-
   } else if (arg == "--print-type" || arg == "-p") {
-    if (!ParsePrintType(command, args)) return false;
+    std::string printTypeString;
+    stream >> printTypeString;
+
+    const std::optional<PrintType> printType = ParsePrintType(printTypeString);
+    if (!printType) return false;
+    GameArgsPrintType = printType.value();
 
   } else if (arg == "--multithread" || arg == "-m") {
-    args.Multithread = true;
+    Multithread = true;
 
-  } else if (arg == "--size" || arg == "-s") {
-    if (!ParseDimensions(command, args)) return false;
   } else {
-    Unparse(command, arg);
+    Parse::Unparse(stream, arg);
     return true;
   }
 
-  return ParseOptionalArgs(command, args);
+  return Parse(stream);
+}
+
+bool GameArgs::IsValid() const {
+  if (!Configuration.IsValid()) return false;
+
+  if (RedStrategy == nullptr || BlueStrategy == nullptr) return false;
+
+  return true;
 }
 
 }  // namespace Cli

@@ -3,6 +3,8 @@
 #include <format>
 #include <iostream>
 
+#include "../util/parse.h"
+
 namespace Cli {
 
 std::string Cli::GetName() const { return ""; }
@@ -26,7 +28,7 @@ std::optional<Thunk> Cli::Parse(std::istringstream& command) const {
   std::string option;
 
   command >> option;
-  ToLower(option);
+  Parse::ToLower(option);
 
   if (option.empty()) {
     std::cout << "Failed to parse command!" << std::endl;

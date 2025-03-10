@@ -13,7 +13,7 @@ Game::Move Random::GetMove(const Game::Game& game) {
 }
 
 std::optional<std::function<std::unique_ptr<Random>()>> Random::Parse(
-    std::istringstream& command) {
+    std::istringstream& stream) {
   return std::make_unique<Random>;
 }
 

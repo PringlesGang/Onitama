@@ -115,7 +115,7 @@ std::optional<Game::Move> Human::ParseCard(std::istringstream& input,
 }
 
 std::optional<std::function<std::unique_ptr<Human>()>> Human::Parse(
-    std::istringstream& command) {
+    std::istringstream& stream) {
   return std::make_unique<Human>;
 }
 

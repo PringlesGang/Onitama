@@ -14,7 +14,7 @@ class MinMax : public Strategy {
   Game::Move GetMove(const Game::Game& game) override;
 
   static std::optional<std::function<std::unique_ptr<MinMax>()>> Parse(
-      std::istringstream& command);
+      std::istringstream& stream);
 
   static std::string GetName();
   static std::string GetCommand();

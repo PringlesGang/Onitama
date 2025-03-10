@@ -17,8 +17,6 @@ class PrintCommand : public Command {
 
  private:
   std::optional<Thunk> ParsePrintGame(std::istringstream& command) const;
-  std::optional<Game::GameSerialization> ParseGameSerialization(
-      std::istringstream& command) const;
 };
 
 }  // namespace Cli

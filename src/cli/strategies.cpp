@@ -9,6 +9,7 @@
 #include "../strategies/monteCarlo.h"
 #include "../strategies/positional.h"
 #include "../strategies/random.h"
+#include "../util/parse.h"
 
 namespace Cli {
 
@@ -53,7 +54,7 @@ std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
     std::cout << "No strategy provided!" << std::endl;
     return std::nullopt;
   };
-  Command::ToLower(name);
+  Parse::ToLower(name);
 
   for (const StrategyParser& strategy : Strategies) {
     if (name != strategy.Name) continue;
