@@ -18,8 +18,9 @@ void Execute(StateGraphArgs args) {
             << *args.StartingConfiguration << std::endl;
 
   ::StateGraph::Graph graph =
-      args.ImportPath ? ::StateGraph::Graph::Import(args.ImportPath.value())
-                      : ::StateGraph::Graph();
+      args.ImportPaths ? ::StateGraph::Graph::Import(args.ImportPaths->first,
+                                                     args.ImportPaths->second)
+                       : ::StateGraph::Graph();
 
   graph.Add(Game::Game(*args.StartingConfiguration));
 
@@ -38,7 +39,8 @@ void Execute(StateGraphArgs args) {
       break;
   }
 
-  if (args.ExportPath) graph.Export(args.ExportPath.value());
+  if (args.ExportPaths)
+    graph.Export(args.ExportPaths->first, args.ExportPaths->second);
 }
 
 bool StateGraphArgs::Parse(std::istringstream& stream) {
@@ -64,18 +66,26 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
         std::make_shared<Game::Game>(config.ToGame().value());
 
   } else if (argument == "--export" || argument == "-e") {
-    const std::optional<std::filesystem::path> path = Parse::ParsePath(stream);
+    const std::optional<std::filesystem::path> nodesPath =
+        Parse::ParsePath(stream);
+    if (!nodesPath) return false;
 
-    if (!path) return false;
+    const std::optional<std::filesystem::path> edgesPath =
+        Parse::ParsePath(stream);
+    if (!edgesPath) return false;
 
-    ExportPath = path.value();
+    ExportPaths = {nodesPath.value(), edgesPath.value()};
 
   } else if (argument == "--import" || argument == "-i") {
-    const std::optional<std::filesystem::path> path = Parse::ParsePath(stream);
+    const std::optional<std::filesystem::path> nodesPath =
+        Parse::ParsePath(stream);
+    if (!nodesPath) return false;
 
-    if (!path) return false;
+    const std::optional<std::filesystem::path> edgesPath =
+        Parse::ParsePath(stream);
+    if (!edgesPath) return false;
 
-    ImportPath = path.value();
+    ImportPaths = {nodesPath.value(), edgesPath.value()};
 
   } else {
     Parse::Unparse(stream, argument);

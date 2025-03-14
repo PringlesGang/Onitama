@@ -138,6 +138,8 @@ std::weak_ptr<const Vertex> Graph::Add(Game::Game&& game) {
 
     // Traverse further
     std::shared_ptr<const Vertex> nextInfo = Add(std::move(nextState)).lock();
+    info->Edges.emplace(move, nextInfo);
+
     const WinState nextQuality = -nextInfo->Quality;
 
     // Select the best move yet
@@ -238,9 +240,6 @@ static std::optional<Vertex> ParseVertex(std::istringstream string) {
 
   const Game::GameSerialization serialization = parsedSerialization.value();
 
-  // Optimal move
-  const std::optional<Game::Move> optimalMove = ParseMove(string);
-
   // Quality
   std::string qualityValString;
   std::getline(string, qualityValString);
@@ -255,22 +254,91 @@ static std::optional<Vertex> ParseVertex(std::istringstream string) {
     return std::nullopt;
   }
 
-  return Vertex(std::move(serialization), std::move(optimalMove),
-                std::move(quality));
+  return Vertex(std::move(serialization), std::nullopt, std::move(quality));
 }
 
-Graph Graph::Import(const std::filesystem::path& filePath) {
-  std::ifstream stream;
-  stream.open(filePath);
+std::optional<Edge> Graph::ParseEdge(std::istringstream string) const {
+  // Source serialization
+  std::string sourceSerializationString;
+  std::getline(string, sourceSerializationString, ',');
 
+  std::istringstream sourceSerializationStream(sourceSerializationString);
+  const std::optional<Game::GameSerialization> parsedSourceSerialization =
+      Game::Game::ParseSerialization(sourceSerializationStream);
+  if (!parsedSourceSerialization) {
+    std::cerr << std::format("Failed to parse source serialization \"{}\"!",
+                             sourceSerializationString)
+              << std::endl;
+    return std::nullopt;
+  }
+  const Game::Game sourceGame =
+      Game::Game::FromSerialization(parsedSourceSerialization.value());
+
+  if (!Vertices.contains(sourceGame)) {
+    std::cerr << std::format("Undefined vertex \"{}\"!",
+                             sourceSerializationString)
+              << std::endl;
+    return std::nullopt;
+  }
+  const std::weak_ptr<Vertex> source = Vertices.at(sourceGame);
+
+  // Target serialization
+  std::string targetSerializationString;
+  std::getline(string, targetSerializationString, ',');
+
+  std::istringstream targetSerializationStream(targetSerializationString);
+  const std::optional<Game::GameSerialization> parsedTargetSerialization =
+      Game::Game::ParseSerialization(targetSerializationStream);
+  if (!parsedTargetSerialization) {
+    std::cerr << std::format("Failed to parse target serialization \"{}\"!",
+                             targetSerializationString)
+              << std::endl;
+    return std::nullopt;
+  }
+  const Game::Game targetGame =
+      Game::Game::FromSerialization(parsedTargetSerialization.value());
+
+  if (!Vertices.contains(targetGame)) {
+    std::cerr << std::format("Undefined vertex \"{}\"!",
+                             sourceSerializationString)
+              << std::endl;
+    return std::nullopt;
+  }
+  const std::weak_ptr<const Vertex> target = Vertices.at(targetGame);
+
+  // Move
+  const std::optional<Game::Move> move = ParseMove(string);
+  if (!move) return std::nullopt;
+
+  // Optimal move
+  std::string optimalString;
+  std::getline(string, optimalString);
+  if (optimalString != "false" && optimalString != "true") {
+    std::cerr << std::format("Failed to parse boolean \"{}\"!", optimalString)
+              << std::endl;
+    return std::nullopt;
+  }
+  const bool optimal = optimalString == "true";
+
+  return Edge{.Source = source,
+              .Target = target,
+              .Move = move.value(),
+              .Optimal = optimal};
+}
+
+Graph Graph::Import(const std::filesystem::path& nodesPath,
+                    const std::filesystem::path& edgesPath) {
   Graph graph;
 
-  for (std::string vertexString; !stream.eof();
-       std::getline(stream, vertexString)) {
-    if (vertexString.empty()) continue;
+  std::ifstream nodesStream;
+  nodesStream.open(nodesPath);
+
+  for (std::string nodeString; !nodesStream.eof();
+       std::getline(nodesStream, nodeString)) {
+    if (nodeString.empty()) continue;
 
     const std::optional<Vertex> vertex =
-        ParseVertex(std::istringstream(vertexString));
+        ParseVertex(std::istringstream(nodeString));
     if (vertex) {
       graph.Vertices.insert(
           {Game::Game::FromSerialization(vertex->Serialization),
@@ -278,31 +346,78 @@ Graph Graph::Import(const std::filesystem::path& filePath) {
     }
   }
 
+  nodesStream.close();
+
+  std::ifstream edgesStream;
+  edgesStream.open(edgesPath);
+
+  for (std::string edgeString; !edgesStream.eof();
+       std::getline(edgesStream, edgeString)) {
+    if (edgeString.empty()) continue;
+
+    const std::optional<Edge> edge =
+        graph.ParseEdge(std::istringstream(edgeString));
+    if (!edge) continue;
+
+    const std::shared_ptr<Vertex> source = edge->Source.lock();
+    source->Edges.insert({edge->Move, edge->Target});
+
+    if (edge->Optimal) source->OptimalMove = edge->Move;
+  }
+
+  edgesStream.close();
+
   return graph;
 }
 
-void Graph::Export(const std::filesystem::path& filePath) const {
-  std::ofstream stream;
-  stream.open(filePath);
+void Graph::Export(const std::filesystem::path& nodesPath,
+                   const std::filesystem::path& edgesPath) const {
+  std::ofstream nodesStream;
+  nodesStream.open(nodesPath);
+
+  std::ofstream edgesStream;
+  edgesStream.open(edgesPath);
+
+  // Headers
+  nodesStream << "Id, Quality" << std::endl;
+  edgesStream << "Source, Target, Pawn, Card, Offset, Optimal" << std::endl;
 
   for (auto vertexIt = Vertices.begin(); vertexIt != Vertices.end();
        vertexIt++) {
     const Vertex& vertex = *vertexIt->second;
 
-    const std::string serialization = Base64::Encode(vertex.Serialization);
+    const std::string sourceSerialization =
+        Base64::Encode(vertex.Serialization);
 
-    std::string optimalMove = ",,";
-    if (vertex.OptimalMove) {
-      const Game::Move move = vertex.OptimalMove.value();
-      optimalMove = std::format("{},{},{}", move.PawnId,
-                                (size_t)move.UsedCard.Type, move.OffsetId);
+    nodesStream << std::format("{},{}", sourceSerialization,
+                               (int8_t)vertex.Quality)
+                << std::endl;
+
+    for (const auto [move, weakTarget] : vertex.Edges) {
+      const std::shared_ptr<const Vertex> target = weakTarget.lock();
+
+      const std::string targetSerialization =
+          Base64::Encode(target->Serialization);
+
+      const std::string optimalMove = std::format(
+          "{},{},{}", move.PawnId, (size_t)move.UsedCard.Type, move.OffsetId);
+
+      const bool optimal =
+          vertex.OptimalMove && move == vertex.OptimalMove.value();
+
+      edgesStream << std::format("{},{},{},{}", sourceSerialization,
+                                 targetSerialization, optimalMove, optimal)
+                  << std::endl;
     }
-
-    const std::string quality = std::to_string((int8_t)vertex.Quality);
-
-    stream << std::format("{},{},{}", serialization, optimalMove, quality)
-           << std::endl;
   }
+
+  nodesStream.close();
+  edgesStream.close();
+
+  std::cout << std::format("Exported nodes: {}", nodesPath.string())
+            << std::endl;
+  std::cout << std::format("Exported edges: {}", edgesPath.string())
+            << std::endl;
 }
 
 }  // namespace StateGraph

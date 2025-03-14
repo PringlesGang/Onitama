@@ -15,7 +15,8 @@ constexpr inline std::string_view Command =
     "filepath)\n"
 
     "stategraph --game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
-    "(--size width height) (--export filepath) (--import filepath)";
+    "(--size width height) (--export nodes-path edges-path) "
+    "(--import nodes-path edges-path)";
 
 constexpr inline std::string_view Description =
     "Depending on the arguments, "
@@ -32,8 +33,10 @@ struct StateGraphArgs {
 
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
 
-  std::optional<std::filesystem::path> ExportPath = std::nullopt;
-  std::optional<std::filesystem::path> ImportPath = std::nullopt;
+  std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
+      ExportPaths = std::nullopt;
+  std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
+      ImportPaths = std::nullopt;
 };
 
 void Execute(StateGraphArgs args);

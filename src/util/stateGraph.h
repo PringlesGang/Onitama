@@ -22,8 +22,18 @@ struct Vertex {
 
   const Game::GameSerialization Serialization;
 
+  std::unordered_map<Game::Move, std::weak_ptr<const Vertex>> Edges;
+
   std::optional<Game::Move> OptimalMove = std::nullopt;
   WinState Quality = WinState::Unknown;
+};
+
+struct Edge {
+  std::weak_ptr<Vertex> Source;
+  std::weak_ptr<const Vertex> Target;
+
+  Game::Move Move;
+  bool Optimal = false;
 };
 
 struct Hash {
@@ -40,10 +50,14 @@ class Graph {
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
   std::weak_ptr<const Vertex> Add(Game::Game&& game);
 
-  static Graph Import(const std::filesystem::path& filePath);
-  void Export(const std::filesystem::path& filePath) const;
+  static Graph Import(const std::filesystem::path& nodesPath,
+                      const std::filesystem::path& edgesPath);
+  void Export(const std::filesystem::path& nodesPath,
+              const std::filesystem::path& edgesPath) const;
 
  private:
+  std::optional<Edge> ParseEdge(std::istringstream string) const;
+
   std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
       Vertices;
 };

@@ -32,12 +32,16 @@ std::optional<std::function<std::unique_ptr<Positional>()>> Positional::Parse(
 
   if (!argument.empty()) {
     if (argument == "--import" || argument == "-i") {
-      const std::optional<std::filesystem::path> path =
+      const std::optional<std::filesystem::path> nodesPath =
           Parse::ParsePath(stream);
-      if (!path) return std::nullopt;
+      if (!nodesPath) return std::nullopt;
+
+      const std::optional<std::filesystem::path> edgesPath =
+          Parse::ParsePath(stream);
+      if (!edgesPath) return std::nullopt;
 
       graph = std::make_shared<StateGraph::Graph>(
-          StateGraph::Graph::Import(path.value()));
+          StateGraph::Graph::Import(nodesPath.value(), edgesPath.value()));
     } else {
       Parse::Unparse(stream, argument);
     }
@@ -52,7 +56,7 @@ std::optional<std::function<std::unique_ptr<Positional>()>> Positional::Parse(
 std::string Positional::GetName() { return "positional"; }
 
 std::string Positional::GetCommand() {
-  return std::format("{} (--import filepath)", GetName());
+  return std::format("{} (--import nodes-path edges-path)", GetName());
 }
 
 std::string Positional::GetDescription() {
