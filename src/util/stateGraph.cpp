@@ -115,9 +115,8 @@ size_t Hash::operator()(const Game::Game& game) const noexcept {
 std::optional<std::weak_ptr<const Vertex>> Graph::Get(
     const Game::Game& game) const {
   const Game::GameSerialization serialization = game.Serialize();
-  return Vertices.contains(game)
-             ? std::optional(std::weak_ptr(Vertices.at(game)))
-             : std::nullopt;
+  return Vertices.contains(game) ? std::optional(Vertices.at(game))
+                                 : std::nullopt;
 };
 
 void Graph::ExploreComponentRecursive(

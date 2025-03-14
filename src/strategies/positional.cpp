@@ -18,10 +18,15 @@ Game::Move Positional::GetMove(const Game::Game& game) {
 
   // Either get the pre-computed positional strategy,
   // or compute the positional strategy now
-  return found ? found->lock()->OptimalMove.value()
-               : Graph->FindPerfectStrategy(Game::Game(game))
-                     .lock()
-                     ->OptimalMove.value();
+  if (found) {
+    std::shared_ptr<const StateGraph::Vertex> shared = found->lock();
+    return shared ? shared->OptimalMove.value() : game.GetValidMoves()[0];
+  }
+
+  std::shared_ptr<const StateGraph::Vertex> shared =
+      Graph->FindPerfectStrategy(Game::Game(game)).lock();
+  return shared && shared->OptimalMove ? shared->OptimalMove.value()
+                                       : game.GetValidMoves()[0];
 }
 
 std::optional<std::function<std::unique_ptr<Positional>()>> Positional::Parse(
