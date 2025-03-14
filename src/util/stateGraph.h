@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <unordered_set>
 
 #include "../game/game.h"
 #include "winState.h"
@@ -48,7 +49,9 @@ struct EqualTo {
 class Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
-  std::weak_ptr<const Vertex> Add(Game::Game&& game);
+
+  std::weak_ptr<const Vertex> ExploreComponent(Game::Game&& game);
+  std::weak_ptr<const Vertex> FindPerfectStrategy(Game::Game&& game);
 
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);
@@ -57,6 +60,9 @@ class Graph {
 
  private:
   std::optional<Edge> ParseEdge(std::istringstream string) const;
+
+  void ExploreComponentRecursive(std::weak_ptr<Vertex> vertex,
+                                 std::unordered_set<Game::Game>& exploring);
 
   std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
       Vertices;

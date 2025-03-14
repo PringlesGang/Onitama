@@ -16,16 +16,23 @@ constexpr inline std::string_view Command =
 
     "stategraph --game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
     "(--size width height) (--export nodes-path edges-path) "
-    "(--import nodes-path edges-path)";
+    "(--import nodes-path edges-path) (--strategy)";
 
 constexpr inline std::string_view Description =
     "Depending on the arguments, "
-    "will construct the winning state graph for either:\n"
+    "will construct the state graph for either:\n"
     "- the provided game state;\n"
     "- or the starting configuration with the supplied arguments.\n\n"
 
     "Will export the graph to the provided filepath.\n"
-    "Will import the graph from the provided filepath.";
+    "Will import the graph from the provided filepath.\n\n"
+
+    "--strategy will provide a perfect positional strategy instead.";
+
+enum class StateGraphType {
+  Component,
+  PerfectPositionalStrategy,
+};
 
 struct StateGraphArgs {
   bool Parse(std::istringstream& stream);
@@ -37,6 +44,8 @@ struct StateGraphArgs {
       ExportPaths = std::nullopt;
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
       ImportPaths = std::nullopt;
+
+  StateGraphType type = StateGraphType::Component;
 };
 
 void Execute(StateGraphArgs args);

@@ -155,9 +155,12 @@ bool Game::operator==(const Game& other) const {
 }
 
 void Game::SetValidMoves() {
-  const std::span<const Card, HAND_SIZE>& hand = GetHand();
-
   ValidMoves.clear();
+
+  // No valid moves for a finished game
+  if (IsFinished()) return;
+
+  const std::span<const Card, HAND_SIZE>& hand = GetHand();
 
   for (size_t pawnId = 0; pawnId < GetPawnCount(); pawnId++) {
     for (Card card : hand) {

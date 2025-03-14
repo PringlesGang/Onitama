@@ -3,7 +3,6 @@
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <unordered_set>
 
 #include "base64.h"
 
@@ -121,7 +120,42 @@ std::optional<std::weak_ptr<const Vertex>> Graph::Get(
              : std::nullopt;
 };
 
-std::weak_ptr<const Vertex> Graph::Add(Game::Game&& game) {
+void Graph::ExploreComponentRecursive(
+    std::weak_ptr<Vertex> weakVertex,
+    std::unordered_set<Game::Game>& exploring) {
+  std::shared_ptr<Vertex> vertex = weakVertex.lock();
+  if (vertex == nullptr) return;
+
+  Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
+
+  if (exploring.contains(game)) return;
+  exploring.insert(game);
+
+  for (Game::Move move : game.GetValidMoves()) {
+    Game::Game nextState = game;
+    nextState.DoMove(move);
+
+    if (!Vertices.contains(nextState))
+      Vertices.insert({nextState, std::make_shared<Vertex>(nextState)});
+    std::weak_ptr<Vertex> nextVertex = Vertices.at(nextState);
+
+    vertex->Edges.insert({move, nextVertex});
+    ExploreComponentRecursive(nextVertex, exploring);
+  }
+}
+
+std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
+  const std::shared_ptr<Vertex> vertex =
+      Vertices.contains(game) ? Vertices.at(game)
+                              : std::make_shared<Vertex>(std::move(game));
+
+  std::unordered_set<Game::Game> exploring;
+  ExploreComponentRecursive(vertex, exploring);
+
+  return vertex;
+}
+
+std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
   const std::optional<std::weak_ptr<const Vertex>> storedInfo = Get(game);
   if (storedInfo) return storedInfo.value();
 
@@ -137,7 +171,8 @@ std::weak_ptr<const Vertex> Graph::Add(Game::Game&& game) {
     nextState.DoMove(move);
 
     // Traverse further
-    std::shared_ptr<const Vertex> nextInfo = Add(std::move(nextState)).lock();
+    std::shared_ptr<const Vertex> nextInfo =
+        FindPerfectStrategy(std::move(nextState)).lock();
     info->Edges.emplace(move, nextInfo);
 
     const WinState nextQuality = -nextInfo->Quality;

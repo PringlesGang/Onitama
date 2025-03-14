@@ -22,21 +22,39 @@ void Execute(StateGraphArgs args) {
                                                      args.ImportPaths->second)
                        : ::StateGraph::Graph();
 
-  graph.Add(Game::Game(*args.StartingConfiguration));
+  switch (args.type) {
+    case StateGraphType::Component: {
+      graph.ExploreComponent(Game::Game(*args.StartingConfiguration));
 
-  const std::shared_ptr<const ::StateGraph::Vertex> vertex =
-      graph.Get(*args.StartingConfiguration)->lock();
+      break;
+    }
 
-  switch (vertex->Quality) {
-    case WinState::Lost:
-      std::cout << "Lost" << std::endl;
+    case StateGraphType::PerfectPositionalStrategy: {
+      graph.FindPerfectStrategy(Game::Game(*args.StartingConfiguration));
+
+      const std::shared_ptr<const ::StateGraph::Vertex> vertex =
+          graph.Get(*args.StartingConfiguration)->lock();
+
+      switch (vertex->Quality) {
+        case WinState::Lost:
+          std::cout << "Lost" << std::endl;
+          break;
+        case WinState::Unknown:
+          std::cout << "Tie" << std::endl;
+          break;
+        case WinState::Won:
+          std::cout << "Won" << std::endl;
+          break;
+      }
+
       break;
-    case WinState::Unknown:
-      std::cout << "Tie" << std::endl;
-      break;
-    case WinState::Won:
-      std::cout << "Won" << std::endl;
-      break;
+    }
+
+    default:
+      std::cerr << std::format("Unknown state graph type \"{}\"",
+                               (size_t)args.type)
+                << std::endl;
+      return;
   }
 
   if (args.ExportPaths)
@@ -86,6 +104,9 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
     if (!edgesPath) return false;
 
     ImportPaths = {nodesPath.value(), edgesPath.value()};
+
+  } else if (argument == "--strategy") {
+    type = StateGraphType::PerfectPositionalStrategy;
 
   } else {
     Parse::Unparse(stream, argument);
