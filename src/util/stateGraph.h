@@ -57,6 +57,7 @@ class Graph {
                       const std::filesystem::path& edgesPath);
   void Export(const std::filesystem::path& nodesPath,
               const std::filesystem::path& edgesPath) const;
+  void ExportImages(const std::filesystem::path& imagesPath) const;
 
  private:
   std::optional<Edge> ParseEdge(std::istringstream string) const;

@@ -45,6 +45,8 @@ struct StateGraphArgs {
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
       ImportPaths = std::nullopt;
 
+  std::optional<std::filesystem::path> ImagesPath = std::nullopt;
+
   StateGraphType type = StateGraphType::Component;
 };
 

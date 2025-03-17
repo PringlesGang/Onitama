@@ -57,6 +57,8 @@ void Execute(StateGraphArgs args) {
 
   if (args.ExportPaths)
     graph.Export(args.ExportPaths->first, args.ExportPaths->second);
+
+  if (args.ImagesPath) graph.ExportImages(args.ImagesPath.value());
 }
 
 bool StateGraphArgs::Parse(std::istringstream& stream) {
@@ -105,6 +107,13 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
 
   } else if (argument == "--strategy") {
     type = StateGraphType::PerfectPositionalStrategy;
+
+  } else if (argument == "--image") {
+    const std::optional<std::filesystem::path> imagesPath =
+        Parse::ParsePath(stream);
+    if (!imagesPath) return false;
+
+    ImagesPath = imagesPath.value();
 
   } else {
     Parse::Unparse(stream, argument);

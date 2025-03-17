@@ -413,7 +413,7 @@ void Graph::Export(const std::filesystem::path& nodesPath,
   edgesStream.open(edgesPath);
 
   // Headers
-  nodesStream << "Id, Quality" << std::endl;
+  nodesStream << "Id, Quality, image" << std::endl;
   edgesStream << "Source, Target, Pawn, Card, Offset, Optimal" << std::endl;
 
   for (auto vertexIt = Vertices.begin(); vertexIt != Vertices.end();
@@ -423,8 +423,8 @@ void Graph::Export(const std::filesystem::path& nodesPath,
     const std::string sourceSerialization =
         Base64::Encode(vertex.Serialization);
 
-    nodesStream << std::format("{},{}", sourceSerialization,
-                               (int8_t)vertex.Quality)
+    nodesStream << std::format("{},{},{}.bmp", sourceSerialization,
+                               (int8_t)vertex.Quality, sourceSerialization)
                 << std::endl;
 
     for (const auto [move, weakTarget] : vertex.Edges) {
@@ -452,6 +452,15 @@ void Graph::Export(const std::filesystem::path& nodesPath,
             << std::endl;
   std::cout << std::format("Exported edges: {}", edgesPath.string())
             << std::endl;
+}
+
+void Graph::ExportImages(const std::filesystem::path& imagesPath) const {
+  std::cout << std::format("Exporting images: {}", imagesPath.string())
+            << std::endl;
+
+  for (const auto [game, vertex] : Vertices) {
+    game.ExportImage(imagesPath);
+  }
 }
 
 }  // namespace StateGraph
