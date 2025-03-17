@@ -65,7 +65,11 @@ Game Game::WithRandomCards(const size_t width, const size_t height,
 
 static constexpr size_t ReadBits(GameSerialization& input,
                                  const size_t length) {
-  const size_t result = input.to_ullong() & ((1 << length) - 1);
+  size_t result = 0;
+  for (size_t i = 0; i < length; i++) {
+    result |= input[i] << i;
+  }
+
   input >>= length;
   return result;
 }
@@ -460,7 +464,10 @@ std::ostream& Game::StreamHand(std::ostream& stream,
 
 static void AddBits(GameSerialization& input, const size_t bits,
                     size_t& inputSize, const size_t bitsSize) {
-  input |= bits << inputSize;
+  GameSerialization newBits(bits);
+  newBits <<= inputSize;
+
+  input |= newBits;
   inputSize += bitsSize;
 }
 
