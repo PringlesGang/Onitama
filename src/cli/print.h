@@ -5,7 +5,12 @@
 
 namespace Cli {
 
-void ExecutePrintGame(const Game::GameSerialization game);
+struct PrintGameArgs {
+  Game::GameSerialization Serialization;
+  std::optional<std::filesystem::path> ImagePath = std::nullopt;
+};
+
+void ExecutePrintGame(const PrintGameArgs args);
 
 class PrintCommand : public Command {
  public:
@@ -17,6 +22,8 @@ class PrintCommand : public Command {
 
  private:
   std::optional<Thunk> ParsePrintGame(std::istringstream& command) const;
+  bool ParsePrintGameArgs(std::istringstream& command,
+                          PrintGameArgs& args) const;
 };
 
 }  // namespace Cli
