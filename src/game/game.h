@@ -4,6 +4,7 @@
 #include <array>
 #include <bit>
 #include <bitset>
+#include <filesystem>
 #include <optional>
 #include <ostream>
 #include <span>
@@ -90,6 +91,7 @@ class Game {
 
   GameSerialization Serialize() const;
 
+  bool ExportImage(std::filesystem::path filepath) const;
   friend std::ostream& operator<<(std::ostream& stream, const Game& game);
 
  private:

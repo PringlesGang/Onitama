@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include <stb_image_write.h>
+
 #include <algorithm>
 #include <format>
 #include <iostream>
@@ -262,6 +264,142 @@ void Game::DoMove(const Move move) {
 
   CurrentPlayer = ~CurrentPlayer;
   SetValidMoves();
+}
+
+static void PushPixel(std::vector<uint8_t>& vector,
+                      std::span<const uint8_t, 3> pixel) {
+  vector.insert(vector.end(), pixel.begin(), pixel.end());
+}
+
+bool Game::ExportImage(std::filesystem::path directory) const {
+  // Filepath validation
+  if (std::filesystem::is_directory(directory)) {
+    const std::string filename =
+        std::format("{}.bmp", Base64::Encode(Serialize()));
+    directory.append(filename);
+  } else {
+    std::cerr << std::format("Invalid filepath \"{}\"!", directory.string())
+              << std::endl;
+    return false;
+  }
+
+  constexpr int channels = 3;  // RGB
+
+  const auto [boardWidth, boardHeight] = GetDimensions();
+  const size_t width =
+      std::max(boardWidth, CardDisplaySize) + 1 + CardDisplaySize;
+  const size_t height = CardDisplaySize + 1 +
+                        std::max(boardHeight, CardDisplaySize) + 1 +
+                        CardDisplaySize;
+
+  std::vector<uint8_t> pixels;
+  pixels.reserve(width * height * channels);
+
+  // Colors
+  typedef std::array<uint8_t, channels> Color;
+  constexpr Color backgroundCol = {0xFF, 0xFF, 0xFF};
+  constexpr Color emptyTileCol = {0xF3, 0xEC, 0xBE};
+
+  constexpr Color redMasterCol = {0xDF, 0, 0};
+  constexpr Color redStudentCol = {0xFF, 0x42, 0x42};
+  constexpr Color blueMasterCol = {0, 0, 0xDF};
+  constexpr Color blueStudentCol = {0x42, 0x42, 0xFF};
+
+  constexpr Color originCol = {0, 0, 0};
+  constexpr Color moveTileCol = {0x88, 0x8E, 0x68};
+
+  const auto printCardRow = [emptyTileCol, originCol, moveTileCol, &pixels](
+                                Card card, size_t y, ::Color player) {
+    const Coordinate origin = {CardDisplaySize / 2, CardDisplaySize / 2};
+
+    for (size_t x = 0; x < CardDisplaySize; x++) {
+      const Offset offset = Offset(x - origin.x, y - origin.y).Orient(player);
+
+      if (offset == Offset{0, 0}) {
+        PushPixel(pixels, originCol);
+      } else if (card.HasMove(offset)) {
+        PushPixel(pixels, moveTileCol);
+      } else {
+        PushPixel(pixels, emptyTileCol);
+      }
+    }
+  };
+
+  const auto printHand = [width, printCardRow, backgroundCol](
+                             std::span<const Card, HAND_SIZE> hand,
+                             ::Color player, std::vector<uint8_t>& pixels) {
+    for (size_t y = 0; y < CardDisplaySize; y++) {
+      for (size_t cardId = 0; cardId < HAND_SIZE; cardId++) {
+        printCardRow(hand[cardId], y, player);
+        if (cardId < HAND_SIZE - 1) PushPixel(pixels, backgroundCol);
+      }
+
+      for (size_t x = (CardDisplaySize + 1) * HAND_SIZE - 1; x < width; x++) {
+        PushPixel(pixels, backgroundCol);
+      }
+    }
+  };
+
+  // Write top hand
+  printHand(GetHand(TopPlayer), TopPlayer, pixels);
+
+  for (size_t x = 0; x < width; x++) PushPixel(pixels, backgroundCol);
+
+  // Write Board & set aside card
+  const size_t boardSegmentHeight = std::max(boardHeight, CardDisplaySize);
+  const size_t boardStart = (boardSegmentHeight - boardHeight) / 2;
+  const size_t cardStart = (boardSegmentHeight - CardDisplaySize) / 2;
+
+  for (size_t y = 0; y < boardSegmentHeight; y++) {
+    if (boardStart <= y && y < boardStart + boardHeight) {
+      const size_t localY = y - boardStart;
+
+      for (size_t x = 0; x < boardWidth; x++) {
+        const Tile tile = GameBoard.GetTile({x, localY}).value();
+
+        if (tile) {
+          if (tile->Team == ::Color::Red) {
+            if (tile->Master) {
+              PushPixel(pixels, redMasterCol);
+            } else {
+              PushPixel(pixels, redStudentCol);
+            }
+          } else {
+            if (tile->Master) {
+              PushPixel(pixels, blueMasterCol);
+            } else {
+              PushPixel(pixels, blueStudentCol);
+            }
+          }
+        } else {
+          PushPixel(pixels, emptyTileCol);
+        }
+      }
+    } else {
+      for (size_t x = 0; x < boardWidth; x++) {
+        PushPixel(pixels, backgroundCol);
+      }
+    }
+
+    for (size_t x = boardWidth + CardDisplaySize; x < width; x++)
+      PushPixel(pixels, backgroundCol);
+
+    if (cardStart <= y && y < cardStart + CardDisplaySize) {
+      printCardRow(SetAsideCard, y - cardStart, CurrentPlayer);
+    } else {
+      for (size_t x = 0; x < CardDisplaySize; x++) {
+        PushPixel(pixels, backgroundCol);
+      }
+    }
+  }
+
+  for (size_t x = 0; x < width; x++) PushPixel(pixels, backgroundCol);
+
+  // Write bottom hand
+  printHand(GetHand(~TopPlayer), ~TopPlayer, pixels);
+
+  return stbi_write_bmp(directory.string().c_str(), width, height, channels,
+                        pixels.data());
 }
 
 std::ostream& operator<<(std::ostream& stream, const Game& game) {

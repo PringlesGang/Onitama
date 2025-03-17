@@ -12,6 +12,8 @@
 
 namespace Game {
 
+constexpr size_t CardDisplaySize = 5;
+
 enum class CardType {
   Boar,
   Cobra,
