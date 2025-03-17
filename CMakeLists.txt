@@ -98,6 +98,29 @@ add_executable("onitama" ${Src} ${Header})
 
 target_include_directories(onitama PRIVATE ${INCLUDE_DIRS})
 
+target_precompile_headers(onitama PRIVATE
+    <iostream>
+    <format>
+    <array>
+    <vector>
+    <functional>
+    <optional>
+    <memory>
+    <algorithm>
+    <future>
+    <filesystem>
+    <span>
+    <unordered_map>
+    <sstream>
+    <stdexcept>
+    <string>
+    <unordered_set>
+    <random>
+    <bit>
+    <bitset>
+    <cstdint>
+)
+
 if (MSVC)
     set(InstallDest ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
 else ()
