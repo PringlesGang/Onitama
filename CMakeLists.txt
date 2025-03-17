@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.29)
 
 project("onitama")
 
@@ -78,7 +78,25 @@ set(Header
         src/experiments/stateGraph.h
 )
 
+set(INCLUDE_DIRS)
+
+
+# stb dependency
+if(NOT IS_READABLE "${CMAKE_SOURCE_DIR}/vendor/stb/stb_image_write.h")
+    file(DOWNLOAD
+        https://raw.githubusercontent.com/nothings/stb/1ee679ca2ef753a528db5ba6801e1067b40481b8/stb_image_write.h
+        "${CMAKE_SOURCE_DIR}/vendor/stb/stb_image_write.h"
+    )
+endif()
+
+add_definitions(-DSTB_IMAGE_WRITE_IMPLEMENTATION)
+
+list(APPEND INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/vendor/stb")
+
+
 add_executable("onitama" ${Src} ${Header})
+
+target_include_directories(onitama PRIVATE ${INCLUDE_DIRS})
 
 if (MSVC)
     set(InstallDest ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)

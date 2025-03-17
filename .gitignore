@@ -2,3 +2,4 @@ build
 experiments/**
 .vscode
 .vs
+vendor
