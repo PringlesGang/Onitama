@@ -12,9 +12,7 @@ namespace Experiments {
 namespace StateGraph {
 
 void Execute(StateGraphArgs args) {
-  std::cout << std::format(
-                   "Generating state graph for {}:\n",
-                   Base64::Encode(args.StartingConfiguration->Serialize()))
+  std::cout << "Generating state graph for:\n"
             << *args.StartingConfiguration << std::endl;
 
   ::StateGraph::Graph graph =

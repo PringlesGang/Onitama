@@ -403,6 +403,9 @@ bool Game::ExportImage(std::filesystem::path directory) const {
 }
 
 std::ostream& operator<<(std::ostream& stream, const Game& game) {
+  std::cout << std::format("Game state {}", Base64::Encode(game.Serialize()))
+            << std::endl;
+
   const std::span<const Card, HAND_SIZE> topHand = game.GetHand(TopPlayer);
   const std::span<const Card, HAND_SIZE> bottomHand = game.GetHand(~TopPlayer);
 
