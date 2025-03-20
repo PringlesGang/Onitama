@@ -291,10 +291,10 @@ bool Game::ExportImage(std::filesystem::path directory) const {
 
   const auto [boardWidth, boardHeight] = GetDimensions();
   const size_t width =
-      std::max(boardWidth, CardDisplaySize) + 1 + CardDisplaySize;
-  const size_t height = CardDisplaySize + 1 +
-                        std::max(boardHeight, CardDisplaySize) + 1 +
-                        CardDisplaySize;
+      std::max(boardWidth, CARD_DISPLAY_SIZE) + 1 + CARD_DISPLAY_SIZE;
+  const size_t height = CARD_DISPLAY_SIZE + 1 +
+                        std::max(boardHeight, CARD_DISPLAY_SIZE) + 1 +
+                        CARD_DISPLAY_SIZE;
 
   std::vector<uint8_t> pixels;
   pixels.reserve(width * height * channels);
@@ -314,9 +314,9 @@ bool Game::ExportImage(std::filesystem::path directory) const {
 
   const auto printCardRow = [emptyTileCol, originCol, moveTileCol, &pixels](
                                 Card card, size_t y, ::Color player) {
-    const Coordinate origin = {CardDisplaySize / 2, CardDisplaySize / 2};
+    const Coordinate origin = {CARD_DISPLAY_SIZE / 2, CARD_DISPLAY_SIZE / 2};
 
-    for (size_t x = 0; x < CardDisplaySize; x++) {
+    for (size_t x = 0; x < CARD_DISPLAY_SIZE; x++) {
       const Offset offset = Offset(x - origin.x, y - origin.y).Orient(player);
 
       if (offset == Offset{0, 0}) {
@@ -332,13 +332,13 @@ bool Game::ExportImage(std::filesystem::path directory) const {
   const auto printHand = [width, printCardRow, backgroundCol](
                              std::span<const Card, HAND_SIZE> hand,
                              ::Color player, std::vector<uint8_t>& pixels) {
-    for (size_t y = 0; y < CardDisplaySize; y++) {
+    for (size_t y = 0; y < CARD_DISPLAY_SIZE; y++) {
       for (size_t cardId = 0; cardId < HAND_SIZE; cardId++) {
         printCardRow(hand[cardId], y, player);
         if (cardId < HAND_SIZE - 1) PushPixel(pixels, backgroundCol);
       }
 
-      for (size_t x = (CardDisplaySize + 1) * HAND_SIZE - 1; x < width; x++) {
+      for (size_t x = (CARD_DISPLAY_SIZE + 1) * HAND_SIZE - 1; x < width; x++) {
         PushPixel(pixels, backgroundCol);
       }
     }
@@ -350,9 +350,9 @@ bool Game::ExportImage(std::filesystem::path directory) const {
   for (size_t x = 0; x < width; x++) PushPixel(pixels, backgroundCol);
 
   // Write Board & set aside card
-  const size_t boardSegmentHeight = std::max(boardHeight, CardDisplaySize);
+  const size_t boardSegmentHeight = std::max(boardHeight, CARD_DISPLAY_SIZE);
   const size_t boardStart = (boardSegmentHeight - boardHeight) / 2;
-  const size_t cardStart = (boardSegmentHeight - CardDisplaySize) / 2;
+  const size_t cardStart = (boardSegmentHeight - CARD_DISPLAY_SIZE) / 2;
 
   for (size_t y = 0; y < boardSegmentHeight; y++) {
     if (boardStart <= y && y < boardStart + boardHeight) {
@@ -385,13 +385,13 @@ bool Game::ExportImage(std::filesystem::path directory) const {
       }
     }
 
-    for (size_t x = boardWidth + CardDisplaySize; x < width; x++)
+    for (size_t x = boardWidth + CARD_DISPLAY_SIZE; x < width; x++)
       PushPixel(pixels, backgroundCol);
 
-    if (cardStart <= y && y < cardStart + CardDisplaySize) {
+    if (cardStart <= y && y < cardStart + CARD_DISPLAY_SIZE) {
       printCardRow(SetAsideCard, y - cardStart, CurrentPlayer);
     } else {
-      for (size_t x = 0; x < CardDisplaySize; x++) {
+      for (size_t x = 0; x < CARD_DISPLAY_SIZE; x++) {
         PushPixel(pixels, backgroundCol);
       }
     }
@@ -421,16 +421,31 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
   if (game.CurrentPlayer == TopPlayer) stream << cardNumberString << std::endl;
   game.StreamHand(stream, topHand, true);
 
-  size_t pawnIndex = 0;
-  for (size_t row = 0; row < game.GameBoard.GetDimensions().second; row++) {
-    game.GameBoard.StreamPlayerRow(stream, game.CurrentPlayer, row, pawnIndex);
-    stream << "  ";
+  const auto [boardWidth, boardHeight] = game.GameBoard.GetDimensions();
+  const size_t boardSegmentHeight = std::max(boardHeight, CARD_DISPLAY_SIZE);
+  const size_t boardStart = (boardSegmentHeight - boardHeight) / 2;
+  const size_t cardStart = (boardSegmentHeight - CARD_DISPLAY_SIZE) / 2;
 
-    const bool reverse = game.CurrentPlayer == TopPlayer;
-    const int8_t sign = reverse ? -1 : 1;
-    game.SetAsideCard.StreamRow(stream, sign * (row - 2),
-                                game.CurrentPlayer == TopPlayer)
-        << std::endl;
+  size_t pawnIndex = 0;
+  for (size_t row = 0; row < boardSegmentHeight; row++) {
+    if (boardStart <= row && row < boardStart + boardHeight) {
+      game.GameBoard.StreamPlayerRow(stream, game.CurrentPlayer,
+                                     row - boardStart, pawnIndex);
+    } else {
+      stream << std::string(boardWidth, ' ');
+    }
+
+    if (cardStart <= row && row < cardStart + CARD_DISPLAY_SIZE) {
+      stream << std::string(
+          std::max(0, (int)CARD_DISPLAY_SIZE - (int)boardWidth) + 2, ' ');
+
+      const bool reverse = game.CurrentPlayer == TopPlayer;
+      const int8_t sign = reverse ? -1 : 1;
+      game.SetAsideCard.StreamRow(stream, sign * (row - cardStart - 2),
+                                  game.CurrentPlayer == TopPlayer);
+    }
+
+    stream << std::endl;
   }
 
   stream << std::endl;

@@ -7,8 +7,8 @@
 #include "color.h"
 
 struct Offset {
-  int8_t dx;
-  int8_t dy;
+  int dx;
+  int dy;
 
   Offset Orient(const Color player) const;
 

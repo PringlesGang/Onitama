@@ -52,7 +52,10 @@ std::ostream& Card::StreamRow(std::ostream& stream, const int8_t row,
   const std::vector<Offset>& offsets = GetMoves();
   const int8_t sign = rotate ? -1 : 1;
 
-  for (Offset offset{.dx = (int8_t)(-2 * sign), .dy = row}; abs(offset.dx) <= 2;
+  const int min = -(int)(CARD_DISPLAY_SIZE / 2);
+  const int max = CARD_DISPLAY_SIZE + min;
+
+  for (Offset offset{.dx = min * sign, .dy = row}; abs(offset.dx) < max;
        offset.dx += sign) {
     const auto offsetId = std::find(offsets.begin(), offsets.end(), offset);
 
@@ -73,8 +76,11 @@ std::ostream& Card::StreamRow(std::ostream& stream, const int8_t row,
 std::ostream& Card::Stream(std::ostream& stream, const bool rotate) const {
   const int8_t sign = rotate ? -1 : 1;
 
+  const int min = -(int)(CARD_DISPLAY_SIZE / 2);
+  const int max = CARD_DISPLAY_SIZE + min;
+
   stream << std::endl;
-  for (int8_t row = -2 * sign; abs(row) <= 2; row++) {
+  for (int row = min * sign; abs(row) < max; row++) {
     StreamRow(stream, row, rotate) << std::endl;
   }
 
