@@ -23,7 +23,7 @@ struct Vertex {
 
   const Game::GameSerialization Serialization;
 
-  std::unordered_map<Game::Move, std::weak_ptr<const Vertex>> Edges;
+  std::unordered_map<Game::Move, std::weak_ptr<Vertex>> Edges;
 
   std::optional<Game::Move> OptimalMove = std::nullopt;
   WinState Quality = WinState::Unknown;
@@ -31,7 +31,7 @@ struct Vertex {
 
 struct Edge {
   std::weak_ptr<Vertex> Source;
-  std::weak_ptr<const Vertex> Target;
+  std::weak_ptr<Vertex> Target;
 
   Game::Move Move;
   bool Optimal = false;
@@ -64,6 +64,12 @@ class Graph {
 
   void ExploreComponentRecursive(std::weak_ptr<Vertex> vertex,
                                  std::unordered_set<Game::Game>& exploring);
+
+  std::weak_ptr<Vertex> FindPerfectStrategyExpand(
+      Game::Game&& game, std::unordered_set<std::shared_ptr<Vertex>>& draws);
+  void FindPerfectStrategyCheckDraw(
+      std::weak_ptr<Vertex> vertex,
+      std::unordered_set<std::shared_ptr<Vertex>>& component);
 
   std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
       Vertices;

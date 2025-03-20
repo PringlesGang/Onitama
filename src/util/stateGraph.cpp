@@ -155,8 +155,25 @@ std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
 }
 
 std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
-  const std::optional<std::weak_ptr<const Vertex>> storedInfo = Get(game);
-  if (storedInfo) return storedInfo.value();
+  std::unordered_set<std::shared_ptr<Vertex>> draws;
+  const std::weak_ptr<const Vertex> requestedVertex =
+      FindPerfectStrategyExpand(std::move(game), draws);
+
+  while (!draws.empty()) {
+    std::unordered_set<std::shared_ptr<Vertex>> component;
+    FindPerfectStrategyCheckDraw(*draws.begin(), component);
+
+    for (const std::shared_ptr<Vertex> vertex : component) {
+      draws.erase(vertex);
+    }
+  }
+
+  return requestedVertex;
+}
+
+std::weak_ptr<Vertex> Graph::FindPerfectStrategyExpand(
+    Game::Game&& game, std::unordered_set<std::shared_ptr<Vertex>>& draws) {
+  if (Vertices.contains(game)) return Vertices.at(std::move(game));
 
   std::shared_ptr<Vertex> info = std::make_shared<Vertex>(game);
   Vertices.emplace(game, info);
@@ -170,8 +187,8 @@ std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
     nextState.DoMove(move);
 
     // Traverse further
-    std::shared_ptr<const Vertex> nextInfo =
-        FindPerfectStrategy(std::move(nextState)).lock();
+    std::shared_ptr<Vertex> nextInfo =
+        FindPerfectStrategyExpand(std::move(nextState), draws).lock();
     info->Edges.emplace(move, nextInfo);
 
     const WinState nextQuality = -nextInfo->Quality;
@@ -186,7 +203,66 @@ std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
     if (info->Quality == WinState::Won) return info;
   }
 
+  if (info->Quality == WinState::Unknown) draws.insert(info);
+
   return info;
+}
+
+void Graph::FindPerfectStrategyCheckDraw(
+    std::weak_ptr<Vertex> weakVertex,
+    std::unordered_set<std::shared_ptr<Vertex>>& component) {
+  // Check if the vertex has already been checked
+  const std::shared_ptr<Vertex> vertex = weakVertex.lock();
+  if (vertex == nullptr || component.contains(vertex)) return;
+  component.insert(vertex);
+
+  // Check if a winning move has popped up
+  for (const auto [move, nextVertexWeak] : vertex->Edges) {
+    const std::shared_ptr<const Vertex> nextVertex = nextVertexWeak.lock();
+    if (nextVertex != nullptr && nextVertex->Quality == WinState::Lost) {
+      vertex->Quality = WinState::Won;
+      vertex->OptimalMove = move;
+      return;
+    }
+  }
+
+  // Find the next best move
+  bool allLosingMoves = true;
+  for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
+       edgeIt++) {
+    const auto [move, nextVertexWeak] = *edgeIt;
+
+    const std::shared_ptr<Vertex> nextVertex = nextVertexWeak.lock();
+    if (nextVertex == nullptr || nextVertex->Quality != WinState::Unknown)
+      continue;
+
+    FindPerfectStrategyCheckDraw(nextVertex, component);
+
+    if (nextVertex->Quality == WinState::Lost) {
+      vertex->Quality = WinState::Won;
+      vertex->OptimalMove = move;
+
+      // Recheck the previously searched draw edges, now that the loop is broken
+      for (auto checkedEdges = vertex->Edges.begin(); checkedEdges != edgeIt;
+           checkedEdges++) {
+        std::shared_ptr<Vertex> checkedVertex = checkedEdges->second.lock();
+        if (checkedVertex == nullptr ||
+            nextVertex->Quality != WinState::Unknown)
+          continue;
+
+        std::unordered_set<std::shared_ptr<Vertex>> newComponent({vertex});
+        FindPerfectStrategyCheckDraw(std::move(checkedVertex), newComponent);
+      }
+
+      return;
+
+    } else if (nextVertex->Quality == WinState::Unknown) {
+      vertex->OptimalMove = move;
+      allLosingMoves = false;
+    }
+  }
+
+  if (allLosingMoves) vertex->Quality = WinState::Lost;
 }
 
 static std::optional<Game::Move> ParseMove(std::istringstream& string) {
@@ -338,7 +414,7 @@ std::optional<Edge> Graph::ParseEdge(std::istringstream string) const {
               << std::endl;
     return std::nullopt;
   }
-  const std::weak_ptr<const Vertex> target = Vertices.at(targetGame);
+  const std::weak_ptr<Vertex> target = Vertices.at(targetGame);
 
   // Move
   const std::optional<Game::Move> move = ParseMove(string);
