@@ -39,7 +39,7 @@ std::weak_ptr<Vertex> Graph::FindPerfectStrategyExpand(
     std::shared_ptr<Vertex> nextInfo =
         FindPerfectStrategyExpand(std::move(nextState), draws).lock();
     if (nextInfo == nullptr) continue;
-    info->Edges.emplace(move, nextInfo);
+    info->Edges.emplace_back(std::make_shared<Edge>(info, nextInfo, move));
 
     const std::optional<WinState> nextQuality =
         nextInfo->Quality.transform(operator-);
@@ -68,11 +68,11 @@ void Graph::FindPerfectStrategyCheckDraw(
   component.insert(vertex);
 
   // Check if a winning move has popped up
-  for (const auto [move, nextVertexWeak] : vertex->Edges) {
-    const std::shared_ptr<const Vertex> nextVertex = nextVertexWeak.lock();
-    if (nextVertex != nullptr && nextVertex->Quality == WinState::Lose) {
+  for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
+    const std::shared_ptr<const Vertex> target = edge->Target.lock();
+    if (target != nullptr && target->Quality == WinState::Lose) {
       vertex->Quality = WinState::Win;
-      vertex->OptimalMove = move;
+      vertex->OptimalMove = edge->Move;
       return;
     }
   }
@@ -81,25 +81,25 @@ void Graph::FindPerfectStrategyCheckDraw(
   bool allLosingMoves = true;
   for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
        edgeIt++) {
-    const auto [move, nextVertexWeak] = *edgeIt;
+    const std::shared_ptr<const Edge> edge = *edgeIt;
 
-    const std::shared_ptr<Vertex> nextVertex = nextVertexWeak.lock();
-    if (nextVertex == nullptr || nextVertex->Quality.has_value()) continue;
+    const std::shared_ptr<Vertex> target = edge->Target.lock();
+    if (target == nullptr || target->Quality.has_value()) continue;
 
-    FindPerfectStrategyCheckDraw(nextVertex, component);
+    FindPerfectStrategyCheckDraw(target, component);
 
-    switch (nextVertex->Quality.value_or(WinState::Draw)) {
+    switch (target->Quality.value_or(WinState::Draw)) {
       case WinState::Lose: {
         vertex->Quality = WinState::Win;
-        vertex->OptimalMove = move;
+        vertex->OptimalMove = edge->Move;
 
         // Recheck the previously searched draw edges, now that the loop is
         // broken
-        for (auto checkedEdges = vertex->Edges.begin(); checkedEdges != edgeIt;
-             checkedEdges++) {
-          std::shared_ptr<Vertex> checkedVertex = checkedEdges->second.lock();
-          if (checkedVertex == nullptr || nextVertex->Quality.has_value())
-            continue;
+        for (auto checkedEdgesIt = vertex->Edges.begin();
+             checkedEdgesIt != edgeIt; checkedEdgesIt++) {
+          const std::shared_ptr<const Edge> checkedEdges = *checkedEdgesIt;
+          std::shared_ptr<Vertex> checkedVertex = checkedEdges->Target.lock();
+          if (checkedVertex == nullptr || target->Quality.has_value()) continue;
 
           std::unordered_set<std::shared_ptr<Vertex>> newComponent({vertex});
           FindPerfectStrategyCheckDraw(std::move(checkedVertex), newComponent);
@@ -108,7 +108,7 @@ void Graph::FindPerfectStrategyCheckDraw(
         return;
       }
       case WinState::Draw: {
-        vertex->OptimalMove = move;
+        vertex->OptimalMove = edge->Move;
         allLosingMoves = false;
 
         break;

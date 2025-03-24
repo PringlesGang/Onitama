@@ -8,3 +8,5 @@ enum class WinState {
 
 WinState operator-(const WinState original);
 bool operator<(const WinState lhs, const WinState rhs);
+
+std::string to_string(WinState state);

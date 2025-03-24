@@ -21,7 +21,8 @@ void Graph::ExploreComponentRecursive(
       Vertices.insert({nextState, std::make_shared<Vertex>(nextState)});
     std::weak_ptr<Vertex> nextVertex = Vertices.at(nextState);
 
-    vertex->Edges.insert({move, nextVertex});
+    vertex->Edges.emplace_back(
+        std::make_shared<Edge>(vertex, nextVertex, move));
     ExploreComponentRecursive(nextVertex, exploring);
   }
 }

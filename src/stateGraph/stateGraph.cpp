@@ -60,6 +60,10 @@ static bool CompareCoordinates(const Game::Game& first,
   return true;
 }
 
+Edge::Edge(std::weak_ptr<Vertex> source, std::weak_ptr<Vertex> target,
+           Game::Move move, std::optional<bool> optimal)
+    : Source(source), Target(target), Move(move), Optimal(optimal) {}
+
 bool EqualTo::operator()(const Game::Game& first,
                          const Game::Game& second) const noexcept {
   if (first.GetSetAsideCard() != second.GetSetAsideCard()) return false;
@@ -210,14 +214,12 @@ static std::optional<Vertex> ParseVertex(std::istringstream string) {
   std::string qualityValString;
   std::getline(string, qualityValString);
 
-  WinState quality;
+  std::optional<WinState> quality;
   try {
     const int8_t qualityVal = std::stoi(qualityValString);
     quality = (WinState)qualityVal;
   } catch (std::invalid_argument e) {
-    std::cerr << std::format("Failed to parse quality \"{}\"", qualityValString)
-              << std::endl;
-    return std::nullopt;
+    quality = std::nullopt;
   }
 
   return Vertex(std::move(serialization), std::nullopt, std::move(quality));
@@ -279,11 +281,6 @@ std::optional<Edge> Graph::ParseEdge(std::istringstream string) const {
   // Optimal move
   std::string optimalString;
   std::getline(string, optimalString);
-  if (optimalString != "false" && optimalString != "true") {
-    std::cerr << std::format("Failed to parse boolean \"{}\"!", optimalString)
-              << std::endl;
-    return std::nullopt;
-  }
 
   std::optional<bool> optimal = std::nullopt;
   if (optimalString == "true") {
@@ -292,10 +289,7 @@ std::optional<Edge> Graph::ParseEdge(std::istringstream string) const {
     optimal = false;
   }
 
-  return Edge{.Source = source,
-              .Target = target,
-              .Move = move.value(),
-              .Optimal = optimal};
+  return Edge(source, target, move.value(), optimal);
 }
 
 Graph Graph::Import(const std::filesystem::path& nodesPath,
@@ -332,7 +326,7 @@ Graph Graph::Import(const std::filesystem::path& nodesPath,
     if (!edge) continue;
 
     const std::shared_ptr<Vertex> source = edge->Source.lock();
-    source->Edges.insert({edge->Move, edge->Target});
+    source->Edges.emplace_back(std::make_shared<Edge>(edge.value()));
 
     if (edge->IsOptimal()) source->OptimalMove = edge->Move;
   }
@@ -361,14 +355,16 @@ void Graph::Export(const std::filesystem::path& nodesPath,
     const std::string sourceSerialization =
         Base64::Encode(vertex.Serialization);
     const std::string quality =
-        vertex.Quality ? std::to_string((int8_t)vertex.Quality.value()) : "";
+        vertex.Quality.transform(to_string).value_or("Unknown");
 
     nodesStream << std::format("{},{},{}.bmp", sourceSerialization, quality,
                                sourceSerialization)
                 << std::endl;
 
-    for (const auto [move, weakTarget] : vertex.Edges) {
-      const std::shared_ptr<const Vertex> target = weakTarget.lock();
+    for (const std::shared_ptr<Edge> edge : vertex.Edges) {
+      const std::shared_ptr<const Vertex> target = edge->Target.lock();
+      if (target == nullptr) continue;
+      const Game::Move move = edge->Move;
 
       const std::string targetSerialization =
           Base64::Encode(target->Serialization);
@@ -376,11 +372,9 @@ void Graph::Export(const std::filesystem::path& nodesPath,
       const std::string optimalMove = std::format(
           "{},{},{}", move.PawnId, (size_t)move.UsedCard.Type, move.OffsetId);
 
-      const bool optimal =
-          vertex.OptimalMove && move == vertex.OptimalMove.value();
-
       edgesStream << std::format("{},{},{},{}", sourceSerialization,
-                                 targetSerialization, optimalMove, optimal)
+                                 targetSerialization, optimalMove,
+                                 edge->IsOptimal())
                   << std::endl;
     }
   }

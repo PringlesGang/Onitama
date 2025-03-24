@@ -8,6 +8,8 @@
 
 namespace StateGraph {
 
+struct Edge;
+
 struct Vertex {
   Vertex(const Game::Game& game);
   Vertex(Game::GameSerialization serialization,
@@ -23,20 +25,24 @@ struct Vertex {
 
   const Game::GameSerialization Serialization;
 
-  std::unordered_map<Game::Move, std::weak_ptr<Vertex>> Edges;
+  std::vector<std::shared_ptr<Edge>> Edges;
 
   std::optional<Game::Move> OptimalMove;
   std::optional<WinState> Quality;
 };
 
 struct Edge {
+  Edge(std::weak_ptr<Vertex> source, std::weak_ptr<Vertex> target,
+       Game::Move move, std::optional<bool> optimal = std::nullopt);
+
   std::weak_ptr<Vertex> Source;
   std::weak_ptr<Vertex> Target;
 
   Game::Move Move;
+
   std::optional<bool> Optimal;
 
-  bool IsOptimal() const { return Optimal && Optimal.value(); }
+  bool IsOptimal() const { return Optimal.has_value() && Optimal.value(); }
 };
 
 struct Hash {
