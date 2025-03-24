@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 
-#include "../util/stateGraph.h"
+#include "../stateGraph/stateGraph.h"
 #include "strategy.h"
 
 namespace Strategy {

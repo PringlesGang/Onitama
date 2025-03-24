@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include "../cli/game.h"
+#include "../stateGraph/stateGraph.h"
 #include "../util/base64.h"
 #include "../util/parse.h"
-#include "../util/stateGraph.h"
 
 namespace Experiments {
 namespace StateGraph {
@@ -33,16 +33,20 @@ void Execute(StateGraphArgs args) {
       const std::shared_ptr<const ::StateGraph::Vertex> vertex =
           graph.Get(*args.StartingConfiguration)->lock();
 
-      switch (vertex->Quality) {
-        case WinState::Lost:
-          std::cout << "Lost" << std::endl;
-          break;
-        case WinState::Unknown:
-          std::cout << "Tie" << std::endl;
-          break;
-        case WinState::Won:
-          std::cout << "Won" << std::endl;
-          break;
+      if (vertex->Quality.has_value()) {
+        switch (vertex->Quality.value()) {
+          case WinState::Lose:
+            std::cout << "Lost" << std::endl;
+            break;
+          case WinState::Draw:
+            std::cout << "Draw" << std::endl;
+            break;
+          case WinState::Win:
+            std::cout << "Won" << std::endl;
+            break;
+        }
+      } else {
+        std::cout << "Unkown" << std::endl;
       }
 
       break;

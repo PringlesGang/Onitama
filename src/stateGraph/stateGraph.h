@@ -4,7 +4,7 @@
 #include <unordered_set>
 
 #include "../game/game.h"
-#include "winState.h"
+#include "../util/winState.h"
 
 namespace StateGraph {
 
@@ -12,7 +12,7 @@ struct Vertex {
   Vertex(const Game::Game& game);
   Vertex(Game::GameSerialization serialization,
          std::optional<Game::Move> optimalMove = std::nullopt,
-         WinState quality = WinState::Unknown);
+         std::optional<WinState> quality = std::nullopt);
 
   bool operator==(const Vertex& other) const {
     return Serialization == other.Serialization;
@@ -25,8 +25,8 @@ struct Vertex {
 
   std::unordered_map<Game::Move, std::weak_ptr<Vertex>> Edges;
 
-  std::optional<Game::Move> OptimalMove = std::nullopt;
-  WinState Quality = WinState::Unknown;
+  std::optional<Game::Move> OptimalMove;
+  std::optional<WinState> Quality;
 };
 
 struct Edge {
@@ -34,7 +34,9 @@ struct Edge {
   std::weak_ptr<Vertex> Target;
 
   Game::Move Move;
-  bool Optimal = false;
+  std::optional<bool> Optimal;
+
+  bool IsOptimal() const { return Optimal && Optimal.value(); }
 };
 
 struct Hash {

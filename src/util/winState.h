@@ -1,10 +1,9 @@
 #pragma once
 
 enum class WinState {
-  Lost = -1,
-  Unknown = 0,
-  Won = 1,
-
+  Lose = -1,
+  Draw = 0,
+  Win = 1,
 };
 
 WinState operator-(const WinState original);

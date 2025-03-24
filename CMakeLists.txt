@@ -19,7 +19,6 @@ set(Src
         src/util/coordinate.cpp
         src/util/offset.cpp
         src/util/winState.cpp
-        src/util/stateGraph.cpp
         src/util/parse.cpp
 
         src/strategies/human.cpp
@@ -38,6 +37,10 @@ set(Src
 
         src/experiments/fairCards.cpp
         src/experiments/stateGraph.cpp
+
+        src/stateGraph/stateGraph.cpp
+        src/stateGraph/exploreComponent.cpp
+        src/stateGraph/perfectStrategy.cpp
 )
 
 set(Header
@@ -56,7 +59,6 @@ set(Header
         src/util/offset.h
         src/util/winState.h
         src/util/base64.h
-        src/util/stateGraph.h
         src/util/parse.h
 
         src/strategies/strategy.h
@@ -76,6 +78,8 @@ set(Header
 
         src/experiments/fairCards.h
         src/experiments/stateGraph.h
+
+        src/stateGraph/stateGraph.h
 )
 
 set(INCLUDE_DIRS)

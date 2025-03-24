@@ -4,16 +4,18 @@
 #include <fstream>
 #include <iostream>
 
-#include "base64.h"
+#include "../util/base64.h"
 
 namespace StateGraph {
 
 Vertex::Vertex(const Game::Game& game)
     : Serialization(game.Serialize()),
-      Quality(game.IsFinished() ? WinState::Lost : WinState::Unknown) {}
+      Quality(game.IsFinished() ? std::optional<WinState>(WinState::Lose)
+                                : std::nullopt) {}
 
 Vertex::Vertex(Game::GameSerialization serialization,
-               std::optional<Game::Move> optimalMove, WinState quality)
+               std::optional<Game::Move> optimalMove,
+               std::optional<WinState> quality)
     : Serialization(serialization),
       OptimalMove(optimalMove),
       Quality(quality) {}
@@ -118,152 +120,6 @@ std::optional<std::weak_ptr<const Vertex>> Graph::Get(
   return Vertices.contains(game) ? std::optional(Vertices.at(game))
                                  : std::nullopt;
 };
-
-void Graph::ExploreComponentRecursive(
-    std::weak_ptr<Vertex> weakVertex,
-    std::unordered_set<Game::Game>& exploring) {
-  std::shared_ptr<Vertex> vertex = weakVertex.lock();
-  if (vertex == nullptr) return;
-
-  Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
-
-  if (exploring.contains(game)) return;
-  exploring.insert(game);
-
-  for (Game::Move move : game.GetValidMoves()) {
-    Game::Game nextState = game;
-    nextState.DoMove(move);
-
-    if (!Vertices.contains(nextState))
-      Vertices.insert({nextState, std::make_shared<Vertex>(nextState)});
-    std::weak_ptr<Vertex> nextVertex = Vertices.at(nextState);
-
-    vertex->Edges.insert({move, nextVertex});
-    ExploreComponentRecursive(nextVertex, exploring);
-  }
-}
-
-std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
-  const std::shared_ptr<Vertex> vertex =
-      Vertices.contains(game) ? Vertices.at(game)
-                              : std::make_shared<Vertex>(std::move(game));
-
-  std::unordered_set<Game::Game> exploring;
-  ExploreComponentRecursive(vertex, exploring);
-
-  return vertex;
-}
-
-std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
-  std::unordered_set<std::shared_ptr<Vertex>> draws;
-  const std::weak_ptr<const Vertex> requestedVertex =
-      FindPerfectStrategyExpand(std::move(game), draws);
-
-  while (!draws.empty()) {
-    std::unordered_set<std::shared_ptr<Vertex>> component;
-    FindPerfectStrategyCheckDraw(*draws.begin(), component);
-
-    for (const std::shared_ptr<Vertex> vertex : component) {
-      draws.erase(vertex);
-    }
-  }
-
-  return requestedVertex;
-}
-
-std::weak_ptr<Vertex> Graph::FindPerfectStrategyExpand(
-    Game::Game&& game, std::unordered_set<std::shared_ptr<Vertex>>& draws) {
-  if (Vertices.contains(game)) return Vertices.at(std::move(game));
-
-  std::shared_ptr<Vertex> info = std::make_shared<Vertex>(game);
-  Vertices.emplace(game, info);
-
-  // Terminal game state
-  if (info->Quality != WinState::Unknown) return info;
-
-  const std::vector<Game::Move>& validMoves = game.GetValidMoves();
-  for (const Game::Move move : validMoves) {
-    Game::Game nextState(game);
-    nextState.DoMove(move);
-
-    // Traverse further
-    std::shared_ptr<Vertex> nextInfo =
-        FindPerfectStrategyExpand(std::move(nextState), draws).lock();
-    info->Edges.emplace(move, nextInfo);
-
-    const WinState nextQuality = -nextInfo->Quality;
-
-    // Select the best move yet
-    if (!info->OptimalMove || info->Quality < nextQuality) {
-      info->Quality = nextQuality;
-      info->OptimalMove = move;
-    }
-
-    // A winning positional strategy has been found
-    if (info->Quality == WinState::Won) return info;
-  }
-
-  if (info->Quality == WinState::Unknown) draws.insert(info);
-
-  return info;
-}
-
-void Graph::FindPerfectStrategyCheckDraw(
-    std::weak_ptr<Vertex> weakVertex,
-    std::unordered_set<std::shared_ptr<Vertex>>& component) {
-  // Check if the vertex has already been checked
-  const std::shared_ptr<Vertex> vertex = weakVertex.lock();
-  if (vertex == nullptr || component.contains(vertex)) return;
-  component.insert(vertex);
-
-  // Check if a winning move has popped up
-  for (const auto [move, nextVertexWeak] : vertex->Edges) {
-    const std::shared_ptr<const Vertex> nextVertex = nextVertexWeak.lock();
-    if (nextVertex != nullptr && nextVertex->Quality == WinState::Lost) {
-      vertex->Quality = WinState::Won;
-      vertex->OptimalMove = move;
-      return;
-    }
-  }
-
-  // Find the next best move
-  bool allLosingMoves = true;
-  for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
-       edgeIt++) {
-    const auto [move, nextVertexWeak] = *edgeIt;
-
-    const std::shared_ptr<Vertex> nextVertex = nextVertexWeak.lock();
-    if (nextVertex == nullptr || nextVertex->Quality != WinState::Unknown)
-      continue;
-
-    FindPerfectStrategyCheckDraw(nextVertex, component);
-
-    if (nextVertex->Quality == WinState::Lost) {
-      vertex->Quality = WinState::Won;
-      vertex->OptimalMove = move;
-
-      // Recheck the previously searched draw edges, now that the loop is broken
-      for (auto checkedEdges = vertex->Edges.begin(); checkedEdges != edgeIt;
-           checkedEdges++) {
-        std::shared_ptr<Vertex> checkedVertex = checkedEdges->second.lock();
-        if (checkedVertex == nullptr ||
-            nextVertex->Quality != WinState::Unknown)
-          continue;
-
-        std::unordered_set<std::shared_ptr<Vertex>> newComponent({vertex});
-        FindPerfectStrategyCheckDraw(std::move(checkedVertex), newComponent);
-      }
-
-      return;
-
-    } else if (nextVertex->Quality == WinState::Unknown) {
-      vertex->OptimalMove = move;
-      allLosingMoves = false;
-    }
-  }
-
-  if (allLosingMoves) vertex->Quality = WinState::Lost;
-}
 
 static std::optional<Game::Move> ParseMove(std::istringstream& string) {
   // Pawn id
@@ -428,7 +284,13 @@ std::optional<Edge> Graph::ParseEdge(std::istringstream string) const {
               << std::endl;
     return std::nullopt;
   }
-  const bool optimal = optimalString == "true";
+
+  std::optional<bool> optimal = std::nullopt;
+  if (optimalString == "true") {
+    optimal = true;
+  } else if (optimalString == "false") {
+    optimal = false;
+  }
 
   return Edge{.Source = source,
               .Target = target,
@@ -472,7 +334,7 @@ Graph Graph::Import(const std::filesystem::path& nodesPath,
     const std::shared_ptr<Vertex> source = edge->Source.lock();
     source->Edges.insert({edge->Move, edge->Target});
 
-    if (edge->Optimal) source->OptimalMove = edge->Move;
+    if (edge->IsOptimal()) source->OptimalMove = edge->Move;
   }
 
   edgesStream.close();
@@ -498,9 +360,11 @@ void Graph::Export(const std::filesystem::path& nodesPath,
 
     const std::string sourceSerialization =
         Base64::Encode(vertex.Serialization);
+    const std::string quality =
+        vertex.Quality ? std::to_string((int8_t)vertex.Quality.value()) : "";
 
-    nodesStream << std::format("{},{},{}.bmp", sourceSerialization,
-                               (int8_t)vertex.Quality, sourceSerialization)
+    nodesStream << std::format("{},{},{}.bmp", sourceSerialization, quality,
+                               sourceSerialization)
                 << std::endl;
 
     for (const auto [move, weakTarget] : vertex.Edges) {

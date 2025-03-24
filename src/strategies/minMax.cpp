@@ -28,7 +28,7 @@ Game::Move MinMax::GetMove(const Game::Game& game) {
                          std::move(nextState), 0));
   }
 
-  WinState bestMoveValue = WinState::Lost;
+  WinState bestMoveValue = WinState::Lose;
   Game::Move bestMove = moves[0];
 
   for (auto& [move, future] : futures) {
@@ -44,17 +44,17 @@ Game::Move MinMax::GetMove(const Game::Game& game) {
 }
 
 WinState MinMax::PlayRecursive(Game::Game game, const size_t depth) const {
-  if (depth == MaxDepth) return WinState::Unknown;
+  if (depth == MaxDepth) return WinState::Draw;
 
   const std::optional<Color> winner = game.IsFinished();
   if (winner) {
-    return winner.value() == game.GetCurrentPlayer() ? WinState::Won
-                                                     : WinState::Lost;
+    return winner.value() == game.GetCurrentPlayer() ? WinState::Win
+                                                     : WinState::Lose;
   }
 
   const std::vector<Game::Move>& moves = game.GetValidMoves();
 
-  WinState best = WinState::Lost;
+  WinState best = WinState::Lose;
   for (const Game::Move move : moves) {
     Game::Game nextState = Game::Game(game);
     nextState.DoMove(move);
