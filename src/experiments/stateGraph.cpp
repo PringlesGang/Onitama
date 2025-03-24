@@ -20,15 +20,42 @@ void Execute(StateGraphArgs args) {
                                                      args.ImportPaths->second)
                        : ::StateGraph::Graph();
 
-  switch (args.type) {
-    case StateGraphType::Component: {
-      graph.ExploreComponent(Game::Game(*args.StartingConfiguration));
-
+  std::function<void(Game::Game&&)> analyse;
+  switch (args.Type) {
+    case StateGraphType::Component:
+      analyse = [&graph](Game::Game&& game) {
+        graph.ExploreComponent(std::move(game));
+      };
       break;
-    }
 
-    case StateGraphType::PerfectPositionalStrategy: {
-      graph.FindPerfectStrategy(Game::Game(*args.StartingConfiguration));
+    case StateGraphType::PerfectPositionalStrategy:
+      analyse = [&graph](Game::Game&& game) {
+        graph.FindPerfectStrategy(std::move(game));
+      };
+      break;
+
+    case StateGraphType::RetrogradeAnalysis:
+      analyse = [&graph](Game::Game&& game) {
+        graph.RetrogradeAnalysis(std::move(game));
+      };
+      break;
+
+    default:
+      std::cerr << std::format("Unknown state graph type \"{}\"",
+                               (size_t)args.Type)
+                << std::endl;
+      return;
+  }
+
+  switch (args.Type) {
+    default:
+    case StateGraphType::Component:
+      analyse(Game::Game(*args.StartingConfiguration));
+      break;
+
+    case StateGraphType::PerfectPositionalStrategy:
+    case StateGraphType::RetrogradeAnalysis: {
+      analyse(Game::Game(*args.StartingConfiguration));
 
       const std::shared_ptr<const ::StateGraph::Vertex> vertex =
           graph.Get(*args.StartingConfiguration)->lock();
@@ -51,12 +78,6 @@ void Execute(StateGraphArgs args) {
 
       break;
     }
-
-    default:
-      std::cerr << std::format("Unknown state graph type \"{}\"",
-                               (size_t)args.type)
-                << std::endl;
-      return;
   }
 
   if (args.ExportPaths)
@@ -110,7 +131,10 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
     ImportPaths = {nodesPath.value(), edgesPath.value()};
 
   } else if (argument == "--strategy") {
-    type = StateGraphType::PerfectPositionalStrategy;
+    const std::optional<StateGraphType> type = ParseStateGraphType(stream);
+    if (!type) return false;
+
+    Type = type.value();
 
   } else if (argument == "--image") {
     const std::optional<std::filesystem::path> imagesPath =
@@ -125,6 +149,29 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
   }
 
   return Parse(stream);
+}
+
+std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
+    std::istringstream& stream) {
+  std::string string;
+  stream >> string;
+
+  if (string == "perfect" || string == "perfect-positional" ||
+      string == "perfect-positional-strategy") {
+    return StateGraphType::PerfectPositionalStrategy;
+  } else if (string == "component") {
+    return StateGraphType::Component;
+  } else if (string == "retrograde" || string == "retrograde-analysis") {
+    return StateGraphType::RetrogradeAnalysis;
+  }
+
+  std::cerr << std::format("Unknown state graph strategy \"{}\"!\n", string)
+            << "Valid strategies are:\n"
+               "- component\n"
+               "- perfect-positional-strategy\n"
+               "- retrograde-analysis\n"
+            << std::endl;
+  return std::nullopt;
 }
 
 bool StateGraphArgs::IsValid() const {
