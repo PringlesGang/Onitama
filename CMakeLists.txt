@@ -41,6 +41,7 @@ set(Src
         src/stateGraph/stateGraph.cpp
         src/stateGraph/exploreComponent.cpp
         src/stateGraph/perfectStrategy.cpp
+        src/stateGraph/retrogradeAnalysis.cpp
 )
 
 set(Header
