@@ -169,7 +169,12 @@ void Game::SetValidMoves() {
   const std::span<const Card, HAND_SIZE>& hand = GetHand();
 
   for (size_t pawnId = 0; pawnId < GetPawnCount(); pawnId++) {
-    for (Card card : hand) {
+    for (auto cardIt = hand.begin(); cardIt != hand.end(); cardIt++) {
+      const Card card = *cardIt;
+      // Don't count a move multiple times
+      // if a player has multiple of the same cards
+      if (std::find(hand.begin(), cardIt, card) != cardIt) continue;
+
       const size_t offsetCount = card.GetMoves().size();
       for (size_t offsetId = 0; offsetId < offsetCount; offsetId++) {
         const Move move{
