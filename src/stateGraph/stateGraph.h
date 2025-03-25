@@ -13,7 +13,6 @@ struct Edge;
 struct Vertex {
   Vertex(const Game::Game& game);
   Vertex(Game::GameSerialization serialization,
-         std::optional<Game::Move> optimalMove = std::nullopt,
          std::optional<WinState> quality = std::nullopt);
 
   bool operator==(const Vertex& other) const {
@@ -23,11 +22,13 @@ struct Vertex {
     return Serialization == game.Serialize();
   }
 
+  void SetOptimalMove(Game::Move move);
+  std::optional<Game::Move> GetOptimalMove() const;
+
   const Game::GameSerialization Serialization;
 
   std::vector<std::shared_ptr<Edge>> Edges;
 
-  std::optional<Game::Move> OptimalMove;
   std::optional<WinState> Quality;
 };
 

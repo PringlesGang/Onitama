@@ -47,7 +47,7 @@ std::weak_ptr<Vertex> Graph::FindPerfectStrategyExpand(
     // Select the best move yet
     if (!info->Quality || info->Quality < nextQuality) {
       info->Quality = nextQuality;
-      info->OptimalMove = move;
+      info->SetOptimalMove(move);
     }
 
     // A winning positional strategy has been found
@@ -72,7 +72,7 @@ void Graph::FindPerfectStrategyCheckDraw(
     const std::shared_ptr<const Vertex> target = edge->Target.lock();
     if (target != nullptr && target->Quality == WinState::Lose) {
       vertex->Quality = WinState::Win;
-      vertex->OptimalMove = edge->Move;
+      vertex->SetOptimalMove(edge->Move);
       return;
     }
   }
@@ -91,7 +91,7 @@ void Graph::FindPerfectStrategyCheckDraw(
     switch (target->Quality.value_or(WinState::Draw)) {
       case WinState::Lose: {
         vertex->Quality = WinState::Win;
-        vertex->OptimalMove = edge->Move;
+        vertex->SetOptimalMove(edge->Move);
 
         // Recheck the previously searched draw edges, now that the loop is
         // broken
@@ -108,7 +108,7 @@ void Graph::FindPerfectStrategyCheckDraw(
         return;
       }
       case WinState::Draw: {
-        vertex->OptimalMove = edge->Move;
+        vertex->SetOptimalMove(edge->Move);
         allLosingMoves = false;
 
         break;

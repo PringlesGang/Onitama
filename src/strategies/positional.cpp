@@ -13,20 +13,18 @@ Positional::Positional(std::shared_ptr<StateGraph::Graph> graph)
     : Graph(graph) {}
 
 Game::Move Positional::GetMove(const Game::Game& game) {
-  const std::optional<std::weak_ptr<const StateGraph::Vertex>> found =
+  std::optional<std::weak_ptr<const StateGraph::Vertex>> found =
       Graph->Get(game);
 
   // Either get the pre-computed positional strategy,
   // or compute the positional strategy now
-  if (found) {
-    std::shared_ptr<const StateGraph::Vertex> shared = found->lock();
-    return shared ? shared->OptimalMove.value() : game.GetValidMoves()[0];
-  }
+  const std::shared_ptr<const StateGraph::Vertex> vertex =
+      found ? found->lock()
+            : Graph->FindPerfectStrategy(Game::Game(game)).lock();
 
-  std::shared_ptr<const StateGraph::Vertex> shared =
-      Graph->FindPerfectStrategy(Game::Game(game)).lock();
-  return shared && shared->OptimalMove ? shared->OptimalMove.value()
-                                       : game.GetValidMoves()[0];
+  return vertex == nullptr
+             ? game.GetValidMoves()[0]
+             : vertex->GetOptimalMove().value_or(game.GetValidMoves()[0]);
 }
 
 std::optional<std::function<std::unique_ptr<Positional>()>> Positional::Parse(

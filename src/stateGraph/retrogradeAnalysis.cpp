@@ -22,8 +22,7 @@ std::weak_ptr<const Vertex> Graph::RetrogradeAnalysis(Game::Game&& game) {
       assert(edge->Target.lock()->Quality.value_or(WinState::Draw) ==
              WinState::Draw);
 
-      edge->Optimal = true;
-      vertex->OptimalMove = edge->Move;
+      vertex->SetOptimalMove(edge->Move);
     }
   }
 
@@ -99,8 +98,7 @@ void Graph::RetrogradeAnalyseEdges(
       if (target->Quality.value() == WinState::Lose) {
         // This is the optimal move
         source->Quality = WinState::Win;
-        source->OptimalMove = edge->Move;
-        edge->Optimal = true;
+        source->SetOptimalMove(edge->Move);
 
         edgeLabelled = true;
         edgeIt = edges.erase(edgeIt);
@@ -117,10 +115,11 @@ void Graph::RetrogradeAnalyseEdges(
 
         if (lastUnlabelledEdge) {
           source->Quality = WinState::Lose;
-          source->OptimalMove = edge->Move;
+          source->SetOptimalMove(edge->Move);
+        } else {
+          edge->Optimal = false;
         }
 
-        edge->Optimal = lastUnlabelledEdge;
         edgeLabelled = true;
         edgeIt = edges.erase(edgeIt);
 

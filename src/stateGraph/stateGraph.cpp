@@ -14,11 +14,28 @@ Vertex::Vertex(const Game::Game& game)
                                 : std::nullopt) {}
 
 Vertex::Vertex(Game::GameSerialization serialization,
-               std::optional<Game::Move> optimalMove,
                std::optional<WinState> quality)
-    : Serialization(serialization),
-      OptimalMove(optimalMove),
-      Quality(quality) {}
+    : Serialization(serialization), Quality(quality) {}
+
+void Vertex::SetOptimalMove(const Game::Move move) {
+  for (std::shared_ptr<Edge> edge : Edges) {
+    const bool isOptimalMove = edge->Move == move;
+
+    if (edge->Optimal.has_value() || isOptimalMove) {
+      edge->Optimal = isOptimalMove;
+    }
+  }
+}
+
+std::optional<Game::Move> Vertex::GetOptimalMove() const {
+  const auto optimalMoveIt = std::find_if(
+      Edges.begin(), Edges.end(),
+      [](std::shared_ptr<Edge> edge) -> bool { return edge->IsOptimal(); });
+
+  return optimalMoveIt == Edges.end()
+             ? std::nullopt
+             : std::optional<Game::Move>((*optimalMoveIt)->Move);
+}
 
 static bool CompareCoordinates(const Game::Game& first,
                                const Game::Game& second,
@@ -222,7 +239,7 @@ static std::optional<Vertex> ParseVertex(std::istringstream string) {
     quality = std::nullopt;
   }
 
-  return Vertex(std::move(serialization), std::nullopt, std::move(quality));
+  return Vertex(std::move(serialization), std::move(quality));
 }
 
 std::optional<Edge> Graph::ParseEdge(std::istringstream string) const {
@@ -327,8 +344,6 @@ Graph Graph::Import(const std::filesystem::path& nodesPath,
 
     const std::shared_ptr<Vertex> source = edge->Source.lock();
     source->Edges.emplace_back(std::make_shared<Edge>(edge.value()));
-
-    if (edge->IsOptimal()) source->OptimalMove = edge->Move;
   }
 
   edgesStream.close();
