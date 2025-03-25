@@ -75,11 +75,11 @@ class Graph {
   void ExploreComponentRecursive(std::weak_ptr<Vertex> vertex,
                                  std::unordered_set<Game::Game>& exploring);
 
-  std::weak_ptr<Vertex> FindPerfectStrategyExpand(
-      Game::Game&& game, std::unordered_set<std::shared_ptr<Vertex>>& draws);
-  void FindPerfectStrategyCheckDraw(
-      std::weak_ptr<Vertex> vertex,
-      std::unordered_set<std::shared_ptr<Vertex>>& component);
+  void FindPerfectStrategyExpand(
+      std::shared_ptr<Vertex> game,
+      std::unordered_set<std::shared_ptr<Vertex>>& expandedVertices,
+      std::unordered_set<std::shared_ptr<Edge>>& unlabelledEdges,
+      const std::shared_ptr<const Vertex> root);
 
   std::weak_ptr<Vertex> RetrogradeAnalysisExpand(
       Game::Game&& game,

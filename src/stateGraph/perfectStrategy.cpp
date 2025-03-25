@@ -3,123 +3,119 @@
 namespace StateGraph {
 
 std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
-  std::unordered_set<std::shared_ptr<Vertex>> draws;
-  const std::weak_ptr<const Vertex> requestedVertex =
-      FindPerfectStrategyExpand(std::move(game), draws);
+  std::shared_ptr<Vertex> rootVertex = std::make_shared<Vertex>(game);
+  Vertices.emplace(game, rootVertex);
 
-  while (!draws.empty()) {
-    std::unordered_set<std::shared_ptr<Vertex>> component;
-    FindPerfectStrategyCheckDraw(*draws.begin(), component);
+  std::unordered_set<std::shared_ptr<Vertex>> expandedVertices;
+  std::unordered_set<std::shared_ptr<Edge>> unlabelledEdges;
+  FindPerfectStrategyExpand(rootVertex, expandedVertices, unlabelledEdges,
+                            rootVertex);
 
-    for (const std::shared_ptr<Vertex> vertex : component) {
-      if (!vertex->Quality.has_value()) vertex->Quality = WinState::Draw;
-      draws.erase(vertex);
-    }
+  // All edges between two expanded, non-labelled vertices result in draws
+  for (const std::shared_ptr<Vertex> vertex : expandedVertices) {
+    if (vertex->Quality.has_value()) continue;
+
+    const auto isDraw =
+        [&expandedVertices](std::shared_ptr<Edge> edge) -> bool {
+      const std::shared_ptr<Vertex> target = edge->Target.lock();
+      if (target == nullptr) return false;
+
+      return expandedVertices.contains(target);
+    };
+
+    const auto drawMove =
+        std::find_if(vertex->Edges.begin(), vertex->Edges.end(), isDraw);
+    if (drawMove == vertex->Edges.end()) continue;
+
+    vertex->SetOptimalMove((*drawMove)->Move);
+    vertex->Quality = WinState::Draw;
   }
 
-  return requestedVertex;
+  return rootVertex;
 }
 
-std::weak_ptr<Vertex> Graph::FindPerfectStrategyExpand(
-    Game::Game&& game, std::unordered_set<std::shared_ptr<Vertex>>& draws) {
-  if (Vertices.contains(game)) return Vertices.at(std::move(game));
+void Graph::FindPerfectStrategyExpand(
+    const std::shared_ptr<Vertex> source,
+    std::unordered_set<std::shared_ptr<Vertex>>& expandedVertices,
+    std::unordered_set<std::shared_ptr<Edge>>& unlabelledEdges,
+    const std::shared_ptr<const Vertex> root) {
+  if (expandedVertices.contains(source)) return;
+  expandedVertices.insert(source);
 
-  std::shared_ptr<Vertex> info = std::make_shared<Vertex>(game);
-  Vertices.emplace(game, info);
+  const Game::Game game = Game::Game::FromSerialization(source->Serialization);
 
   // Terminal game state
-  if (info->Quality.has_value()) return info;
+  if (source->Quality.has_value()) {
+    RetrogradeAnalyseEdges(unlabelledEdges);
+    return;
+  }
 
+  // Insert edges
   const std::vector<Game::Move>& validMoves = game.GetValidMoves();
   for (const Game::Move move : validMoves) {
     Game::Game nextState(game);
     nextState.DoMove(move);
 
-    // Traverse further
-    std::shared_ptr<Vertex> nextInfo =
-        FindPerfectStrategyExpand(std::move(nextState), draws).lock();
-    if (nextInfo == nullptr) continue;
-    info->Edges.emplace_back(std::make_shared<Edge>(info, nextInfo, move));
+    if (!Vertices.contains(nextState))
+      Vertices.emplace(nextState, std::make_shared<Vertex>(nextState));
+    const std::shared_ptr<Vertex> target = Vertices.at(nextState);
 
-    const std::optional<WinState> nextQuality =
-        nextInfo->Quality.transform(operator-);
-
-    // Select the best move yet
-    if (!info->Quality || info->Quality < nextQuality) {
-      info->Quality = nextQuality;
-      info->SetOptimalMove(move);
-    }
-
-    // A winning positional strategy has been found
-    if (info->Quality == WinState::Win) return info;
+    const std::shared_ptr<Edge> edge =
+        std::make_shared<Edge>(source, target, move);
+    unlabelledEdges.insert(edge);
+    source->Edges.emplace_back(std::move(edge));
   }
 
-  if (!info->Quality) draws.insert(info);
-
-  return info;
-}
-
-void Graph::FindPerfectStrategyCheckDraw(
-    std::weak_ptr<Vertex> weakVertex,
-    std::unordered_set<std::shared_ptr<Vertex>>& component) {
-  // Check if the vertex has already been checked
-  const std::shared_ptr<Vertex> vertex = weakVertex.lock();
-  if (vertex == nullptr || component.contains(vertex)) return;
-  component.insert(vertex);
-
-  // Check if a winning move has popped up
-  for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
-    const std::shared_ptr<const Vertex> target = edge->Target.lock();
-    if (target != nullptr && target->Quality == WinState::Lose) {
-      vertex->Quality = WinState::Win;
-      vertex->SetOptimalMove(edge->Move);
-      return;
-    }
-  }
-
-  // Find the next best move
-  bool allLosingMoves = true;
-  for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
+  bool allLabelled = true;
+  for (auto edgeIt = source->Edges.begin(); edgeIt != source->Edges.end();
        edgeIt++) {
-    const std::shared_ptr<const Edge> edge = *edgeIt;
+    const std::shared_ptr<Edge> edge = *edgeIt;
+    const bool finalEdge = edgeIt + 1 == source->Edges.end();
 
-    const std::shared_ptr<Vertex> target = edge->Target.lock();
-    if (target == nullptr || target->Quality.has_value()) continue;
+    std::shared_ptr<Vertex> target = edge->Target.lock();
+    if (target == nullptr) {
+      unlabelledEdges.erase(edge);
+      continue;
+    }
 
-    FindPerfectStrategyCheckDraw(target, component);
+    FindPerfectStrategyExpand(target, expandedVertices, unlabelledEdges, root);
 
-    switch (target->Quality.value_or(WinState::Draw)) {
+    // Optimal strategy from root has been established; exit algorithm
+    if (root->Quality.has_value()) return;
+
+    if (!target->Quality.has_value()) {
+      allLabelled = false;
+      continue;
+    }
+
+    switch (target->Quality.value()) {
       case WinState::Lose: {
-        vertex->Quality = WinState::Win;
-        vertex->SetOptimalMove(edge->Move);
-
-        // Recheck the previously searched draw edges, now that the loop is
-        // broken
-        for (auto checkedEdgesIt = vertex->Edges.begin();
-             checkedEdgesIt != edgeIt; checkedEdgesIt++) {
-          const std::shared_ptr<const Edge> checkedEdges = *checkedEdgesIt;
-          std::shared_ptr<Vertex> checkedVertex = checkedEdges->Target.lock();
-          if (checkedVertex == nullptr || target->Quality.has_value()) continue;
-
-          std::unordered_set<std::shared_ptr<Vertex>> newComponent({vertex});
-          FindPerfectStrategyCheckDraw(std::move(checkedVertex), newComponent);
-        }
+        source->Quality = WinState::Win;
+        source->SetOptimalMove(edge->Move);
+        unlabelledEdges.erase(edge);
 
         return;
       }
-      case WinState::Draw: {
-        vertex->SetOptimalMove(edge->Move);
-        allLosingMoves = false;
 
-        break;
-      }
       case WinState::Win: {
-        break;
+        if (finalEdge && allLabelled) {  // last unlabelled
+          source->Quality = WinState::Lose;
+          source->SetOptimalMove(edge->Move);
+        } else {
+          edge->Optimal = false;
+        }
+
+        unlabelledEdges.erase(edge);
+        continue;
+      }
+
+      default: {
+        const std::string msg = std::format("Unexpected target quality \"{}\"!",
+                                            (int8_t)target->Quality.value());
+        throw std::runtime_error(msg);
       }
     }
   }
-
-  if (allLosingMoves) vertex->Quality = WinState::Lose;
 }
 
 }  // namespace StateGraph

@@ -124,15 +124,12 @@ void Graph::RetrogradeAnalyseEdges(
         edgeIt = edges.erase(edgeIt);
 
       } else {
-        std::string msg = std::format("Unexpected target quality \"{}\"!",
-                                      (int8_t)target->Quality.value());
+        const std::string msg = std::format("Unexpected target quality \"{}\"!",
+                                            (int8_t)target->Quality.value());
         throw std::runtime_error(msg);
       }
     }
   }
-
-  // All edges have been labelled to what extent possible
-  edges.clear();
 }
 
 }  // namespace StateGraph
