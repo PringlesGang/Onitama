@@ -125,9 +125,3 @@ target_precompile_headers(onitama PRIVATE
     <bitset>
     <cstdint>
 )
-
-if (MSVC)
-    set(InstallDest ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
-else ()
-    set(InstallDest ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endif ()
