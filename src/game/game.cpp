@@ -286,6 +286,9 @@ bool Game::ExportImage(std::filesystem::path directory) const {
     const std::string filename =
         std::format("{}.bmp", Base64::Encode(Serialize()));
     directory.append(filename);
+
+    // Image already exported
+    if (std::filesystem::exists(directory)) return true;
   } else {
     std::cerr << std::format("Invalid filepath \"{}\"!", directory.string())
               << std::endl;
