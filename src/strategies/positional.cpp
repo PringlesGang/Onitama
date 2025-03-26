@@ -20,7 +20,7 @@ Game::Move Positional::GetMove(const Game::Game& game) {
   // or compute the positional strategy now
   const std::shared_ptr<const StateGraph::Vertex> vertex =
       found ? found->lock()
-            : Graph->FindPerfectStrategy(Game::Game(game)).lock();
+            : Graph->ForwardRetrogradeAnalysis(Game::Game(game)).lock();
 
   return vertex == nullptr
              ? game.GetValidMoves()[0]

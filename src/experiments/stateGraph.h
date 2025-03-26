@@ -31,7 +31,7 @@ constexpr inline std::string_view Description =
 
 enum class StateGraphType {
   Component,
-  PerfectPositionalStrategy,
+  ForwardRetrogradeAnalysis,
   RetrogradeAnalysis,
 };
 

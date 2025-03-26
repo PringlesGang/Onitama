@@ -2,14 +2,15 @@
 
 namespace StateGraph {
 
-std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
+std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
+    Game::Game&& game) {
   std::shared_ptr<Vertex> rootVertex = std::make_shared<Vertex>(game);
   Vertices.emplace(game, rootVertex);
 
   std::unordered_set<std::shared_ptr<Vertex>> expandedVertices;
   std::unordered_set<std::shared_ptr<Edge>> unlabelledEdges;
-  FindPerfectStrategyExpand(rootVertex, expandedVertices, unlabelledEdges,
-                            rootVertex);
+  ForwardRetrogradeAnalysisExpand(rootVertex, expandedVertices, unlabelledEdges,
+                                  rootVertex);
 
   // All edges between two expanded, non-labelled vertices result in draws
   for (const std::shared_ptr<Vertex> vertex : expandedVertices) {
@@ -34,7 +35,7 @@ std::weak_ptr<const Vertex> Graph::FindPerfectStrategy(Game::Game&& game) {
   return rootVertex;
 }
 
-void Graph::FindPerfectStrategyExpand(
+void Graph::ForwardRetrogradeAnalysisExpand(
     const std::shared_ptr<Vertex> source,
     std::unordered_set<std::shared_ptr<Vertex>>& expandedVertices,
     std::unordered_set<std::shared_ptr<Edge>>& unlabelledEdges,
@@ -78,7 +79,8 @@ void Graph::FindPerfectStrategyExpand(
       continue;
     }
 
-    FindPerfectStrategyExpand(target, expandedVertices, unlabelledEdges, root);
+    ForwardRetrogradeAnalysisExpand(target, expandedVertices, unlabelledEdges,
+                                    root);
 
     // Optimal strategy from root has been established; exit algorithm
     if (root->Quality.has_value()) return;

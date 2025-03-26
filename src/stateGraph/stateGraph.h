@@ -60,8 +60,8 @@ class Graph {
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
   std::weak_ptr<const Vertex> ExploreComponent(Game::Game&& game);
-  std::weak_ptr<const Vertex> FindPerfectStrategy(Game::Game&& game);
   std::weak_ptr<const Vertex> RetrogradeAnalysis(Game::Game&& game);
+  std::weak_ptr<const Vertex> ForwardRetrogradeAnalysis(Game::Game&& game);
 
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);
@@ -75,7 +75,7 @@ class Graph {
   void ExploreComponentRecursive(std::weak_ptr<Vertex> vertex,
                                  std::unordered_set<Game::Game>& exploring);
 
-  void FindPerfectStrategyExpand(
+  void ForwardRetrogradeAnalysisExpand(
       std::shared_ptr<Vertex> game,
       std::unordered_set<std::shared_ptr<Vertex>>& expandedVertices,
       std::unordered_set<std::shared_ptr<Edge>>& unlabelledEdges,

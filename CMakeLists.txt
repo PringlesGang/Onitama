@@ -40,8 +40,8 @@ set(Src
 
         src/stateGraph/stateGraph.cpp
         src/stateGraph/exploreComponent.cpp
-        src/stateGraph/perfectStrategy.cpp
         src/stateGraph/retrogradeAnalysis.cpp
+        src/stateGraph/forwardRetrogradeAnalysis.cpp
 )
 
 set(Header

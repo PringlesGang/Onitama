@@ -28,9 +28,9 @@ void Execute(StateGraphArgs args) {
       };
       break;
 
-    case StateGraphType::PerfectPositionalStrategy:
+    case StateGraphType::ForwardRetrogradeAnalysis:
       analyse = [&graph](Game::Game&& game) {
-        graph.FindPerfectStrategy(std::move(game));
+        graph.ForwardRetrogradeAnalysis(std::move(game));
       };
       break;
 
@@ -53,7 +53,7 @@ void Execute(StateGraphArgs args) {
       analyse(Game::Game(*args.StartingConfiguration));
       break;
 
-    case StateGraphType::PerfectPositionalStrategy:
+    case StateGraphType::ForwardRetrogradeAnalysis:
     case StateGraphType::RetrogradeAnalysis: {
       analyse(Game::Game(*args.StartingConfiguration));
 
@@ -156,9 +156,9 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
   std::string string;
   stream >> string;
 
-  if (string == "perfect" || string == "perfect-positional" ||
-      string == "perfect-positional-strategy") {
-    return StateGraphType::PerfectPositionalStrategy;
+  if (string == "forward" || string == "forward-retrograde" ||
+      string == "forward-retrograde-analysis") {
+    return StateGraphType::ForwardRetrogradeAnalysis;
   } else if (string == "component") {
     return StateGraphType::Component;
   } else if (string == "retrograde" || string == "retrograde-analysis") {
@@ -168,8 +168,8 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
   std::cerr << std::format("Unknown state graph strategy \"{}\"!\n", string)
             << "Valid strategies are:\n"
                "- component\n"
-               "- perfect-positional-strategy\n"
                "- retrograde-analysis\n"
+               "- forward-retrograde-analysis\n"
             << std::endl;
   return std::nullopt;
 }
