@@ -5,10 +5,13 @@
 namespace StateGraph {
 
 std::weak_ptr<const Vertex> Graph::RetrogradeAnalysis(Game::Game&& game) {
+  std::cout << "Exploring state graph..." << std::endl;
+
   std::unordered_set<std::shared_ptr<Edge>> edges;
   std::unordered_set<Game::Game, Hash, EqualTo> explored;
   RetrogradeAnalysisExpand(Game::Game(game), explored, edges);
 
+  std::cout << "Analysing edges..." << std::endl;
   RetrogradeAnalyseEdges(edges);
 
   // All unlabelled vertices are Draw
