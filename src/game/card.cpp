@@ -9,13 +9,14 @@
 
 namespace Game {
 
-std::optional<Card> Card::Parse(std::istringstream& stream) {
+std::optional<Card> Card::Parse(std::istringstream& stream, bool fatal) {
   std::string input;
   stream >> input;
   Parse::ToLower(input);
 
   if (input.empty()) {
-    std::cerr << "Tried to parse empty string as card!" << std::endl;
+    if (fatal) std::cerr << "Tried to parse empty string as card!" << std::endl;
+
     return std::nullopt;
   }
 
@@ -38,7 +39,12 @@ std::optional<Card> Card::Parse(std::istringstream& stream) {
   if (input == "rooster") return Card(CardType::Rooster);
   if (input == "tiger") return Card(CardType::Tiger);
 
-  std::cerr << std::format("Invalid card name \"{}\"!", input) << std::endl;
+  if (fatal) {
+    std::cerr << std::format("Invalid card name \"{}\"!", input) << std::endl;
+  } else {
+    Parse::Unparse(stream, input);
+  }
+
   return std::nullopt;
 }
 

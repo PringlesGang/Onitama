@@ -44,11 +44,24 @@ std::optional<std::filesystem::path> ParsePath(std::istringstream& stream) {
 std::optional<std::array<Game::Card, CARD_COUNT>> ParseCards(
     std::istringstream& stream) {
   std::array<Game::Card, CARD_COUNT> cards;
+  size_t parsed = 0;
   for (Game::Card& card : cards) {
-    const std::optional<Game::Card> parsedCard = Game::Card::Parse(stream);
-    if (!parsedCard) return std::nullopt;
+    const std::optional<Game::Card> parsedCard =
+        Game::Card::Parse(stream, false);
+
+    if (!parsedCard) {
+      if (parsed == 1) {
+        std::fill(cards.begin() + 1, cards.end(), cards[0]);
+        break;
+
+      } else {
+        Game::Card::Parse(stream, true);  // Print error message
+        return std::nullopt;
+      }
+    }
 
     card = parsedCard.value();
+    parsed++;
   }
 
   return cards;

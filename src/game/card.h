@@ -117,7 +117,8 @@ const static inline std::unordered_map<CardType, std::string> CardToString{
 };
 
 struct Card {
-  static std::optional<Card> Parse(std::istringstream& stream);
+  static std::optional<Card> Parse(std::istringstream& stream,
+                                   bool fatal = true);
 
   static const std::vector<Offset>& GetMoves(const CardType card) {
     return CardToMoves.at(card);
