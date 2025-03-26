@@ -12,17 +12,19 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
   ForwardRetrogradeAnalysisExpand(rootVertex, expandedVertices, unlabelledEdges,
                                   rootVertex);
 
+  RetrogradeAnalyseEdges(unlabelledEdges);
+
+  const auto isDraw = [&expandedVertices](std::shared_ptr<Edge> edge) -> bool {
+    const std::shared_ptr<Vertex> target = edge->Target.lock();
+    if (target == nullptr) return false;
+
+    return (target->Quality.value_or(WinState::Draw) == WinState::Draw) &&
+           expandedVertices.contains(target);
+  };
+
   // All edges between two expanded, non-labelled vertices result in draws
   for (const std::shared_ptr<Vertex> vertex : expandedVertices) {
     if (vertex->Quality.has_value()) continue;
-
-    const auto isDraw =
-        [&expandedVertices](std::shared_ptr<Edge> edge) -> bool {
-      const std::shared_ptr<Vertex> target = edge->Target.lock();
-      if (target == nullptr) return false;
-
-      return expandedVertices.contains(target);
-    };
 
     const auto drawMove =
         std::find_if(vertex->Edges.begin(), vertex->Edges.end(), isDraw);
