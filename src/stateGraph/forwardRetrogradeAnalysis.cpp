@@ -85,7 +85,11 @@ void Graph::ForwardRetrogradeAnalysisExpand(
                                     root);
 
     // Optimal strategy from root has been established; exit algorithm
-    if (root->Quality.has_value()) return;
+    if (root->Quality.has_value()) {
+      // Current vertex was not fully expanded
+      expandedVertices.erase(source);
+      return;
+    }
 
     if (!target->Quality.has_value()) {
       allLabelled = false;
