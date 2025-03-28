@@ -34,6 +34,7 @@ set(Src
         src/cli/strategies.cpp
         src/cli/experiment.cpp
         src/cli/print.cpp
+        src/cli/test.cpp
 
         src/experiments/fairCards.cpp
         src/experiments/stateGraph.cpp
@@ -42,6 +43,9 @@ set(Src
         src/stateGraph/exploreComponent.cpp
         src/stateGraph/retrogradeAnalysis.cpp
         src/stateGraph/forwardRetrogradeAnalysis.cpp
+
+        tests/tests.cpp
+        tests/game/game.cpp
 )
 
 set(Header
@@ -76,11 +80,14 @@ set(Header
         src/cli/strategies.h
         src/cli/experiment.h
         src/cli/print.h
+        src/cli/test.h
 
         src/experiments/fairCards.h
         src/experiments/stateGraph.h
 
         src/stateGraph/stateGraph.h
+
+        tests/tests.h
 )
 
 set(INCLUDE_DIRS)
@@ -125,3 +132,6 @@ target_precompile_headers(onitama PRIVATE
     <bitset>
     <cstdint>
 )
+
+enable_testing()
+add_test(NAME "Initial game state constructor" COMMAND $<TARGET_FILE:onitama> test 0)

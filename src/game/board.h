@@ -24,6 +24,8 @@ class Board {
   Board(const Board& other);
   Board(Board&& other);
 
+  bool operator==(const Board& other) const;
+
   void Reset();
   void DoMove(const Coordinate source, const Offset offset);
 

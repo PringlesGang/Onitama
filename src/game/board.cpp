@@ -55,6 +55,10 @@ Board::Board(Board&& other)
       RedMasterCaptured(std::move(other.RedMasterCaptured)),
       BlueMasterCaptured(std::move(other.BlueMasterCaptured)) {}
 
+bool Board::operator==(const Board& other) const {
+  return Width == other.Width && Height == other.Height && Grid == other.Grid;
+}
+
 void Board::Reset() {
   RedLocations.clear();
   BlueLocations.clear();

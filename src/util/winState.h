@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 enum class WinState {
   Lose = -1,
   Draw = 0,

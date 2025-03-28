@@ -1,6 +1,7 @@
 #include "winState.h"
 
 #include <cstdint>
+#include <format>
 
 WinState operator-(const WinState original) {
   return WinState(-(int8_t)original);
