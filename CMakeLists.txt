@@ -106,13 +106,13 @@ add_definitions(-DSTB_IMAGE_WRITE_IMPLEMENTATION)
 list(APPEND INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/vendor/stb")
 
 
-add_executable("onitama" src/main.cpp ${Src} ${Header})
-add_executable("onitama-test" tests/tests.cpp ${SrcTest} ${HeaderTest} ${Src} ${Header})
+add_library("onitama-core" OBJECT ${Src} ${Header})
+target_include_directories(onitama-core PRIVATE ${INCLUDE_DIRS})
 
-target_include_directories(onitama PRIVATE ${INCLUDE_DIRS})
-target_include_directories(onitama-test PRIVATE ${INCLUDE_DIRS})
+add_executable("onitama" src/main.cpp $<TARGET_OBJECTS:onitama-core>)
+add_executable("onitama-test" tests/tests.cpp $<TARGET_OBJECTS:onitama-core> ${SrcTest} ${HeaderTest})
 
-target_precompile_headers(onitama PRIVATE
+target_precompile_headers(onitama-core PRIVATE
     <iostream>
     <format>
     <array>
