@@ -3,12 +3,13 @@
 #include <bit>
 #include <bitset>
 #include <format>
+#include <optional>
 #include <stdexcept>
 
 namespace Base64 {
 
 template <size_t N>
-std::bitset<N> Decode(const char character) {
+std::optional<std::bitset<N>> Decode(const char character) {
   switch (character) {
     case '+':
       return 62;
@@ -19,13 +20,12 @@ std::bitset<N> Decode(const char character) {
       if ('A' <= character && character <= 'Z') return character - 'A';
       if ('a' <= character && character <= 'z') return character - 'a' + 26;
       if ('0' <= character && character <= '9') return character - '0' + 26 * 2;
-      throw std::runtime_error(
-          std::format("Invalid base64 character '{}'", character));
+      return std::nullopt;
   }
 }
 
 template <size_t N>
-std::bitset<N> Decode(const std::string& string) {
+std::optional<std::bitset<N>> Decode(const std::string& string) {
   constexpr size_t charSize = std::bit_width(size_t{63});
   const size_t stringSize = string.size() * charSize;
   if (stringSize > N) {
@@ -37,7 +37,11 @@ std::bitset<N> Decode(const std::string& string) {
   std::bitset<N> bits;
   for (size_t i = 0; i < string.size(); i++) {
     const size_t offset = (string.size() - i - 1) * charSize;
-    bits |= Decode<N>(string[i]) << offset;
+
+    const std::optional<std::bitset<N>> newBits = Decode<N>(string[i]);
+    if (!newBits.has_value()) return std::nullopt;
+
+    bits |= newBits.value() << offset;
   }
 
   return bits;

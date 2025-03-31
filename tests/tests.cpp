@@ -17,6 +17,16 @@ const static std::unordered_map<std::string, std::function<int()>> Tests = {
     {"game copy constructor", Game::CopyConstructor},
     {"game move constructor", Game::MoveConstructor},
     {"game with random cards constructor", Game::WithRandomCards},
+    {"game from serialization constructor", Game::FromSerialization},
+    {"parse game serialization", Game::ParseSerialization},
+    {"parse incorrect game serialization", Game::ParseIncorrectSerialization},
+    {"game equality", Game::Equality},
+    {"game inequality", Game::Inequality},
+    {"get game hand", Game::GetHand},
+    {"get current game hand", Game::GetCurrentHand},
+    {"get set aside card", Game::GetSetAsideCard},
+    {"get current player", Game::GetCurrentPlayer},
+    {"get game dimensions", Game::GetDimensions},
 };
 
 int RunAll() {
@@ -40,6 +50,8 @@ int Run(const std::string& id) {
   return Tests.at(id)();
 }
 
+void Init() { Game::Init(); }
+
 }  // namespace Tests
 
 int main(int argc, char* argv[]) {
@@ -47,6 +59,8 @@ int main(int argc, char* argv[]) {
     std::cerr << "No test provided!" << std::endl;
     return 1;
   }
+
+  Tests::Init();
 
   std::string command = "";
   for (int arg = 1; arg < argc; arg++) {

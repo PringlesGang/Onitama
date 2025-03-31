@@ -83,10 +83,14 @@ set(Header
 )
 
 set(SrcTest
+        tests/assertEqual.cpp
+
         tests/game/game.cpp
 )
 
 set(HeaderTest
+        tests/assertEqual.h
+
         tests/game/game.h
 )
 
@@ -140,9 +144,19 @@ enable_testing()
 set(tests
     "Initial game state constructor"
     "Game from board constructor"
-    "game copy constructor"
-    "game move constructor"
-    "game with random cards constructor"
+    "Game copy constructor"
+    "Game move constructor"
+    "Game with random cards constructor"
+    "Game from serialization constructor"
+    "Parse game serialization"
+    "Parse incorrect game serialization"
+    "Game equality"
+    "Game inequality"
+    "Get game hand"
+    "Get current game hand"
+    "Get set aside card"
+    "Get current player"
+    "Get game dimensions"
 )
 
 foreach(testId ${tests})
