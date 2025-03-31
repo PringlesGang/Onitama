@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
 
 set(Src
-        src/main.cpp
         src/gameMaster.cpp
 
         src/game/game.cpp
@@ -34,7 +33,6 @@ set(Src
         src/cli/strategies.cpp
         src/cli/experiment.cpp
         src/cli/print.cpp
-        src/cli/test.cpp
 
         src/experiments/fairCards.cpp
         src/experiments/stateGraph.cpp
@@ -43,9 +41,6 @@ set(Src
         src/stateGraph/exploreComponent.cpp
         src/stateGraph/retrogradeAnalysis.cpp
         src/stateGraph/forwardRetrogradeAnalysis.cpp
-
-        tests/tests.cpp
-        tests/game/game.cpp
 )
 
 set(Header
@@ -80,14 +75,19 @@ set(Header
         src/cli/strategies.h
         src/cli/experiment.h
         src/cli/print.h
-        src/cli/test.h
 
         src/experiments/fairCards.h
         src/experiments/stateGraph.h
 
         src/stateGraph/stateGraph.h
+)
 
-        tests/tests.h
+set(SrcTest
+        tests/game/game.cpp
+)
+
+set(HeaderTest
+        tests/game/game.h
 )
 
 set(INCLUDE_DIRS)
@@ -106,9 +106,11 @@ add_definitions(-DSTB_IMAGE_WRITE_IMPLEMENTATION)
 list(APPEND INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/vendor/stb")
 
 
-add_executable("onitama" ${Src} ${Header})
+add_executable("onitama" src/main.cpp ${Src} ${Header})
+add_executable("onitama-test" tests/tests.cpp ${SrcTest} ${HeaderTest} ${Src} ${Header})
 
 target_include_directories(onitama PRIVATE ${INCLUDE_DIRS})
+target_include_directories(onitama-test PRIVATE ${INCLUDE_DIRS})
 
 target_precompile_headers(onitama PRIVATE
     <iostream>
@@ -133,5 +135,13 @@ target_precompile_headers(onitama PRIVATE
     <cstdint>
 )
 
+
 enable_testing()
-add_test(NAME "Initial game state constructor" COMMAND $<TARGET_FILE:onitama> test 0)
+set(tests
+    "Initial game state constructor"
+)
+
+foreach(testId ${tests})
+    string(TOLOWER ${testId} loweredTestId)
+    add_test(NAME ${testId} COMMAND $<TARGET_FILE:onitama-test> ${loweredTestId})
+endforeach()

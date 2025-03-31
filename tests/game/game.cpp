@@ -1,5 +1,8 @@
 #include "game.h"
 
+#include <format>
+#include <iostream>
+
 #include "../../src/game/game.h"
 
 namespace Tests {
