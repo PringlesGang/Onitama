@@ -13,6 +13,10 @@ namespace Tests {
 
 const static std::unordered_map<std::string, std::function<int()>> Tests = {
     {"initial game state constructor", Game::InitialStateConstructor},
+    {"game from board constructor", Game::BoardConstructor},
+    {"game copy constructor", Game::CopyConstructor},
+    {"game move constructor", Game::MoveConstructor},
+    {"game with random cards constructor", Game::WithRandomCards},
 };
 
 int RunAll() {

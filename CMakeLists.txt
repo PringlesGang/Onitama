@@ -139,6 +139,10 @@ target_precompile_headers(onitama-core PRIVATE
 enable_testing()
 set(tests
     "Initial game state constructor"
+    "Game from board constructor"
+    "game copy constructor"
+    "game move constructor"
+    "game with random cards constructor"
 )
 
 foreach(testId ${tests})
