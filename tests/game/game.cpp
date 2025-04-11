@@ -8,11 +8,9 @@
 
 namespace Tests {
 namespace Game {
+namespace Game {
 
 using namespace ::Game;
-
-static constexpr int Pass = 0;
-static constexpr int Fail = 1;
 
 static constexpr Tile EmptyTile = std::nullopt;
 static constexpr Tile BlueStudent = Piece{.Team = Color::Blue, .Master = false};
@@ -264,5 +262,240 @@ int GetDimensions() {
   return Pass;
 }
 
+int GetPawnCoordinates() {
+  if (TemplateGame->GetPawnCoordinates(Color::Red) !=
+      TemplateBoard->GetPawnCoordinates(Color::Red)) {
+    std::cerr << "Game and board disagree on red pawn coordinates!"
+              << std::endl;
+    return Fail;
+  }
+
+  if (TemplateGame->GetPawnCoordinates(Color::Blue) !=
+      TemplateBoard->GetPawnCoordinates(Color::Blue)) {
+    std::cerr << "Game and board disagree on blue pawn coordinates!"
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int GetCurrentPawnCoordinates() {
+  if (TemplateGame->GetPawnCoordinates() !=
+      TemplateGame->GetPawnCoordinates(TemplateGame->GetCurrentPlayer())) {
+    std::cerr << "Current pawn coordinates are not equal to the pawn "
+                 "coordinates of the current player!"
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int MasterCaptured() {
+  if (TemplateGame->MasterCaptured(Color::Red) !=
+      TemplateBoard->MasterCaptured(Color::Red)) {
+    std::cerr << "Game and board disagree on red master captured!" << std::endl;
+    return Fail;
+  }
+
+  if (TemplateGame->MasterCaptured(Color::Blue) !=
+      TemplateBoard->MasterCaptured(Color::Blue)) {
+    std::cerr << "Game and board disagree on blue master captured!"
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int CurrentMasterCaptured() {
+  if (TemplateGame->MasterCaptured() !=
+      TemplateGame->MasterCaptured(TemplateGame->GetCurrentPlayer())) {
+    std::cerr << "Current master captured is not equal to the master captured "
+                 "of the current player!"
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int GetPawnCount() {
+  constexpr size_t expectedPawnCount = 3;
+  const size_t redPawnCount = TemplateGame->GetPawnCount(Color::Red);
+
+  if (redPawnCount != expectedPawnCount) {
+    std::cerr << std::format("Expected red pawn count {}, got {}!",
+                             expectedPawnCount, redPawnCount)
+              << std::endl;
+    return Fail;
+  }
+
+  const size_t bluePawnCount = TemplateGame->GetPawnCount(Color::Blue);
+  if (bluePawnCount != expectedPawnCount) {
+    std::cerr << std::format("Expected blue pawn count {}, got {}!",
+                             expectedPawnCount, bluePawnCount)
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int GetCurrentPawnCount() {
+  if (TemplateGame->GetPawnCount() !=
+      TemplateGame->GetPawnCount(TemplateGame->GetCurrentPlayer())) {
+    std::cerr
+        << "Current pawn count is not equal to pawn count of current player!"
+        << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int GetValidMoves() {
+  const std::vector<Move> expectedValidMoves = {
+      Move{0, Card(CardType::Goose), 2},  Move{1, Card(CardType::Goose), 1},
+      Move{1, Card(CardType::Goose), 0},  Move{1, Card(CardType::Dragon), 0},
+      Move{1, Card(CardType::Dragon), 1}, Move{2, Card(CardType::Goose), 1},
+      Move{2, Card(CardType::Goose), 0},  Move{2, Card(CardType::Dragon), 0},
+      Move{2, Card(CardType::Dragon), 1},
+  };
+  const std::vector<Move>& validMoves = TemplateGame->GetValidMoves();
+
+  if (!std::is_permutation(expectedValidMoves.begin(), expectedValidMoves.end(),
+                           validMoves.begin())) {
+    std::cerr << "Valid moves not correct!\nExpected: ";
+    for (const Move move : expectedValidMoves) {
+      std::cerr << std::format("({},{},{}) ", move.PawnId,
+                               move.UsedCard.GetName(), move.OffsetId);
+    }
+
+    std::cerr << "\nGot: ";
+    for (const Move move : validMoves) {
+      std::cerr << std::format("({},{},{}) ", move.PawnId,
+                               move.UsedCard.GetName(), move.OffsetId);
+    }
+    std::cerr << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int HasValidMoves() {
+  if (!TemplateGame->HasValidMoves()) {
+    std::cerr << "Game with valid moves claims to not have any!" << std::endl;
+    return Fail;
+  }
+
+  std::vector<Tile>&& grid = {BlueStudent, BlueMaster, RedMaster, RedStudent};
+  Board&& board = Board(std::move(grid), 1, 4);
+
+  std::array<Card, CARD_COUNT> cards;
+  std::fill(cards.begin(), cards.end(), Card(CardType::Boar));
+
+  Game::Game game(std::move(board), std::move(cards), Color::Red);
+
+  if (game.HasValidMoves()) {
+    std::cerr << "Game without valid moves claims to have some!" << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int IsValidMove() {
+  constexpr Move validMove{0, Card(CardType::Goose), 2};
+  if (!TemplateGame->IsValidMove(validMove)) {
+    std::cerr << "Valid move was marked as invalid!" << std::endl;
+    return Fail;
+  }
+
+  constexpr Move outOfBoard{0, Card(CardType::Dragon), 0};
+  if (TemplateGame->IsValidMove(outOfBoard)) {
+    std::cerr << "Move out of board marked as valid!" << std::endl;
+    return Fail;
+  }
+
+  constexpr Move onFriendlyPawn{0, Card(CardType::Dragon), 3};
+  if (TemplateGame->IsValidMove(onFriendlyPawn)) {
+    std::cerr << "Move on top of pawn of same color marked as valid!"
+              << std::endl;
+    return Fail;
+  }
+
+  constexpr Move invalidCard{0, Card(CardType::Elephant), 3};
+  if (TemplateGame->IsValidMove(invalidCard)) {
+    std::cerr << "Move with non-owned card marked as valid!" << std::endl;
+    return Fail;
+  }
+
+  constexpr Move invalidOffset{0, Card(CardType::Dragon), 4};
+  if (TemplateGame->IsValidMove(invalidOffset)) {
+    std::cerr << "Move with invalid offset marked as valid!" << std::endl;
+    return Fail;
+  }
+
+  constexpr Move invalidPawn{3, Card(CardType::Goose), 0};
+  if (TemplateGame->IsValidMove(invalidPawn)) {
+    std::cerr << "Move with invalid pawn marked as valid!" << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int IsFinished() {
+  if (TemplateGame->IsFinished() != TemplateBoard->IsFinished()) {
+    std::cerr << "Game and board disagree in whether the game is finished!"
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+int DoMove() {
+  Game::Game game(*TemplateGame);
+  constexpr Move move = Move{2, Card(CardType::Goose), 0};
+  game.DoMove(move);
+
+  std::vector<Tile> expectedGrid = TemplateGrid;
+  expectedGrid[6] = EmptyTile;
+  expectedGrid[10] = RedStudent;
+  Board&& expectedBoard =
+      Board(expectedGrid, TemplateBoardWidth, TemplateBoardHeight);
+
+  std::array<Card, CARD_COUNT> expectedCards = TemplateCards;
+  Card& usedCard = *std::find(expectedCards.begin(), expectedCards.end(),
+                              Card(CardType::Goose));
+  std::swap(expectedCards[0], usedCard);
+
+  Game::Game expectedGame(std::move(expectedBoard), std::move(expectedCards),
+                          ~TemplatePlayer);
+
+  return AssertEqual(game, expectedGame) ? Pass : Fail;
+}
+
+int Serialize() {
+  // BZQ4wYVbCkd
+  constexpr GameSerialization expected = GameSerialization(
+      "1011001010000111000110000011000010101011011000010100100011101");
+  const GameSerialization serialization = TemplateGame->Serialize();
+
+  if (expected != serialization) {
+    std::cerr << std::format("Expected game serialization \"{}\", got \"{}\"!",
+                             expected.to_string(), serialization.to_string())
+              << std::endl;
+    return Fail;
+  }
+
+  return Pass;
+}
+
+}  // namespace Game
 }  // namespace Game
 }  // namespace Tests

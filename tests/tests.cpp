@@ -7,26 +7,67 @@
 #include <string>
 #include <unordered_map>
 
+#include "./game/board.h"
 #include "./game/game.h"
 
 namespace Tests {
 
-const static std::unordered_map<std::string, std::function<int()>> Tests = {
-    {"initial game state constructor", Game::InitialStateConstructor},
-    {"game from board constructor", Game::BoardConstructor},
-    {"game copy constructor", Game::CopyConstructor},
-    {"game move constructor", Game::MoveConstructor},
-    {"game with random cards constructor", Game::WithRandomCards},
-    {"game from serialization constructor", Game::FromSerialization},
-    {"parse game serialization", Game::ParseSerialization},
-    {"parse incorrect game serialization", Game::ParseIncorrectSerialization},
-    {"game equality", Game::Equality},
-    {"game inequality", Game::Inequality},
-    {"get game hand", Game::GetHand},
-    {"get current game hand", Game::GetCurrentHand},
-    {"get set aside card", Game::GetSetAsideCard},
-    {"get current player", Game::GetCurrentPlayer},
-    {"get game dimensions", Game::GetDimensions},
+struct CaseInsensitiveHash {
+  size_t operator()(std::string string) const noexcept {
+    std::transform(string.begin(), string.end(), string.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    return std::hash<std::string>()(string);
+  }
+};
+
+struct CaseInsensitiveEqual {
+  bool operator()(std::string first, std::string second) const noexcept {
+    std::transform(first.begin(), first.end(), first.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(second.begin(), second.end(), second.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    return first == second;
+  }
+};
+
+const static std::unordered_map<std::string, std::function<int()>,
+                                CaseInsensitiveHash, CaseInsensitiveEqual>
+    Tests = {
+        {"Game::Game initial state constructor",
+         Game::Game::InitialStateConstructor},
+        {"Game::Game from board constructor", Game::Game::BoardConstructor},
+        {"Game::Game copy constructor", Game::Game::CopyConstructor},
+        {"Game::Game move constructor", Game::Game::MoveConstructor},
+        {"Game::Game::WithRandomCards", Game::Game::WithRandomCards},
+        {"Game::Game::FromSerialization", Game::Game::FromSerialization},
+        {"Game::Game::ParseSerialization pass", Game::Game::ParseSerialization},
+        {"Game::Game::ParseSerialization fail",
+         Game::Game::ParseIncorrectSerialization},
+        {"Game::Game::operator==", Game::Game::Equality},
+        {"Game::Game::operator!=", Game::Game::Inequality},
+        {"Game::Game::GetHand color", Game::Game::GetHand},
+        {"Game::Game::GetHand current", Game::Game::GetCurrentHand},
+        {"Game::Game::GetSetAsideCard", Game::Game::GetSetAsideCard},
+        {"Game::Game::GetCurrentPlayer", Game::Game::GetCurrentPlayer},
+        {"Game::Game::GetDimensions", Game::Game::GetDimensions},
+        {"Game::Game::GetPawnCoordinates color",
+         Game::Game::GetPawnCoordinates},
+        {"Game::Game::GetPawnCoordinates current",
+         Game::Game::GetCurrentPawnCoordinates},
+        {"Game::Game::MasterCaptured color", Game::Game::MasterCaptured},
+        {"Game::Game::MasterCaptured current",
+         Game::Game::CurrentMasterCaptured},
+        {"Game::Game::GetPawnCount color", Game::Game::GetPawnCount},
+        {"Game::Game::GetPawnCount current", Game::Game::GetCurrentPawnCount},
+        {"Game::Game::GetValidMoves", Game::Game::GetValidMoves},
+        {"Game::Game::HasValidMoves", Game::Game::HasValidMoves},
+        {"Game::Game::IsValidMove", Game::Game::IsValidMove},
+        {"Game::Game::IsFinished", Game::Game::IsFinished},
+        {"Game::Game::DoMove", Game::Game::DoMove},
+        {"Game::Game::Serialize", Game::Game::Serialize},
+
+        {"Game::Board::GetPawnCoordinates", Game::Board::GetPawnCoordinates},
 };
 
 int RunAll() {
@@ -50,7 +91,10 @@ int Run(const std::string& id) {
   return Tests.at(id)();
 }
 
-void Init() { Game::Init(); }
+void Init() {
+  Game::Game::Init();
+  Game::Board::Init();
+}
 
 }  // namespace Tests
 

@@ -7,6 +7,9 @@
 
 namespace Tests {
 
+inline constexpr int Pass = 0;
+inline constexpr int Fail = 1;
+
 bool AssertEqual(const Color player, const Color expected);
 
 bool AssertEqual(const ::Game::Card card, const ::Game::Card expected);

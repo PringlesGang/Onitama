@@ -86,12 +86,14 @@ set(SrcTest
         tests/assertEqual.cpp
 
         tests/game/game.cpp
+        tests/game/board.cpp
 )
 
 set(HeaderTest
         tests/assertEqual.h
 
         tests/game/game.h
+        tests/game/board.h
 )
 
 set(INCLUDE_DIRS)
@@ -142,21 +144,35 @@ target_precompile_headers(onitama-core PRIVATE
 
 enable_testing()
 set(tests
-    "Initial game state constructor"
-    "Game from board constructor"
-    "Game copy constructor"
-    "Game move constructor"
-    "Game with random cards constructor"
-    "Game from serialization constructor"
-    "Parse game serialization"
-    "Parse incorrect game serialization"
-    "Game equality"
-    "Game inequality"
-    "Get game hand"
-    "Get current game hand"
-    "Get set aside card"
-    "Get current player"
-    "Get game dimensions"
+    "Game::Game initial state constructor"
+    "Game::Game from board constructor"
+    "Game::Game copy constructor"
+    "Game::Game move constructor"
+    "Game::Game::WithRandomCards"
+    "Game::Game::FromSerialization"
+    "Game::Game::ParseSerialization pass"
+    "Game::Game::ParseSerialization fail"
+    "Game::Game::operator=="
+    "Game::Game::operator!="
+    "Game::Game::GetHand color"
+    "Game::Game::GetHand current"
+    "Game::Game::GetSetAsideCard"
+    "Game::Game::GetCurrentPlayer"
+    "Game::Game::GetDimensions"
+    "Game::Game::GetPawnCoordinates color"
+    "Game::Game::GetPawnCoordinates current"
+    "Game::Game::MasterCaptured color"
+    "Game::Game::MasterCaptured current"
+    "Game::Game::GetPawnCount color"
+    "Game::Game::GetPawnCount current"
+    "Game::Game::GetValidMoves"
+    "Game::Game::HasValidMoves"
+    "Game::Game::IsValidMove"
+    "Game::Game::IsFinished"
+    "Game::Game::DoMove"
+    "Game::Game::Serialize"
+
+    "Game::Board::GetPawnCoordinates"
 )
 
 foreach(testId ${tests})
