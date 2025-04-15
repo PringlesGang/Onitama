@@ -20,6 +20,8 @@ void Execute(StateGraphArgs args) {
                                                      args.ImportPaths->second)
                        : ::StateGraph::Graph();
 
+  graph.IntermediatePath = args.IntermediatePath;
+
   std::function<void(Game::Game&&)> analyse;
   switch (args.Type) {
     case StateGraphType::Component:
@@ -129,6 +131,10 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
     if (!edgesPath) return false;
 
     ImportPaths = {nodesPath.value(), edgesPath.value()};
+
+  } else if (argument == "--intermediate") {
+    IntermediatePath = Parse::ParsePath(stream);
+    if (!IntermediatePath) return false;
 
   } else if (argument == "--strategy") {
     const std::optional<StateGraphType> type = ParseStateGraphType(stream);

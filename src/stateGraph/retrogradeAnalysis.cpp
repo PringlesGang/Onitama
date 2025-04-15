@@ -43,7 +43,10 @@ std::weak_ptr<Vertex> Graph::RetrogradeAnalysisExpand(
   explored.insert(game);
   Vertices.insert({game, vertex});
 
-  if (game.IsFinished()) return vertex;
+  if (game.IsFinished()) {
+    if (IntermediatePath) Save(IntermediatePath.value());
+    return vertex;
+  }
 
   for (const Game::Move move : game.GetValidMoves()) {
     Game::Game nextGame = Game::Game(game);

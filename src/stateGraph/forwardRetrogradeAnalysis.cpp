@@ -50,6 +50,7 @@ void Graph::ForwardRetrogradeAnalysisExpand(
   // Terminal game state
   if (source->Quality.has_value()) {
     RetrogradeAnalyseEdges(unlabelledEdges);
+    if (IntermediatePath) Save(IntermediatePath.value());
     return;
   }
 
