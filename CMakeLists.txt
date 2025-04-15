@@ -88,6 +88,8 @@ set(SrcTest
 
         tests/game/game.cpp
         tests/game/board.cpp
+
+        tests/stateGraph/saveSystem.cpp
 )
 
 set(HeaderTest
@@ -95,6 +97,8 @@ set(HeaderTest
 
         tests/game/game.h
         tests/game/board.h
+
+        tests/stateGraph/saveSystem.h
 )
 
 set(INCLUDE_DIRS)
@@ -143,6 +147,11 @@ target_precompile_headers(onitama-core PRIVATE
 )
 
 
+if(TARGET onitama-test)
+    configure_file("tests/resources/load.graph" "tests/resources/load.graph" COPYONLY)
+endif()
+
+
 enable_testing()
 set(tests
     "Game::Game initial state constructor"
@@ -174,6 +183,9 @@ set(tests
     "Game::Game::Serialize"
 
     "Game::Board::GetPawnCoordinates"
+
+    "StateGraph::Graph::Save"
+    "StateGraph::Graph::Load"
 )
 
 foreach(testId ${tests})

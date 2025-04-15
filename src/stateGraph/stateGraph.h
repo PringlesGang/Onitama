@@ -72,6 +72,9 @@ class Graph {
   void Save(const std::filesystem::path& path) const;
   static Graph Load(const std::filesystem::path& path);
 
+  std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
+      Vertices;
+
   std::optional<std::filesystem::path> IntermediatePath = std::nullopt;
 
  private:
@@ -91,9 +94,6 @@ class Graph {
       std::unordered_set<Game::Game, Hash, EqualTo>& explored,
       std::unordered_set<std::shared_ptr<Edge>>& edges);
   void RetrogradeAnalyseEdges(std::unordered_set<std::shared_ptr<Edge>>& edges);
-
-  std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
-      Vertices;
 };
 
 inline std::shared_ptr<Graph> SharedGameStateGraph = std::make_shared<Graph>();

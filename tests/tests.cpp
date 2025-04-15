@@ -9,6 +9,7 @@
 
 #include "./game/board.h"
 #include "./game/game.h"
+#include "./stateGraph/saveSystem.h"
 
 namespace Tests {
 
@@ -68,13 +69,24 @@ const static std::unordered_map<std::string, std::function<int()>,
         {"Game::Game::Serialize", Game::Game::Serialize},
 
         {"Game::Board::GetPawnCoordinates", Game::Board::GetPawnCoordinates},
+
+        {"StateGraph::Graph::Save", StateGraph::Save},
+        {"StateGraph::Graph::Load", StateGraph::Load},
 };
 
 int RunAll() {
   int exitCode = 0;
   for (const auto& [id, test] : Tests) {
     std::cout << std::format("Performing test \"{}\"... \t", id);
-    const int result = test();
+
+    int result = 0;
+    try {
+      result = test();
+    } catch (const std::exception& e) {
+      std::cerr << e.what() << std::endl;
+      return 1;
+    }
+
     std::cout << (result ? "Failed!" : "Passed!") << std::endl;
     exitCode |= result;
   }
@@ -88,7 +100,12 @@ int Run(const std::string& id) {
     return 1;
   }
 
-  return Tests.at(id)();
+  try {
+    return Tests.at(id)();
+  } catch (const std::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
 }
 
 void Init() {
