@@ -17,13 +17,17 @@ constexpr inline std::string_view Command =
     "stategraph --game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
     "(--size width height) (--export nodes-path edges-path) "
     "(--import nodes-path edges-path) (--strategy strategy) "
-    "(--intermediate path)";
+    "(--intermediate path)\n"
+
+    "stategraph --load intermediate_path (--export nodes-path edges-path) "
+    "(--strategy strategy) (--intermediate path)";
 
 constexpr inline std::string_view Description =
     "Depending on the arguments, "
     "will construct the state graph for either:\n"
     "- the provided game state;\n"
-    "- or the starting configuration with the supplied arguments.\n\n"
+    "- the starting configuration with the supplied arguments;\n"
+    "- the loaded intermediate state graph.\n\n"
 
     "Will export the graph to the provided filepath.\n"
     "Will import the graph from the provided filepath.\n"
@@ -46,6 +50,7 @@ struct StateGraphArgs {
 
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
 
+  std::optional<std::filesystem::path> LoadPath = std::nullopt;
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
       ExportPaths = std::nullopt;
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>

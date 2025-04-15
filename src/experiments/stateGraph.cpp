@@ -12,13 +12,20 @@ namespace Experiments {
 namespace StateGraph {
 
 void Execute(StateGraphArgs args) {
-  std::cout << "Generating state graph for:\n"
-            << *args.StartingConfiguration << std::endl;
+  if (args.LoadPath) {
+    std::cout << "Continuing state graph construction..." << std::endl;
+  } else {
+    std::cout << "Generating state graph for:\n"
+              << *args.StartingConfiguration << std::endl;
+  }
 
-  ::StateGraph::Graph graph =
-      args.ImportPaths ? ::StateGraph::Graph::Import(args.ImportPaths->first,
-                                                     args.ImportPaths->second)
-                       : ::StateGraph::Graph();
+  ::StateGraph::Graph graph;
+  if (args.LoadPath) {
+    graph = ::StateGraph::Graph::Load(args.LoadPath.value());
+  } else if (args.ImportPaths) {
+    graph = ::StateGraph::Graph::Import(args.ImportPaths->first,
+                                        args.ImportPaths->second);
+  }
 
   graph.IntermediatePath = args.IntermediatePath;
 
@@ -110,6 +117,10 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
     StartingConfiguration =
         std::make_shared<Game::Game>(config.ToGame().value());
 
+  } else if (argument == "--load") {
+    LoadPath = Parse::ParsePath(stream);
+    if (!LoadPath) return false;
+
   } else if (argument == "--export" || argument == "-e") {
     const std::optional<std::filesystem::path> nodesPath =
         Parse::ParsePath(stream);
@@ -181,7 +192,7 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
 }
 
 bool StateGraphArgs::IsValid() const {
-  return StartingConfiguration != nullptr;
+  return StartingConfiguration != nullptr || LoadPath.has_value();
 }
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command) {

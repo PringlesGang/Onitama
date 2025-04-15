@@ -70,6 +70,7 @@ class Graph {
   void ExportImages(const std::filesystem::path& imagesPath) const;
 
   void Save(const std::filesystem::path& path) const;
+  static Graph Load(const std::filesystem::path& path);
 
   std::optional<std::filesystem::path> IntermediatePath = std::nullopt;
 
