@@ -184,8 +184,8 @@ set(tests
 
     "Game::Board::GetPawnCoordinates"
 
-    "StateGraph::Graph::Save"
-    "StateGraph::Graph::Load"
+    "StateGraph::Graph::SaveForwardRetrogradeAnalysis"
+    "StateGraph::Graph::LoadForwardRetrogradeAnalysis"
 )
 
 foreach(testId ${tests})

@@ -70,8 +70,10 @@ const static std::unordered_map<std::string, std::function<int()>,
 
         {"Game::Board::GetPawnCoordinates", Game::Board::GetPawnCoordinates},
 
-        {"StateGraph::Graph::Save", StateGraph::Save},
-        {"StateGraph::Graph::Load", StateGraph::Load},
+        {"StateGraph::Graph::SaveForwardRetrogradeAnalysis",
+         StateGraph::SaveForwardRetrogradeAnalysis},
+        {"StateGraph::Graph::LoadForwardRetrogradeAnalysis",
+         StateGraph::LoadForwardRetrogradeAnalysis},
 };
 
 int RunAll() {

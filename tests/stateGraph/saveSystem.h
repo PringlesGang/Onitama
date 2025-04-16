@@ -5,8 +5,8 @@
 namespace Tests {
 namespace StateGraph {
 
-int Save();
-int Load();
+int SaveForwardRetrogradeAnalysis();
+int LoadForwardRetrogradeAnalysis();
 
 }  // namespace StateGraph
 }  // namespace Tests
