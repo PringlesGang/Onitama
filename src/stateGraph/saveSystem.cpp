@@ -88,19 +88,46 @@ void Write<Vertex>(std::ofstream& stream, const Vertex vertex) {
   }
 }
 
-void Graph::Save(const std::filesystem::path& path) const {
+void Graph::SaveForwardRetrogradeAnalysis(
+    const std::filesystem::path& path, ForwardRetrogradeProgress&& progress) {
   std::cout << "Saving current state graph..." << std::endl;
 
   std::ofstream stream;
   stream.open(path, std::ios::out | std::ios::binary);
 
-  Write<size_t>(stream, Vertices.size());
-  for (const auto [_, vertex] : Vertices) {
+  // Write call stack
+  Write<size_t>(stream, progress.CallStack.size());
+  for (Game::GameSerialization game : progress.CallStack) {
+    Write<Game::GameSerialization>(stream, std::move(game));
+  }
+
+  // Write expanded vertices
+  Write<size_t>(stream, progress.ExpandedVertices.size());
+  for (const std::shared_ptr<Vertex> vertex : progress.ExpandedVertices) {
+    Write<Game::GameSerialization>(stream, vertex->Serialization);
+  }
+
+  // Write unlabelled edges
+  Write<size_t>(stream, progress.UnlabelledEdges.size());
+  for (const std::shared_ptr<Edge> edge : progress.UnlabelledEdges) {
+    const std::shared_ptr<Vertex> source = edge->Source.lock();
+    const std::shared_ptr<Vertex> target = edge->Target.lock();
+    if (source == nullptr || target == nullptr)
+      throw std::runtime_error("Failed to lock edge while saving state!");
+
+    Write<Game::GameSerialization>(stream, source->Serialization);
+    Write<Game::GameSerialization>(stream, target->Serialization);
+  }
+
+  // Write graph
+  Write<size_t>(stream, progress.Graph->Vertices.size());
+  for (const auto [_, vertex] : progress.Graph->Vertices) {
     Write<Vertex>(stream, *vertex);
   }
 }
 
 struct EdgeInfo {
+  std::optional<Game::GameSerialization> Source = std::nullopt;
   Game::GameSerialization Dest;
   Game::Move Move;
   std::optional<bool> Optimal;
@@ -222,7 +249,8 @@ VertexInfo Read<VertexInfo>(std::ifstream& stream) {
   return info;
 }
 
-Graph Graph::Load(const std::filesystem::path& path) {
+ForwardRetrogradeProgress Graph::LoadForwardRetrogradeAnalysis(
+    const std::filesystem::path& path) {
   if (!std::filesystem::is_regular_file(path)) {
     const std::string err =
         std::format("\"{}\" is not a regular file!", path.string());
@@ -232,7 +260,35 @@ Graph Graph::Load(const std::filesystem::path& path) {
   std::ifstream stream;
   stream.open(path, std::ios::in | std::ios::binary);
 
-  // Parse file
+  ForwardRetrogradeProgress progress;
+  progress.Graph = std::make_shared<Graph>();
+
+  // Parse callstack
+  const size_t callStackDepth = Read<size_t>(stream);
+  for (size_t depth = 0; depth < callStackDepth; depth++) {
+    progress.CallStack.emplace_back(Read<Game::GameSerialization>(stream));
+  }
+
+  // Parse expanded vertices
+  const size_t expandedVerticesCount = Read<size_t>(stream);
+  std::vector<Game::GameSerialization> expandedVertices;
+  expandedVertices.reserve(expandedVerticesCount);
+  for (size_t vertexId = 0; vertexId < expandedVerticesCount; vertexId++) {
+    expandedVertices.emplace_back(Read<Game::GameSerialization>(stream));
+  }
+
+  // Parse unlabelled edges
+  const size_t unlabelledEdgesCount = Read<size_t>(stream);
+  std::vector<std::pair<Game::GameSerialization, Game::GameSerialization>>
+      unlabelledEdges;
+  unlabelledEdges.reserve(unlabelledEdgesCount);
+  for (size_t edgeId = 0; edgeId < unlabelledEdgesCount; edgeId++) {
+    Game::GameSerialization&& source = Read<Game::GameSerialization>(stream);
+    Game::GameSerialization&& target = Read<Game::GameSerialization>(stream);
+    unlabelledEdges.emplace_back(std::move(source), std::move(target));
+  }
+
+  // Parse graph
   const size_t vertexCount = Read<size_t>(stream);
   std::vector<VertexInfo> vertices;
   vertices.reserve(vertexCount);
@@ -241,29 +297,42 @@ Graph Graph::Load(const std::filesystem::path& path) {
   }
 
   // Construct graph
-  Graph graph;
   for (const VertexInfo vertex : vertices) {
     Game::Game&& game = Game::Game::FromSerialization(vertex.Serialization);
-    graph.Vertices.emplace(
+    progress.Graph->Vertices.emplace(
         std::move(game),
         std::make_shared<Vertex>(vertex.Serialization, vertex.Quality));
   }
 
   for (const VertexInfo vertexInfo : vertices) {
     Game::Game game = Game::Game::FromSerialization(vertexInfo.Serialization);
-    std::shared_ptr<Vertex> vertex = graph.Vertices.at(game);
+    std::shared_ptr<Vertex> vertex = progress.Graph->Vertices.at(game);
     vertex->Edges.reserve(vertexInfo.Edges.size());
 
     for (const EdgeInfo edgeInfo : vertexInfo.Edges) {
       Game::Game&& destGame = Game::Game::FromSerialization(edgeInfo.Dest);
-      std::shared_ptr<Vertex> destVertex = graph.Vertices.at(destGame);
+      std::shared_ptr<Vertex> destVertex =
+          progress.Graph->Vertices.at(destGame);
 
       vertex->Edges.emplace_back(std::make_shared<Edge>(
           vertex, std::move(destVertex), edgeInfo.Move, edgeInfo.Optimal));
     }
   }
 
-  return graph;
+  // Map expanded vertices
+  for (const Game::GameSerialization vertex : expandedVertices) {
+    progress.ExpandedVertices.emplace(
+        progress.Graph->Vertices.at(Game::Game::FromSerialization(vertex)));
+  }
+
+  // Map unlabelled edges
+  for (const auto [sourceGame, targetGame] : unlabelledEdges) {
+    const std::shared_ptr<Vertex> sourceVertex =
+        progress.Graph->Vertices.at(Game::Game::FromSerialization(sourceGame));
+    progress.UnlabelledEdges.emplace(sourceVertex->GetEdge(targetGame).value());
+  }
+
+  return progress;
 }
 
 }  // namespace StateGraph

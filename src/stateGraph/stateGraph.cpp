@@ -37,6 +37,32 @@ std::optional<Game::Move> Vertex::GetOptimalMove() const {
              : std::optional<Game::Move>((*optimalMoveIt)->Move);
 }
 
+std::optional<std::shared_ptr<Edge>> Vertex::GetEdge(const Game::Move move) {
+  const auto correspondingEdge = [move](std::shared_ptr<Edge> edge) {
+    return edge->Move == move ? true : false;
+  };
+
+  const auto foundEdge =
+      std::find_if(Edges.begin(), Edges.end(), correspondingEdge);
+  return foundEdge == Edges.end()
+             ? std::nullopt
+             : std::optional<std::shared_ptr<Edge>>(*foundEdge);
+}
+
+std::optional<std::shared_ptr<Edge>> Vertex::GetEdge(
+    const Game::GameSerialization game) {
+  const auto correspondingEdge = [game](std::shared_ptr<Edge> edge) {
+    const std::shared_ptr<Vertex> vertex = edge->Target.lock();
+    return vertex != nullptr && vertex->Serialization == game;
+  };
+
+  const auto foundEdge =
+      std::find_if(Edges.begin(), Edges.end(), correspondingEdge);
+  return foundEdge == Edges.end()
+             ? std::nullopt
+             : std::optional<std::shared_ptr<Edge>>(*foundEdge);
+}
+
 static bool CompareCoordinates(const Game::Game& first,
                                const Game::Game& second,
                                const Color firstPlayer,
