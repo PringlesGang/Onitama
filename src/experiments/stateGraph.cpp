@@ -12,20 +12,13 @@ namespace Experiments {
 namespace StateGraph {
 
 void Execute(StateGraphArgs args) {
-  if (args.LoadPath) {
-    std::cout << "Continuing state graph construction..." << std::endl;
-  } else {
-    std::cout << "Generating state graph for:\n"
-              << *args.StartingConfiguration << std::endl;
-  }
+  std::cout << "Generating state graph for:\n"
+            << *args.StartingConfiguration << std::endl;
 
-  ::StateGraph::Graph graph;
-  if (args.LoadPath) {
-    graph = ::StateGraph::Graph::Load(args.LoadPath.value());
-  } else if (args.ImportPaths) {
-    graph = ::StateGraph::Graph::Import(args.ImportPaths->first,
-                                        args.ImportPaths->second);
-  }
+  ::StateGraph::Graph graph =
+      args.ImportPaths ? ::StateGraph::Graph::Import(args.ImportPaths->first,
+                                                     args.ImportPaths->second)
+                       : ::StateGraph::Graph();
 
   graph.IntermediatePath = args.IntermediatePath;
 
@@ -93,6 +86,42 @@ void Execute(StateGraphArgs args) {
     graph.Export(args.ExportPaths->first, args.ExportPaths->second);
 
   if (args.ImagesPath) graph.ExportImages(args.ImagesPath.value());
+}
+
+void ExecuteLoad(StateGraphArgs args) {
+  std::cout << "Continuing state graph construction..." << std::endl;
+
+  ::StateGraph::ForwardRetrogradeProgress progress =
+      ::StateGraph::Graph::LoadForwardRetrogradeAnalysis(args.LoadPath.value());
+
+  const std::shared_ptr<const ::StateGraph::Vertex> root =
+      progress.Graph->ForwardRetrogradeAnalysis(progress).lock();
+
+  if (root == nullptr) {
+    std::cerr << "Root was deleted!" << std::endl;
+    return;
+  }
+
+  if (root->Quality.has_value()) {
+    switch (root->Quality.value()) {
+      case WinState::Lose:
+        std::cout << "Lost" << std::endl;
+        break;
+      case WinState::Draw:
+        std::cout << "Draw" << std::endl;
+        break;
+      case WinState::Win:
+        std::cout << "Won" << std::endl;
+        break;
+    }
+  } else {
+    std::cout << "Unkown" << std::endl;
+  }
+
+  if (args.ExportPaths)
+    progress.Graph->Export(args.ExportPaths->first, args.ExportPaths->second);
+
+  if (args.ImagesPath) progress.Graph->ExportImages(args.ImagesPath.value());
 }
 
 bool StateGraphArgs::Parse(std::istringstream& stream) {
@@ -192,7 +221,12 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
 }
 
 bool StateGraphArgs::IsValid() const {
-  return StartingConfiguration != nullptr || LoadPath.has_value();
+  switch (Type) {
+    case StateGraphType::ForwardRetrogradeAnalysis:
+      return StartingConfiguration != nullptr || LoadPath.has_value();
+    default:
+      return StartingConfiguration != nullptr;
+  }
 }
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command) {
@@ -207,7 +241,11 @@ std::optional<Cli::Thunk> Parse(std::istringstream& command) {
     return std::nullopt;
   }
 
-  return [args] { Execute(args); };
+  if (args.LoadPath) {
+    return [args] { ExecuteLoad(args); };
+  } else {
+    return [args] { Execute(args); };
+  }
 }
 
 }  // namespace StateGraph

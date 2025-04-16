@@ -10,8 +10,6 @@ void Graph::ExploreComponentRecursive(
 
   Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
 
-  if (IntermediatePath && game.IsFinished()) Save(IntermediatePath.value());
-
   if (exploring.contains(game)) return;
   exploring.insert(game);
 

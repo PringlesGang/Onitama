@@ -49,8 +49,8 @@ struct StateGraphArgs {
       std::istringstream& stream);
 
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
-
   std::optional<std::filesystem::path> LoadPath = std::nullopt;
+
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
       ExportPaths = std::nullopt;
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
@@ -63,6 +63,7 @@ struct StateGraphArgs {
 };
 
 void Execute(StateGraphArgs args);
+void ExecuteLoad(StateGraphArgs args);
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command);
 
