@@ -71,8 +71,8 @@ class Graph {
   std::weak_ptr<const Vertex> ForwardRetrogradeAnalysis(Game::Game&& game);
   std::weak_ptr<const Vertex> ForwardRetrogradeAnalysis(
       ForwardRetrogradeProgress progress);
-  static ForwardRetrogradeProgress LoadForwardRetrogradeAnalysis(
-      const std::filesystem::path& path);
+  static std::pair<Graph, ForwardRetrogradeProgress>
+  LoadForwardRetrogradeAnalysis(const std::filesystem::path& path);
 
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);
@@ -99,8 +99,8 @@ class Graph {
       std::deque<Game::GameSerialization>& callStack,
       bool& reinstatingCallStack);
 
-  static void SaveForwardRetrogradeAnalysis(
-      const std::filesystem::path& path, ForwardRetrogradeProgress&& progress);
+  void SaveForwardRetrogradeAnalysis(const std::filesystem::path& path,
+                                     ForwardRetrogradeProgress&& progress);
 
   std::weak_ptr<Vertex> RetrogradeAnalysisExpand(
       Game::Game&& game,
@@ -112,8 +112,6 @@ class Graph {
 inline std::shared_ptr<Graph> SharedGameStateGraph = std::make_shared<Graph>();
 
 struct ForwardRetrogradeProgress {
-  std::shared_ptr<Graph> Graph;
-
   std::unordered_set<std::shared_ptr<Vertex>> ExpandedVertices;
   std::unordered_set<std::shared_ptr<Edge>> UnlabelledEdges;
 

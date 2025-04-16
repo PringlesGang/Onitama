@@ -91,11 +91,11 @@ void Execute(StateGraphArgs args) {
 void ExecuteLoad(StateGraphArgs args) {
   std::cout << "Continuing state graph construction..." << std::endl;
 
-  ::StateGraph::ForwardRetrogradeProgress progress =
+  auto [graph, progress] =
       ::StateGraph::Graph::LoadForwardRetrogradeAnalysis(args.LoadPath.value());
 
   const std::shared_ptr<const ::StateGraph::Vertex> root =
-      progress.Graph->ForwardRetrogradeAnalysis(progress).lock();
+      graph.ForwardRetrogradeAnalysis(progress).lock();
 
   if (root == nullptr) {
     std::cerr << "Root was deleted!" << std::endl;
@@ -119,9 +119,9 @@ void ExecuteLoad(StateGraphArgs args) {
   }
 
   if (args.ExportPaths)
-    progress.Graph->Export(args.ExportPaths->first, args.ExportPaths->second);
+    graph.Export(args.ExportPaths->first, args.ExportPaths->second);
 
-  if (args.ImagesPath) progress.Graph->ExportImages(args.ImagesPath.value());
+  if (args.ImagesPath) graph.ExportImages(args.ImagesPath.value());
 }
 
 bool StateGraphArgs::Parse(std::istringstream& stream) {
