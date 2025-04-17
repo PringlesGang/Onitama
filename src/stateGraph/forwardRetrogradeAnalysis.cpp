@@ -6,6 +6,7 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     Game::Game&& game) {
   // Reset clock
   LastSaveTime = std::chrono::system_clock::now();
+  StartingTime = LastSaveTime;
 
   std::shared_ptr<Vertex> rootVertex = std::make_shared<Vertex>(game);
   Vertices.emplace(game, rootVertex);
@@ -39,6 +40,8 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     vertex->Quality = WinState::Draw;
   }
 
+  PrintRunningTime();
+
   return rootVertex;
 }
 
@@ -46,6 +49,7 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     ForwardRetrogradeProgress progress) {
   // Reset clock
   LastSaveTime = std::chrono::system_clock::now();
+  StartingTime = LastSaveTime;
 
   const std::shared_ptr<Vertex> root =
       Vertices.at(Game::Game::FromSerialization(progress.CallStack.front()));
@@ -78,6 +82,8 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     vertex->SetOptimalMove((*drawMove)->Move);
     vertex->Quality = WinState::Draw;
   }
+
+  PrintRunningTime();
 
   return root;
 }

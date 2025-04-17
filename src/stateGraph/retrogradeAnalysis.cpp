@@ -7,6 +7,7 @@ namespace StateGraph {
 
 std::weak_ptr<const Vertex> Graph::RetrogradeAnalysis(Game::Game&& game) {
   std::cout << "Exploring state graph..." << std::endl;
+  StartingTime = std::chrono::system_clock::now();
 
   std::unordered_set<std::shared_ptr<Edge>> edges;
   std::unordered_set<Game::Game, Hash, EqualTo> explored;
@@ -29,6 +30,8 @@ std::weak_ptr<const Vertex> Graph::RetrogradeAnalysis(Game::Game&& game) {
       vertex->SetOptimalMove(edge->Move);
     }
   }
+
+  PrintRunningTime();
 
   return Vertices.at(std::move(game));
 }

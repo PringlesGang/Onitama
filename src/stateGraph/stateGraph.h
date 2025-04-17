@@ -3,6 +3,7 @@
 #include <chrono>
 #include <deque>
 #include <filesystem>
+#include <iostream>
 #include <unordered_set>
 
 #include "../game/game.h"
@@ -111,7 +112,16 @@ class Graph {
       std::unordered_set<std::shared_ptr<Edge>>& edges);
   void RetrogradeAnalyseEdges(std::unordered_set<std::shared_ptr<Edge>>& edges);
 
+  void PrintRunningTime() const {
+    const size_t runtime = std::chrono::duration_cast<std::chrono::seconds>(
+                               std::chrono::system_clock::now() - StartingTime)
+                               .count();
+    std::cout << std::format("Running time: {}s", runtime) << std::endl;
+  }
+
   std::chrono::time_point<std::chrono::system_clock> LastSaveTime =
+      std::chrono::system_clock::now();
+  std::chrono::time_point<std::chrono::system_clock> StartingTime =
       std::chrono::system_clock::now();
 };
 
@@ -122,6 +132,8 @@ struct ForwardRetrogradeProgress {
   std::unordered_set<std::shared_ptr<Edge>> UnlabelledEdges;
 
   std::deque<Game::GameSerialization> CallStack;
+
+  std::chrono::duration<size_t> Runtime = std::chrono::duration<size_t>::zero();
 };
 
 }  // namespace StateGraph

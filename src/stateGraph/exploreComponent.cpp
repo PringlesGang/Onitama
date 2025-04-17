@@ -28,12 +28,16 @@ void Graph::ExploreComponentRecursive(
 }
 
 std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
+  StartingTime = std::chrono::system_clock::now();
+
   const std::shared_ptr<Vertex> vertex =
       Vertices.contains(game) ? Vertices.at(game)
                               : std::make_shared<Vertex>(std::move(game));
 
   std::unordered_set<Game::Game> exploring;
   ExploreComponentRecursive(vertex, exploring);
+
+  PrintRunningTime();
 
   return vertex;
 }
