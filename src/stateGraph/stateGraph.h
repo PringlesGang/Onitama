@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <deque>
 #include <filesystem>
 #include <unordered_set>
@@ -88,6 +89,8 @@ class Graph {
 
   std::optional<std::filesystem::path> IntermediatePath = std::nullopt;
 
+  size_t SaveTimeInterval = 0;  // Seconds
+
  private:
   std::optional<Edge> ParseEdge(std::istringstream string) const;
 
@@ -107,6 +110,9 @@ class Graph {
       std::unordered_set<Game::Game, Hash, EqualTo>& explored,
       std::unordered_set<std::shared_ptr<Edge>>& edges);
   void RetrogradeAnalyseEdges(std::unordered_set<std::shared_ptr<Edge>>& edges);
+
+  std::chrono::time_point<std::chrono::system_clock> LastSaveTime =
+      std::chrono::system_clock::now();
 };
 
 inline std::shared_ptr<Graph> SharedGameStateGraph = std::make_shared<Graph>();

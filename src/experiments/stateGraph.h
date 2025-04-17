@@ -12,15 +12,15 @@ constexpr inline std::string_view Name = "stategraph";
 
 constexpr inline std::string_view Command =
     "stategraph --state game_serialization (--export filepath) (--import "
-    "filepath)\n"
+    "filepath) (--intermediate path seconds-interval)\n"
 
     "stategraph --game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
     "(--size width height) (--export nodes-path edges-path) "
     "(--import nodes-path edges-path) (--strategy strategy) "
-    "(--intermediate path)\n"
+    "(--intermediate path seconds-interval)\n"
 
     "stategraph --load intermediate_path (--export nodes-path edges-path) "
-    "(--strategy strategy) (--intermediate path)";
+    "(--strategy strategy) (--intermediate path seconds-interval)";
 
 constexpr inline std::string_view Description =
     "Depending on the arguments, "
@@ -31,7 +31,8 @@ constexpr inline std::string_view Description =
 
     "Will export the graph to the provided filepath.\n"
     "Will import the graph from the provided filepath.\n"
-    "Will periodically save intermediate results to the provided filepath.\n\n"
+    "Will repeatedly save intermediate results to the provided filepath after "
+    "the supplied duration.\n\n"
 
     "--strategy will construct the state graph through the given strategy.";
 
@@ -58,6 +59,8 @@ struct StateGraphArgs {
   std::optional<std::filesystem::path> IntermediatePath = std::nullopt;
 
   std::optional<std::filesystem::path> ImagesPath = std::nullopt;
+
+  size_t SaveTimeInterval = 0;
 
   StateGraphType Type = StateGraphType::Component;
 };

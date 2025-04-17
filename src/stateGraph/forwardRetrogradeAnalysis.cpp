@@ -4,6 +4,9 @@ namespace StateGraph {
 
 std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     Game::Game&& game) {
+  // Reset clock
+  LastSaveTime = std::chrono::system_clock::now();
+
   std::shared_ptr<Vertex> rootVertex = std::make_shared<Vertex>(game);
   Vertices.emplace(game, rootVertex);
 
@@ -41,6 +44,9 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
 
 std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     ForwardRetrogradeProgress progress) {
+  // Reset clock
+  LastSaveTime = std::chrono::system_clock::now();
+
   const std::shared_ptr<Vertex> root =
       Vertices.at(Game::Game::FromSerialization(progress.CallStack.front()));
   std::unordered_set<std::shared_ptr<Vertex>>& expandedVertices =
@@ -106,7 +112,9 @@ void Graph::ForwardRetrogradeAnalysisExpand(
   if (!reinstatingCallStack && source->Quality.has_value()) {
     RetrogradeAnalyseEdges(unlabelledEdges);
 
-    if (IntermediatePath) {
+    if (IntermediatePath && std::chrono::duration_cast<std::chrono::seconds>(
+                                std::chrono::system_clock::now() - LastSaveTime)
+                                    .count() >= SaveTimeInterval) {
       ForwardRetrogradeProgress progress{
           .ExpandedVertices = expandedVertices,
           .UnlabelledEdges = unlabelledEdges,
@@ -114,6 +122,8 @@ void Graph::ForwardRetrogradeAnalysisExpand(
       };
       SaveForwardRetrogradeAnalysis(IntermediatePath.value(),
                                     std::move(progress));
+
+      LastSaveTime = std::chrono::system_clock::now();
     }
 
     return;

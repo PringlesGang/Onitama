@@ -21,6 +21,7 @@ void Execute(StateGraphArgs args) {
                        : ::StateGraph::Graph();
 
   graph.IntermediatePath = args.IntermediatePath;
+  graph.SaveTimeInterval = args.SaveTimeInterval;
 
   std::function<void(Game::Game&&)> analyse;
   switch (args.Type) {
@@ -93,6 +94,8 @@ void ExecuteLoad(StateGraphArgs args) {
 
   auto [graph, progress] =
       ::StateGraph::Graph::LoadForwardRetrogradeAnalysis(args.LoadPath.value());
+
+  graph.SaveTimeInterval = args.SaveTimeInterval;
 
   const std::shared_ptr<const ::StateGraph::Vertex> root =
       graph.ForwardRetrogradeAnalysis(progress).lock();
@@ -175,6 +178,11 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
   } else if (argument == "--intermediate") {
     IntermediatePath = Parse::ParsePath(stream);
     if (!IntermediatePath) return false;
+
+    if (!(stream >> SaveTimeInterval)) {
+      std::cerr << "Failed to parse save time interval!" << std::endl;
+      return false;
+    }
 
   } else if (argument == "--strategy") {
     const std::optional<StateGraphType> type = ParseStateGraphType(stream);
