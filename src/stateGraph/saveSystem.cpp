@@ -95,6 +95,11 @@ void Graph::SaveForwardRetrogradeAnalysis(
   std::ofstream stream;
   stream.open(path, std::ios::out | std::ios::binary);
 
+  const size_t runtime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - StartingTime)
+                             .count();
+  Write<size_t>(stream, runtime);
+
   // Write call stack
   Write<size_t>(stream, progress.CallStack.size());
   for (Game::GameSerialization game : progress.CallStack) {
@@ -262,6 +267,8 @@ Graph::LoadForwardRetrogradeAnalysis(const std::filesystem::path& path) {
 
   ForwardRetrogradeProgress progress;
   Graph graph;
+
+  progress.Runtime = std::chrono::duration<size_t>(Read<size_t>(stream));
 
   // Parse callstack
   const size_t callStackDepth = Read<size_t>(stream);

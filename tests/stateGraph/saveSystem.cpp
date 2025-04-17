@@ -99,6 +99,7 @@ int SaveForwardRetrogradeAnalysis() {
   const ForwardRetrogradeProgress progress{
       .ExpandedVertices = {vertices[0], vertices[4], vertices[2], vertices[6]},
       .UnlabelledEdges = {vertices[0]->Edges[1]},
+
       .CallStack = {serializations[0], serializations[2], serializations[4],
                     serializations[6]},
   };
@@ -307,6 +308,8 @@ int SaveForwardRetrogradeAnalysis() {
 
     return Fail;
   }
+
+  // Can't reliably test runtimes
 
   std::filesystem::remove(outPath);
   return Pass;
@@ -630,6 +633,17 @@ int LoadForwardRetrogradeAnalysis() {
     for (const Game::GameSerialization game : progress.CallStack)
       std::cerr << Base64::Encode(game) << ", ";
     std::cerr << "}" << std::endl;
+
+    return Fail;
+  }
+
+  // Compare runtimes
+  constexpr std::chrono::duration<size_t> expectedRuntime(42);
+
+  if (progress.Runtime != expectedRuntime) {
+    std::cerr << std::format("Expected runtime {}s; got {}s!",
+                             expectedRuntime.count(), progress.Runtime.count())
+              << std::endl;
 
     return Fail;
   }

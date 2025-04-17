@@ -4,7 +4,7 @@ namespace StateGraph {
 
 std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     Game::Game&& game) {
-  // Reset clock
+  // Reset clocks
   LastSaveTime = std::chrono::system_clock::now();
   StartingTime = LastSaveTime;
 
@@ -47,9 +47,9 @@ std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
 
 std::weak_ptr<const Vertex> Graph::ForwardRetrogradeAnalysis(
     ForwardRetrogradeProgress progress) {
-  // Reset clock
+  // Reset clocks
   LastSaveTime = std::chrono::system_clock::now();
-  StartingTime = LastSaveTime;
+  StartingTime = LastSaveTime - progress.Runtime;
 
   const std::shared_ptr<Vertex> root =
       Vertices.at(Game::Game::FromSerialization(progress.CallStack.front()));
