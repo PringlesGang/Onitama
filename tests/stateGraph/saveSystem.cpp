@@ -23,7 +23,7 @@ struct VertexInfo {
 };
 
 int SaveForwardRetrogradeAnalysis() {
-  const std::filesystem::path outPath = "./Tests_StateGraph_Save_output";
+  const std::filesystem::path outPath = "./tests/Tests_StateGraph_Save_output";
   std::filesystem::remove(outPath);
 
   constexpr std::array<Game::GameSerialization, 9> serializations = {
