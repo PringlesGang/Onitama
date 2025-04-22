@@ -68,6 +68,7 @@ class Graph {
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
   std::weak_ptr<const Vertex> ExploreComponent(Game::Game&& game);
+
   std::weak_ptr<const Vertex> RetrogradeAnalysis(Game::Game&& game);
 
   std::weak_ptr<const Vertex> ForwardRetrogradeAnalysis(Game::Game&& game);
@@ -78,6 +79,10 @@ class Graph {
                                      ForwardRetrogradeProgress&& progress);
   static std::pair<Graph, ForwardRetrogradeProgress>
   LoadForwardRetrogradeAnalysis(const std::filesystem::path& path);
+
+  std::weak_ptr<const Vertex> DispersedFrontier(Game::Game&& game,
+                                                size_t frontier,
+                                                size_t maxThreadCount);
 
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);

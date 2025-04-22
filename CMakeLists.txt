@@ -41,6 +41,7 @@ set(Src
         src/stateGraph/exploreComponent.cpp
         src/stateGraph/retrogradeAnalysis.cpp
         src/stateGraph/forwardRetrogradeAnalysis.cpp
+        src/stateGraph/dispersedFrontier.cpp
         src/stateGraph/saveSystem.cpp
 )
 
