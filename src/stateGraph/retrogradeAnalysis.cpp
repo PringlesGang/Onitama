@@ -141,4 +141,129 @@ void Graph::RetrogradeAnalyseEdges(
   }
 }
 
+void RetrogradeAnalyse(Graph& graph) {
+  // Keep trying until an uneventful loop occurred
+  bool edgeLabelled = false;
+  std::unordered_set<std::shared_ptr<Vertex>> unlabelledExpandedVertices;
+
+  // Analyse wins and losses
+  do {
+    edgeLabelled = false;
+
+    // Check all vertices
+    for (auto& [game, vertex] : graph.Vertices) {
+      // Cannot relabel a labelled vertex
+      if (vertex->Quality.has_value()) continue;
+
+      if (!vertex->Edges.empty()) unlabelledExpandedVertices.insert(vertex);
+
+      // Check all edges
+      for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
+           edgeIt++) {
+        const std::shared_ptr<Edge> edge = *edgeIt;
+        const bool lastEdge = (edgeIt + 1) == vertex->Edges.end();
+
+        // Cannot relabel a labelled edge
+        if (edge->Optimal.has_value()) continue;
+
+        // Cannot label an edge with an unlabelled target
+        std::shared_ptr<Vertex> target = edge->Target.lock();
+        if (!target->Quality.has_value()) continue;
+
+        switch (target->Quality.value()) {
+          case WinState::Lose: {
+            vertex->Quality = WinState::Win;
+            vertex->SetOptimalMove(edge->Move);
+
+            edgeLabelled = true;
+            unlabelledExpandedVertices.erase(vertex);
+            break;
+          }
+
+          case WinState::Win: {
+            if (lastEdge && !vertex->Quality.has_value()) {
+              vertex->Quality = WinState::Lose;
+              vertex->SetOptimalMove(edge->Move);
+              unlabelledExpandedVertices.erase(vertex);
+            } else {
+              edge->Optimal = false;
+            }
+
+            edgeLabelled = true;
+            break;
+          }
+
+          case WinState::Draw: {
+            // Provisionally set the optimal move to draw
+            edgeLabelled = true;
+            vertex->Quality = WinState::Draw;
+            vertex->SetOptimalMove(edge->Move);
+            unlabelledExpandedVertices.erase(vertex);
+            break;
+          }
+
+          default: {
+            const std::string msg =
+                std::format("Unexpected target quality \"{}\"!",
+                            (int8_t)target->Quality.value());
+            throw std::runtime_error(msg);
+          }
+        }
+
+        // Cannot improve upon a win
+        if (vertex->Quality == WinState::Win) break;
+      }
+    }
+  } while (edgeLabelled);
+
+  // Assign draws
+  bool anyVertexRemoved = false;
+  do {
+    anyVertexRemoved = false;
+
+    for (auto vertexIt = unlabelledExpandedVertices.begin();
+         vertexIt != unlabelledExpandedVertices.end();) {
+      const std::shared_ptr<Vertex> vertex = *vertexIt;
+      bool currentVertexErased = false;
+
+      for (const std::shared_ptr<Edge> edge : vertex->Edges) {
+        const std::shared_ptr<Vertex> target = edge->Target.lock();
+        assert(target != nullptr);
+
+        if (target->Quality.has_value()) {
+          if (target->Quality.value() == WinState::Draw) {
+            // Take the guaranteed draw
+            vertex->SetOptimalMove(edge->Move);
+            vertex->Quality = WinState::Draw;
+            break;
+          }
+
+          assert(target->Quality.value() != WinState::Lose);
+          continue;
+        }
+
+        // There is an unexplored mode; draw not necessarily optimal
+        if (!unlabelledExpandedVertices.contains(target)) {
+          vertexIt = unlabelledExpandedVertices.erase(vertexIt);
+          anyVertexRemoved = true;
+          currentVertexErased = true;
+          break;
+        }
+
+        // Set the supposed draw move
+        vertex->SetOptimalMove(edge->Move);
+      }
+      assert(currentVertexErased || vertex->GetOptimalMove().has_value());
+
+      if (!currentVertexErased) vertexIt++;
+    }
+  } while (anyVertexRemoved);
+
+  // Mark unlabelled expanded vertices with only expanded children as draws
+  for (const std::shared_ptr<Vertex> draw : unlabelledExpandedVertices) {
+    draw->Quality = WinState::Draw;
+    assert(draw->GetOptimalMove().has_value());
+  }
+}
+
 }  // namespace StateGraph

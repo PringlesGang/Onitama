@@ -136,4 +136,6 @@ struct ForwardRetrogradeProgress {
   std::chrono::duration<size_t> Runtime = std::chrono::duration<size_t>::zero();
 };
 
+void RetrogradeAnalyse(Graph& graph);
+
 }  // namespace StateGraph
