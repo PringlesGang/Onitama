@@ -22,32 +22,24 @@ struct VertexInfo {
 
 static void Explore(
     const Game::GameSerialization serialization,
-    std::vector<VertexInfo>& localVertices, std::vector<VertexInfo>& frontier,
+    std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo>& localVertices,
+    std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo>& frontier,
     const std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash,
                              EqualTo>& globalVertices,
     const size_t depth, const size_t maxDepth) {
   // Check frontier depth
-  const auto frontierContains = [&frontier](
-                                    const Game::GameSerialization game) {
-    return std::find(frontier.begin(), frontier.end(), game) != frontier.end();
-  };
-
   if (depth >= maxDepth) {
-    if (!frontierContains(serialization)) frontier.emplace_back(serialization);
+    frontier.insert(
+        {Game::Game::FromSerialization(serialization), serialization});
     return;
   }
 
   // Update local vertices
-  VertexInfo& vertex = localVertices.emplace_back(serialization);
   const Game::Game game = Game::Game::FromSerialization(serialization);
+  VertexInfo& vertex =
+      localVertices.insert({game, serialization}).first->second;
 
   // Analyse moves
-  const auto localVerticesContains = [&localVertices](
-                                         const Game::GameSerialization game) {
-    return std::any_of(localVertices.begin(), localVertices.end(),
-                       [game](VertexInfo info) { return info.Game == game; });
-  };
-
   vertex.Edges = game.GetValidMoves();
   for (const Game::Move move : vertex.Edges) {
     Game::Game next(game);
@@ -55,10 +47,7 @@ static void Explore(
     const Game::GameSerialization nextSerialization = next.Serialize();
 
     // Don't explore already explored states
-    if (globalVertices.contains(next) ||
-        localVerticesContains(nextSerialization)) {
-      continue;
-    }
+    if (globalVertices.contains(next) || localVertices.contains(next)) continue;
 
     // Venture forth
     Explore(std::move(nextSerialization), localVertices, frontier,
@@ -67,8 +56,8 @@ static void Explore(
 }
 
 struct ThreadContext {
-  std::vector<VertexInfo> LocalVertices;
-  std::vector<VertexInfo> Frontier;
+  std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo> LocalVertices;
+  std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo> Frontier;
 
   std::optional<std::future<void>> thread = std::nullopt;
 
@@ -90,13 +79,13 @@ void ThreadContext::Finish(
         globalVertices,
     std::unordered_set<Game::GameSerialization>& globalFrontier) {
   // Add found vertices
-  for (VertexInfo localVertex : LocalVertices) {
-    const Game::Game game = Game::Game::FromSerialization(localVertex.Game);
+  for (const auto [game, localVertex] : LocalVertices) {
     const std::shared_ptr<Vertex> vertex =
         globalVertices.emplace(game, std::make_shared<Vertex>(game))
             .first->second;
 
     // Add edges
+    assert(localVertex.Edges.size() == game.GetValidMoves().size());
     for (Game::Move move : localVertex.Edges) {
       Game::Game nextGame(game);
       nextGame.DoMove(move);
@@ -117,9 +106,7 @@ void ThreadContext::Finish(
   }
 
   // Update frontier
-  for (const VertexInfo frontierVertex : Frontier) {
-    const Game::Game frontierGame =
-        Game::Game::FromSerialization(frontierVertex.Game);
+  for (const auto [frontierGame, frontierVertex] : Frontier) {
     std::shared_ptr<Vertex> vertex = globalVertices.at(frontierGame);
 
     const bool expanded = vertex->Quality.has_value() || !vertex->Edges.empty();
