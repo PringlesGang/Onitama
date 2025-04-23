@@ -32,7 +32,7 @@ struct ThreadContext {
   void Reset() {
     LocalVertices.clear();
     Frontier.clear();
-    thread.reset();
+    thread = std::nullopt;
   }
 };
 
@@ -160,8 +160,8 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
 
         // A finished thread is idling
         if (context.thread->wait_for(0ms) == std::future_status::ready) {
-          idleContext = &context;
           context.Finish(Vertices, frontier);
+          idleContext = &context;
           break;
         }
       }
@@ -172,7 +172,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
     frontier.erase(state);
 
     idleContext->thread =
-        std::async(std::launch::async, [state, &idleContext, this, depth]() {
+        std::async(std::launch::async, [state, idleContext, this, depth]() {
           Explore(std::move(state), idleContext->LocalVertices,
                   idleContext->Frontier, Vertices, 0, depth);
         });
