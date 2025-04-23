@@ -125,26 +125,28 @@ add_executable("onitama" src/main.cpp $<TARGET_OBJECTS:onitama-core>)
 add_executable("onitama-test" tests/tests.cpp $<TARGET_OBJECTS:onitama-core> ${SrcTest} ${HeaderTest})
 
 target_precompile_headers(onitama-core PRIVATE
-    <iostream>
-    <format>
-    <array>
-    <vector>
-    <functional>
-    <optional>
-    <memory>
     <algorithm>
-    <future>
+    <array>
+    <bit>
+    <bitset>
+    <chrono>
+    <cstdint>
     <filesystem>
+    <format>
+    <functional>
+    <future>
+    <iostream>
+    <memory>
+    <optional>
+    <random>
+    <shared_mutex>
     <span>
-    <unordered_map>
     <sstream>
     <stdexcept>
     <string>
+    <unordered_map>
     <unordered_set>
-    <random>
-    <bit>
-    <bitset>
-    <cstdint>
+    <vector>
 )
 
 

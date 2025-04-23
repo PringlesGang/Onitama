@@ -1,6 +1,7 @@
 #include <cassert>
 #include <chrono>
 #include <future>
+#include <shared_mutex>
 #include <unordered_set>
 
 #include "stateGraph.h"
@@ -27,7 +28,8 @@ struct ThreadContext {
 
   void Finish(std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash,
                                  EqualTo>& globalVertices,
-              std::unordered_set<Game::Game, Hash, EqualTo>& globalFrontier);
+              std::unordered_set<Game::Game, Hash, EqualTo>& globalFrontier,
+              std::shared_mutex& mutex);
 
   void Reset() {
     LocalVertices.clear();
@@ -47,7 +49,7 @@ static void Explore(
     std::unordered_set<Game::Game, Hash, EqualTo>& frontier,
     const std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash,
                              EqualTo>& globalVertices,
-    const size_t depth, const size_t maxDepth) {
+    const size_t depth, const size_t maxDepth, std::shared_mutex& mutex) {
   // Check frontier depth
   if (depth >= maxDepth) {
     frontier.emplace(game);
@@ -65,18 +67,30 @@ static void Explore(
     next.DoMove(move);
 
     // Don't explore already explored states
-    if (globalVertices.contains(next) || localVertices.contains(next)) continue;
+    if (localVertices.contains(next)) continue;
+
+    // If the global is locked, don't waste time and just keep going,
+    // assuming it has not yet been explored
+    if (mutex.try_lock_shared()) {
+      const bool explored = globalVertices.contains(next);
+      mutex.unlock_shared();
+
+      if (explored) continue;
+    }
 
     // Venture forth
     Explore(std::move(next), localVertices, frontier, globalVertices, depth + 1,
-            maxDepth);
+            maxDepth, mutex);
   }
 }
 
 void ThreadContext::Finish(
     std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>&
         globalVertices,
-    std::unordered_set<Game::Game, Hash, EqualTo>& globalFrontier) {
+    std::unordered_set<Game::Game, Hash, EqualTo>& globalFrontier,
+    std::shared_mutex& mutex) {
+  mutex.lock();
+
   // Add found vertices
   for (const auto [game, localVertex] : LocalVertices) {
     const std::shared_ptr<Vertex> vertex =
@@ -116,6 +130,7 @@ void ThreadContext::Finish(
     }
   }
 
+  mutex.unlock();
   Reset();
 }
 
@@ -123,6 +138,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
     Game::Game&& game, const size_t depth, const size_t maxThreadCount) {
   std::unordered_set<Game::Game, Hash, EqualTo> frontier = {game};
 
+  std::shared_mutex mutex;
   std::vector<ThreadContext> threadContexts(maxThreadCount);
 
   const auto anyThreadActive = [&threadContexts] {
@@ -140,7 +156,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
         if (!context.InUse()) continue;
 
         if (context.thread->wait_for(0ms) == std::future_status::ready) {
-          context.Finish(Vertices, frontier);
+          context.Finish(Vertices, frontier, mutex);
           break;
         }
       }
@@ -160,7 +176,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
 
         // A finished thread is idling
         if (context.thread->wait_for(0ms) == std::future_status::ready) {
-          context.Finish(Vertices, frontier);
+          context.Finish(Vertices, frontier, mutex);
           idleContext = &context;
           break;
         }
@@ -171,10 +187,10 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
     const Game::Game state = *frontier.begin();
     frontier.erase(state);
 
-    idleContext->thread =
-        std::async(std::launch::async, [state, idleContext, this, depth]() {
+    idleContext->thread = std::async(
+        std::launch::async, [state, idleContext, this, depth, &mutex]() {
           Explore(std::move(state), idleContext->LocalVertices,
-                  idleContext->Frontier, Vertices, 0, depth);
+                  idleContext->Frontier, Vertices, 0, depth, mutex);
         });
   } while (!frontier.empty() || anyThreadActive());
 
