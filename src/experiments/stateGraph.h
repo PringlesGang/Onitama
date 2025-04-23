@@ -40,6 +40,7 @@ enum class StateGraphType {
   Component,
   ForwardRetrogradeAnalysis,
   RetrogradeAnalysis,
+  DispersedFrontier,
 };
 
 struct StateGraphArgs {
@@ -63,6 +64,10 @@ struct StateGraphArgs {
   size_t SaveTimeInterval = 0;
 
   StateGraphType Type = StateGraphType::Component;
+
+  // Dispersed frontier
+  size_t Depth = 0;
+  size_t MaxThreadCount = 0;
 };
 
 void Execute(StateGraphArgs args);

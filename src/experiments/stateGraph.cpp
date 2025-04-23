@@ -43,6 +43,13 @@ void Execute(StateGraphArgs args) {
       };
       break;
 
+    case StateGraphType::DispersedFrontier:
+      analyse = [&graph, args](Game::Game&& game) {
+        graph.DispersedFrontier(std::move(game), args.Depth,
+                                args.MaxThreadCount);
+      };
+      break;
+
     default:
       std::cerr << std::format("Unknown state graph type \"{}\"",
                                (size_t)args.Type)
@@ -57,7 +64,8 @@ void Execute(StateGraphArgs args) {
       break;
 
     case StateGraphType::ForwardRetrogradeAnalysis:
-    case StateGraphType::RetrogradeAnalysis: {
+    case StateGraphType::RetrogradeAnalysis:
+    case StateGraphType::DispersedFrontier: {
       analyse(Game::Game(*args.StartingConfiguration));
 
       const std::shared_ptr<const ::StateGraph::Vertex> vertex =
@@ -187,8 +195,38 @@ bool StateGraphArgs::Parse(std::istringstream& stream) {
   } else if (argument == "--strategy") {
     const std::optional<StateGraphType> type = ParseStateGraphType(stream);
     if (!type) return false;
-
     Type = type.value();
+
+    switch (Type) {
+      case StateGraphType::DispersedFrontier: {
+        if (!(stream >> Depth)) {
+          std::cerr << "Failed to parse dispersed frontier depth!" << std::endl;
+          return false;
+        }
+
+        if (Depth == 0) {
+          std::cerr << "Dispersed frontier depth cannot be zero!" << std::endl;
+          return false;
+        }
+
+        if (!(stream >> MaxThreadCount)) {
+          std::cerr << "Failed to parse dispersed frontier max thread count!"
+                    << std::endl;
+          return false;
+        }
+
+        if (MaxThreadCount == 0) {
+          std::cerr << "Dispersed frontier thread count cannot be zero!"
+                    << std::endl;
+          return false;
+        }
+
+        break;
+      }
+
+      default:
+        break;
+    }
 
   } else if (argument == "--image") {
     const std::optional<std::filesystem::path> imagesPath =
@@ -217,6 +255,8 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
     return StateGraphType::Component;
   } else if (string == "retrograde" || string == "retrograde-analysis") {
     return StateGraphType::RetrogradeAnalysis;
+  } else if (string == "dispersed" || string == "dispersed-frontier") {
+    return StateGraphType::DispersedFrontier;
   }
 
   std::cerr << std::format("Unknown state graph strategy \"{}\"!\n", string)
@@ -224,6 +264,7 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
                "- component\n"
                "- retrograde-analysis\n"
                "- forward-retrograde-analysis\n"
+               "- dispersed-frontier\n"
             << std::endl;
   return std::nullopt;
 }
