@@ -70,37 +70,32 @@ static bool CompareCoordinates(const Game::Game& first,
   const bool masterCaptured = first.MasterCaptured(firstPlayer);
   if (masterCaptured != second.MasterCaptured(secondPlayer)) return false;
 
-  const bool orient = firstPlayer != secondPlayer;
-  const auto [width, height] = second.GetDimensions();
-  const auto orientCoord = [orient, width, height](Coordinate coordinate) {
-    return orient
-               ? Coordinate(width - coordinate.x - 1, height - coordinate.y - 1)
-               : coordinate;
-  };
-
   const std::vector<Coordinate>& firstCoordinates =
       first.GetPawnCoordinates(firstPlayer);
-  const std::vector<Coordinate>& secondCoordinates =
+  std::vector<Coordinate> secondCoordinates =
       second.GetPawnCoordinates(secondPlayer);
 
   if (firstCoordinates.size() != secondCoordinates.size()) return false;
-  if (firstCoordinates.size() == 0) return true;
+  if (firstCoordinates.empty()) return true;
 
-  if (!masterCaptured &&
-      firstCoordinates[0] != orientCoord(secondCoordinates[0]))
-    return false;
+  const bool orient = firstPlayer != secondPlayer;
+  if (orient) {
+    const auto [width, height] = second.GetDimensions();
+    const auto orientCoord = [width, height](Coordinate coordinate) {
+      return Coordinate(width - coordinate.x - 1, height - coordinate.y - 1);
+    };
 
-  auto secondCoord = orient ? --secondCoordinates.end()
-                            : secondCoordinates.begin() + !masterCaptured;
-  for (auto firstCoord = firstCoordinates.begin() + !masterCaptured;
-       firstCoord != firstCoordinates.end(); firstCoord++) {
-    if (*firstCoord != orientCoord(*secondCoord)) return false;
+    std::transform(secondCoordinates.begin(), secondCoordinates.end(),
+                   secondCoordinates.begin(), orientCoord);
 
-    if (!orient || secondCoord != secondCoordinates.begin())
-      secondCoord += orient ? -1 : 1;
+    if (!masterCaptured && firstCoordinates[0] != secondCoordinates[0])
+      return false;
+
+    return std::equal(firstCoordinates.begin() + !masterCaptured,
+                      firstCoordinates.end(), secondCoordinates.rbegin());
+  } else {
+    return firstCoordinates == secondCoordinates;
   }
-
-  return true;
 }
 
 Edge::Edge(std::weak_ptr<Vertex> source, std::weak_ptr<Vertex> target,
@@ -123,11 +118,10 @@ bool EqualTo::operator()(const Game::Game& first,
         first.GetHand(firstPlayer);
     const std::span<const Game::Card, HAND_SIZE> secondHand =
         first.GetHand(firstPlayer);
-    if (std::unordered_multiset<Game::Card>(firstHand.begin(),
-                                            firstHand.end()) !=
-        std::unordered_multiset<Game::Card>(secondHand.begin(),
-                                            secondHand.end()))
+    if (!std::is_permutation(firstHand.begin(), firstHand.end(),
+                             secondHand.begin(), secondHand.end())) {
       return false;
+    }
 
     if (!CompareCoordinates(first, second, firstPlayer, secondPlayer))
       return false;
@@ -140,7 +134,7 @@ size_t Hash::operator()(const Game::Game& game) const noexcept {
   // Cards
   size_t hash = (size_t)game.GetSetAsideCard().Type;
 
-  for (const Game::Card card : game.GetHand(TopPlayer)) {
+  for (const Game::Card card : game.GetHand(game.GetCurrentPlayer())) {
     hash ^= (size_t)card.Type;
   }
 
