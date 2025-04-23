@@ -4,6 +4,7 @@
 #include "stateGraph.h"
 
 namespace StateGraph {
+namespace SaveSystem {
 
 template <typename T>
 static void Write(std::ofstream& stream, const T value) {
@@ -85,49 +86,6 @@ void Write<Vertex>(std::ofstream& stream, const Vertex vertex) {
   Write<size_t>(stream, vertex.Edges.size());
   for (const std::shared_ptr<Edge> edge : vertex.Edges) {
     Write<Edge>(stream, *edge);
-  }
-}
-
-void Graph::SaveForwardRetrogradeAnalysis(
-    const std::filesystem::path& path, ForwardRetrogradeProgress&& progress) {
-  std::cout << "Saving current state graph..." << std::endl;
-
-  std::ofstream stream;
-  stream.open(path, std::ios::out | std::ios::binary);
-
-  const size_t runtime = std::chrono::duration_cast<std::chrono::seconds>(
-                             std::chrono::system_clock::now() - StartingTime)
-                             .count();
-  Write<size_t>(stream, runtime);
-
-  // Write call stack
-  Write<size_t>(stream, progress.CallStack.size());
-  for (Game::GameSerialization game : progress.CallStack) {
-    Write<Game::GameSerialization>(stream, std::move(game));
-  }
-
-  // Write expanded vertices
-  Write<size_t>(stream, progress.ExpandedVertices.size());
-  for (const std::shared_ptr<Vertex> vertex : progress.ExpandedVertices) {
-    Write<Game::GameSerialization>(stream, vertex->Serialization);
-  }
-
-  // Write unlabelled edges
-  Write<size_t>(stream, progress.UnlabelledEdges.size());
-  for (const std::shared_ptr<Edge> edge : progress.UnlabelledEdges) {
-    const std::shared_ptr<Vertex> source = edge->Source.lock();
-    const std::shared_ptr<Vertex> target = edge->Target.lock();
-    if (source == nullptr || target == nullptr)
-      throw std::runtime_error("Failed to lock edge while saving state!");
-
-    Write<Game::GameSerialization>(stream, source->Serialization);
-    Write<Game::GameSerialization>(stream, target->Serialization);
-  }
-
-  // Write graph
-  Write<size_t>(stream, Vertices.size());
-  for (const auto [_, vertex] : Vertices) {
-    Write<Vertex>(stream, *vertex);
   }
 }
 
@@ -254,8 +212,57 @@ VertexInfo Read<VertexInfo>(std::ifstream& stream) {
   return info;
 }
 
+}  // namespace SaveSystem
+
+void Graph::SaveForwardRetrogradeAnalysis(
+    const std::filesystem::path& path, ForwardRetrogradeProgress&& progress) {
+  using namespace SaveSystem;
+
+  std::cout << "Saving current state graph..." << std::endl;
+
+  std::ofstream stream;
+  stream.open(path, std::ios::out | std::ios::binary);
+
+  const size_t runtime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - StartingTime)
+                             .count();
+  Write<size_t>(stream, runtime);
+
+  // Write call stack
+  Write<size_t>(stream, progress.CallStack.size());
+  for (Game::GameSerialization game : progress.CallStack) {
+    Write<Game::GameSerialization>(stream, std::move(game));
+  }
+
+  // Write expanded vertices
+  Write<size_t>(stream, progress.ExpandedVertices.size());
+  for (const std::shared_ptr<Vertex> vertex : progress.ExpandedVertices) {
+    Write<Game::GameSerialization>(stream, vertex->Serialization);
+  }
+
+  // Write unlabelled edges
+  Write<size_t>(stream, progress.UnlabelledEdges.size());
+  for (const std::shared_ptr<Edge> edge : progress.UnlabelledEdges) {
+    const std::shared_ptr<Vertex> source = edge->Source.lock();
+    const std::shared_ptr<Vertex> target = edge->Target.lock();
+    if (source == nullptr || target == nullptr)
+      throw std::runtime_error("Failed to lock edge while saving state!");
+
+    Write<Game::GameSerialization>(stream, source->Serialization);
+    Write<Game::GameSerialization>(stream, target->Serialization);
+  }
+
+  // Write graph
+  Write<size_t>(stream, Vertices.size());
+  for (const auto [_, vertex] : Vertices) {
+    Write<Vertex>(stream, *vertex);
+  }
+}
+
 std::pair<Graph, ForwardRetrogradeProgress>
 Graph::LoadForwardRetrogradeAnalysis(const std::filesystem::path& path) {
+  using namespace SaveSystem;
+
   if (!std::filesystem::is_regular_file(path)) {
     const std::string err =
         std::format("\"{}\" is not a regular file!", path.string());

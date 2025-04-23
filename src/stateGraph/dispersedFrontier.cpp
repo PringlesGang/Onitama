@@ -1,63 +1,25 @@
 #include <cassert>
 #include <chrono>
 #include <future>
+#include <unordered_set>
 
 #include "stateGraph.h"
 
 namespace StateGraph {
 
-using namespace std::chrono_literals;
+namespace DispersedFrontier {
 
 struct VertexInfo {
   VertexInfo(Game::GameSerialization game) : Game(game) {}
   VertexInfo(Game::Game game) : Game(game.Serialize()) {}
 
-  bool operator==(const Game::GameSerialization game) const {
-    return Game == game;
-  }
-
   Game::GameSerialization Game;
   std::vector<Game::Move> Edges;
 };
 
-static void Explore(
-    const Game::GameSerialization serialization,
-    std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo>& localVertices,
-    std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo>& frontier,
-    const std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash,
-                             EqualTo>& globalVertices,
-    const size_t depth, const size_t maxDepth) {
-  // Check frontier depth
-  if (depth >= maxDepth) {
-    frontier.insert(
-        {Game::Game::FromSerialization(serialization), serialization});
-    return;
-  }
-
-  // Update local vertices
-  const Game::Game game = Game::Game::FromSerialization(serialization);
-  VertexInfo& vertex =
-      localVertices.insert({game, serialization}).first->second;
-
-  // Analyse moves
-  vertex.Edges = game.GetValidMoves();
-  for (const Game::Move move : vertex.Edges) {
-    Game::Game next(game);
-    next.DoMove(move);
-    const Game::GameSerialization nextSerialization = next.Serialize();
-
-    // Don't explore already explored states
-    if (globalVertices.contains(next) || localVertices.contains(next)) continue;
-
-    // Venture forth
-    Explore(std::move(nextSerialization), localVertices, frontier,
-            globalVertices, depth + 1, maxDepth);
-  }
-}
-
 struct ThreadContext {
   std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo> LocalVertices;
-  std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo> Frontier;
+  std::unordered_set<Game::Game, Hash, EqualTo> Frontier;
 
   std::optional<std::future<void>> thread = std::nullopt;
 
@@ -65,7 +27,7 @@ struct ThreadContext {
 
   void Finish(std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash,
                                  EqualTo>& globalVertices,
-              std::unordered_set<Game::GameSerialization>& globalFrontier);
+              std::unordered_set<Game::Game, Hash, EqualTo>& globalFrontier);
 
   void Reset() {
     LocalVertices.clear();
@@ -74,10 +36,47 @@ struct ThreadContext {
   }
 };
 
+}  // namespace DispersedFrontier
+
+using namespace std::chrono_literals;
+using namespace DispersedFrontier;
+
+static void Explore(
+    const Game::Game game,
+    std::unordered_map<Game::Game, VertexInfo, Hash, EqualTo>& localVertices,
+    std::unordered_set<Game::Game, Hash, EqualTo>& frontier,
+    const std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash,
+                             EqualTo>& globalVertices,
+    const size_t depth, const size_t maxDepth) {
+  // Check frontier depth
+  if (depth >= maxDepth) {
+    frontier.emplace(game);
+    return;
+  }
+
+  // Update local vertices
+  VertexInfo& vertex =
+      localVertices.emplace(game, VertexInfo(game)).first->second;
+
+  // Analyse moves
+  vertex.Edges = game.GetValidMoves();
+  for (const Game::Move move : vertex.Edges) {
+    Game::Game next(game);
+    next.DoMove(move);
+
+    // Don't explore already explored states
+    if (globalVertices.contains(next) || localVertices.contains(next)) continue;
+
+    // Venture forth
+    Explore(std::move(next), localVertices, frontier, globalVertices, depth + 1,
+            maxDepth);
+  }
+}
+
 void ThreadContext::Finish(
     std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>&
         globalVertices,
-    std::unordered_set<Game::GameSerialization>& globalFrontier) {
+    std::unordered_set<Game::Game, Hash, EqualTo>& globalFrontier) {
   // Add found vertices
   for (const auto [game, localVertex] : LocalVertices) {
     const std::shared_ptr<Vertex> vertex =
@@ -106,14 +105,14 @@ void ThreadContext::Finish(
   }
 
   // Update frontier
-  for (const auto [frontierGame, frontierVertex] : Frontier) {
+  for (const Game::Game& frontierGame : Frontier) {
     std::shared_ptr<Vertex> vertex = globalVertices.at(frontierGame);
-
     const bool expanded = vertex->Quality.has_value() || !vertex->Edges.empty();
+
     if (expanded) {
-      globalFrontier.erase(frontierVertex.Game);
+      globalFrontier.erase(frontierGame);
     } else {
-      globalFrontier.insert(frontierVertex.Game);
+      globalFrontier.insert(frontierGame);
     }
   }
 
@@ -122,7 +121,7 @@ void ThreadContext::Finish(
 
 std::weak_ptr<const Vertex> Graph::DispersedFrontier(
     Game::Game&& game, const size_t depth, const size_t maxThreadCount) {
-  std::unordered_set<Game::GameSerialization> frontier = {game.Serialize()};
+  std::unordered_set<Game::Game, Hash, EqualTo> frontier = {game};
 
   std::vector<ThreadContext> threadContexts(maxThreadCount);
 
@@ -160,21 +159,22 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
         }
 
         // A finished thread is idling
-        if (idleContext->thread->wait_for(0ms) == std::future_status::ready) {
+        if (context.thread->wait_for(0ms) == std::future_status::ready) {
           idleContext = &context;
           context.Finish(Vertices, frontier);
+          break;
         }
       }
     } while (idleContext == nullptr);
 
     // Put the idle thread to work
-    const Game::GameSerialization vertex = *frontier.begin();
-    frontier.erase(vertex);
+    const Game::Game state = *frontier.begin();
+    frontier.erase(state);
 
     idleContext->thread =
-        std::async(std::launch::async, [vertex, &idleContext, this, depth]() {
-          Explore(vertex, idleContext->LocalVertices, idleContext->Frontier,
-                  Vertices, 0, depth);
+        std::async(std::launch::async, [state, &idleContext, this, depth]() {
+          Explore(std::move(state), idleContext->LocalVertices,
+                  idleContext->Frontier, Vertices, 0, depth);
         });
   } while (!frontier.empty() || anyThreadActive());
 
