@@ -244,8 +244,8 @@ void DispersedFrontierArgs::Execute() const {
           ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
           : ::StateGraph::Graph();
 
-  graph.DispersedFrontier(Game::Game(*StartingConfiguration), Depth,
-                          MaxThreadCount);
+  ::StateGraph::Strategies::DispersedFrontier(graph, *StartingConfiguration,
+                                              Depth, MaxThreadCount);
 
   const std::shared_ptr<const ::StateGraph::Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();

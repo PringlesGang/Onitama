@@ -4,12 +4,11 @@
 #include <shared_mutex>
 #include <unordered_set>
 
-#include "stateGraph.h"
 #include "strategies.h"
 
 namespace StateGraph {
-
-namespace DispersedFrontier {
+namespace Strategies {
+namespace DF {
 
 struct VertexInfo {
   VertexInfo(Game::GameSerialization game) : Game(game) {}
@@ -39,10 +38,10 @@ struct ThreadContext {
   }
 };
 
-}  // namespace DispersedFrontier
+}  // namespace DF
 
 using namespace std::chrono_literals;
-using namespace DispersedFrontier;
+using namespace DF;
 
 static void Explore(
     const Game::Game game,
@@ -135,8 +134,8 @@ void ThreadContext::Finish(
   Reset();
 }
 
-std::weak_ptr<const Vertex> Graph::DispersedFrontier(
-    Game::Game&& game, const size_t depth, const size_t maxThreadCount) {
+void DispersedFrontier(Graph& graph, const Game::Game game, const size_t depth,
+                       const size_t maxThreadCount) {
   std::unordered_set<Game::Game, Hash, EqualTo> frontier = {game};
 
   std::shared_mutex mutex;
@@ -157,7 +156,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
         if (!context.InUse()) continue;
 
         if (context.thread->wait_for(0ms) == std::future_status::ready) {
-          context.Finish(Vertices, frontier, mutex);
+          context.Finish(graph.Vertices, frontier, mutex);
           break;
         }
       }
@@ -177,7 +176,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
 
         // A finished thread is idling
         if (context.thread->wait_for(0ms) == std::future_status::ready) {
-          context.Finish(Vertices, frontier, mutex);
+          context.Finish(graph.Vertices, frontier, mutex);
           idleContext = &context;
           break;
         }
@@ -189,14 +188,14 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
     frontier.erase(state);
 
     idleContext->thread = std::async(
-        std::launch::async, [state, idleContext, this, depth, &mutex]() {
+        std::launch::async, [state, idleContext, &graph, depth, &mutex]() {
           Explore(std::move(state), idleContext->LocalVertices,
-                  idleContext->Frontier, Vertices, 0, depth, mutex);
+                  idleContext->Frontier, graph.Vertices, 0, depth, mutex);
         });
   } while (!frontier.empty() || anyThreadActive());
 
-  Strategies::RetrogradeAnalyse(*this);
-  return Vertices.at(game);
+  Strategies::RetrogradeAnalyse(graph);
 }
 
+}  // namespace Strategies
 }  // namespace StateGraph

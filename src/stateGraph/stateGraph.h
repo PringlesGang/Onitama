@@ -67,10 +67,6 @@ struct Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
-  std::weak_ptr<const Vertex> DispersedFrontier(Game::Game&& game,
-                                                size_t frontier,
-                                                size_t maxThreadCount);
-
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);
   void Export(const std::filesystem::path& nodesPath,
