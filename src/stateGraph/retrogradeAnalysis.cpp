@@ -161,30 +161,42 @@ void RetrogradeAnalyse(Graph& graph) {
       for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
            edgeIt++) {
         const std::shared_ptr<Edge> edge = *edgeIt;
-        const bool lastEdge = (edgeIt + 1) == vertex->Edges.end();
 
         // Cannot relabel a labelled edge
         if (edge->Optimal.has_value()) continue;
 
         // Cannot label an edge with an unlabelled target
-        std::shared_ptr<Vertex> target = edge->Target.lock();
+        const std::shared_ptr<Vertex> target = edge->Target.lock();
+        assert(target != nullptr);
         if (!target->Quality.has_value()) continue;
+
+        const bool lastUnlabelledEdge =
+            std::all_of(vertex->Edges.begin(), vertex->Edges.end(),
+                        [edge](std::shared_ptr<Edge> otherEdge) {
+                          return edge->Move == otherEdge->Move ||
+                                 otherEdge->Optimal.has_value();
+                        });
 
         switch (target->Quality.value()) {
           case WinState::Lose: {
             vertex->Quality = WinState::Win;
             vertex->SetOptimalMove(edge->Move);
-
             edgeLabelled = true;
-            unlabelledExpandedVertices.erase(vertex);
             break;
           }
 
           case WinState::Win: {
-            if (lastEdge && !vertex->Quality.has_value()) {
-              vertex->Quality = WinState::Lose;
-              vertex->SetOptimalMove(edge->Move);
-              unlabelledExpandedVertices.erase(vertex);
+            if (lastUnlabelledEdge) {
+              if (vertex->GetOptimalMove().has_value()) {
+                // Draw move was already found
+                vertex->Quality = WinState::Draw;
+                edge->Optimal = false;
+              } else {
+                // No draw move; only losing moves
+                vertex->Quality = WinState::Lose;
+                vertex->SetOptimalMove(edge->Move);
+              }
+
             } else {
               edge->Optimal = false;
             }
@@ -196,9 +208,8 @@ void RetrogradeAnalyse(Graph& graph) {
           case WinState::Draw: {
             // Provisionally set the optimal move to draw
             edgeLabelled = true;
-            vertex->Quality = WinState::Draw;
             vertex->SetOptimalMove(edge->Move);
-            unlabelledExpandedVertices.erase(vertex);
+            if (lastUnlabelledEdge) vertex->Quality = WinState::Draw;
             break;
           }
 
@@ -210,21 +221,33 @@ void RetrogradeAnalyse(Graph& graph) {
           }
         }
 
-        // Cannot improve upon a win
-        if (vertex->Quality == WinState::Win) break;
+        // The vertex' quality has been determined
+        if (vertex->Quality.has_value()) {
+          unlabelledExpandedVertices.erase(vertex);
+          break;
+        }
       }
     }
   } while (edgeLabelled);
 
   // Assign draws
   bool anyVertexRemoved = false;
+  bool currentVertexRemoved = false;
+  const auto removeVertex =
+      [&anyVertexRemoved, &currentVertexRemoved, &unlabelledExpandedVertices](
+          std::unordered_set<std::shared_ptr<Vertex>>::iterator& vertex) {
+        anyVertexRemoved = true;
+        currentVertexRemoved = true;
+        vertex = unlabelledExpandedVertices.erase(vertex);
+      };
+
   do {
     anyVertexRemoved = false;
 
     for (auto vertexIt = unlabelledExpandedVertices.begin();
          vertexIt != unlabelledExpandedVertices.end();) {
       const std::shared_ptr<Vertex> vertex = *vertexIt;
-      bool currentVertexErased = false;
+      currentVertexRemoved = false;
 
       for (const std::shared_ptr<Edge> edge : vertex->Edges) {
         const std::shared_ptr<Vertex> target = edge->Target.lock();
@@ -235,6 +258,8 @@ void RetrogradeAnalyse(Graph& graph) {
             // Take the guaranteed draw
             vertex->SetOptimalMove(edge->Move);
             vertex->Quality = WinState::Draw;
+
+            removeVertex(vertexIt);
             break;
           }
 
@@ -242,20 +267,18 @@ void RetrogradeAnalyse(Graph& graph) {
           continue;
         }
 
-        // There is an unexplored mode; draw not necessarily optimal
+        // There is an unexplored node; draw not necessarily optimal
         if (!unlabelledExpandedVertices.contains(target)) {
-          vertexIt = unlabelledExpandedVertices.erase(vertexIt);
-          anyVertexRemoved = true;
-          currentVertexErased = true;
+          removeVertex(vertexIt);
           break;
         }
 
         // Set the supposed draw move
         vertex->SetOptimalMove(edge->Move);
       }
-      assert(currentVertexErased || vertex->GetOptimalMove().has_value());
+      assert(currentVertexRemoved || vertex->GetOptimalMove().has_value());
 
-      if (!currentVertexErased) vertexIt++;
+      if (!currentVertexRemoved) vertexIt++;
     }
   } while (anyVertexRemoved);
 
