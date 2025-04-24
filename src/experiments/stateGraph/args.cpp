@@ -1,16 +1,13 @@
-#include "stateGraph.h"
+#include "args.h"
 
-#include <format>
-#include <iostream>
-
-#include "../cli/game.h"
-#include "../stateGraph/stateGraph.h"
-#include "../stateGraph/strategies.h"
-#include "../util/base64.h"
-#include "../util/parse.h"
+#include "../../stateGraph/stateGraph.h"
+#include "../../stateGraph/strategies.h"
 
 namespace Experiments {
 namespace StateGraph {
+
+using namespace ::StateGraph;
+using namespace ::StateGraph::Strategies;
 
 std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
     std::istringstream& stream) {
@@ -144,12 +141,11 @@ void ComponentArgs::Execute() const {
   std::cout << "Generating state graph for:\n"
             << *StartingConfiguration << std::endl;
 
-  ::StateGraph::Graph graph =
-      ImportPaths
-          ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
-          : ::StateGraph::Graph();
+  Graph graph = ImportPaths
+                    ? Graph::Import(ImportPaths->first, ImportPaths->second)
+                    : Graph();
 
-  ::StateGraph::Strategies::ExploreComponent(graph, *StartingConfiguration);
+  ExploreComponent(graph, *StartingConfiguration);
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
@@ -180,15 +176,13 @@ void ForwardRetrogradeAnalysisArgs::Execute() const {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
 
-  ::StateGraph::Graph graph =
-      ImportPaths
-          ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
-          : ::StateGraph::Graph();
+  Graph graph = ImportPaths
+                    ? Graph::Import(ImportPaths->first, ImportPaths->second)
+                    : Graph();
 
-  ::StateGraph::Strategies::ForwardRetrogradeAnalysis(graph,
-                                                      *StartingConfiguration);
+  ForwardRetrogradeAnalysis(graph, *StartingConfiguration);
 
-  const std::shared_ptr<const ::StateGraph::Vertex> vertex =
+  const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
   if (vertex->Quality.has_value()) {
     switch (vertex->Quality.value()) {
@@ -239,15 +233,13 @@ void DispersedFrontierArgs::Execute() const {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
 
-  ::StateGraph::Graph graph =
-      ImportPaths
-          ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
-          : ::StateGraph::Graph();
+  Graph graph = ImportPaths
+                    ? Graph::Import(ImportPaths->first, ImportPaths->second)
+                    : Graph();
 
-  ::StateGraph::Strategies::DispersedFrontier(graph, *StartingConfiguration,
-                                              Depth, MaxThreadCount);
+  DispersedFrontier(graph, *StartingConfiguration, Depth, MaxThreadCount);
 
-  const std::shared_ptr<const ::StateGraph::Vertex> vertex =
+  const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
   if (vertex->Quality.has_value()) {
     switch (vertex->Quality.value()) {
@@ -267,16 +259,6 @@ void DispersedFrontierArgs::Execute() const {
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
-}
-
-std::optional<Cli::Thunk> Parse(std::istringstream& command) {
-  const std::optional<std::shared_ptr<StateGraphArgs>> args =
-      StateGraphArgs::Parse(command);
-
-  if (!args.has_value()) return std::nullopt;
-  if (!args.value()->IsValid()) return std::nullopt;
-
-  return [args] { args.value()->Execute(); };
 }
 
 }  // namespace StateGraph

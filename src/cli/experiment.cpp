@@ -4,8 +4,8 @@
 #include <format>
 #include <iostream>
 
-#include "../experiments/fairCards.h"
-#include "../experiments/stateGraph.h"
+#include "../experiments/fairCards/fairCards.h"
+#include "../experiments/stateGraph/stateGraph.h"
 #include "../util/parse.h"
 
 namespace Cli {

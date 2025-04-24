@@ -34,8 +34,10 @@ set(Src
         src/cli/experiment.cpp
         src/cli/print.cpp
 
-        src/experiments/fairCards.cpp
-        src/experiments/stateGraph.cpp
+        src/experiments/fairCards/fairCards.cpp
+
+        src/experiments/stateGraph/stateGraph.cpp
+        src/experiments/stateGraph/args.cpp
 
         src/stateGraph/stateGraph.cpp
         src/stateGraph/exploreComponent.cpp
@@ -78,8 +80,10 @@ set(Header
         src/cli/experiment.h
         src/cli/print.h
 
-        src/experiments/fairCards.h
-        src/experiments/stateGraph.h
+        src/experiments/fairCards/fairCards.h
+
+        src/experiments/stateGraph/stateGraph.h
+        src/experiments/stateGraph/args.h
 
         src/stateGraph/stateGraph.h
         src/stateGraph/strategies.h

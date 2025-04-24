@@ -2,8 +2,8 @@
 
 #include <format>
 
-#include "../cli/game.h"
-#include "../strategies/random.h"
+#include "../../cli/game.h"
+#include "../../strategies/random.h"
 
 namespace Experiments {
 namespace FairCards {

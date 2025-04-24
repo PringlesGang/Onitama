@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../cli/command.h"
-#include "../cli/strategies.h"
+#include "../../cli/command.h"
+#include "../../cli/strategies.h"
 
 namespace Experiments {
 namespace FairCards {

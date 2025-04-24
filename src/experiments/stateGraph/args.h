@@ -2,39 +2,11 @@
 
 #include <filesystem>
 
-#include "../cli/command.h"
-#include "../game/game.h"
+#include "../../cli/command.h"
+#include "../../game/game.h"
 
 namespace Experiments {
 namespace StateGraph {
-
-constexpr inline std::string_view Name = "stategraph";
-
-constexpr inline std::string_view Command =
-    "stategraph state game_serialization (--export filepath) "
-    "(--import filepath) (--intermediate path seconds-interval)\n"
-
-    "stategraph game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
-    "(--size width height) (--export nodes-path edges-path) "
-    "(--import nodes-path edges-path) (--strategy strategy) "
-    "(--intermediate path seconds-interval)\n"
-
-    "stategraph load intermediate_path (--export nodes-path edges-path) "
-    "(--strategy strategy) (--intermediate path seconds-interval)";
-
-constexpr inline std::string_view Description =
-    "Depending on the arguments, "
-    "will construct the state graph for either:\n"
-    "- the provided game state;\n"
-    "- the starting configuration with the supplied arguments;\n"
-    "- the loaded intermediate state graph.\n\n"
-
-    "Will export the graph to the provided filepath.\n"
-    "Will import the graph from the provided filepath.\n"
-    "Will repeatedly save intermediate results to the provided filepath after "
-    "the supplied duration.\n\n"
-
-    "--strategy will construct the state graph through the given strategy.";
 
 enum class StateGraphType {
   Component,
@@ -107,8 +79,6 @@ struct DispersedFrontierArgs : public StateGraphArgs {
   size_t Depth = 0;
   size_t MaxThreadCount = 0;
 };
-
-std::optional<Cli::Thunk> Parse(std::istringstream& command);
 
 }  // namespace StateGraph
 }  // namespace Experiments
