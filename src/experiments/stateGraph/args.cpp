@@ -34,7 +34,7 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
 
 std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
     std::istringstream& stream) {
-  std::shared_ptr<StateGraphArgs> args;
+  std::shared_ptr<StateGraphArgs> args = nullptr;
 
   std::string stateType;
   stream >> stateType;
@@ -53,8 +53,9 @@ std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
 
     args->StartingConfiguration = std::make_shared<Game::Game>(
         std::move(Game::Game::FromSerialization(serialization.value())));
+  }
 
-  } else {
+  if (args == nullptr) {
     std::cerr << "Failed to parse starting state type!" << std::endl;
     return std::nullopt;
   }
