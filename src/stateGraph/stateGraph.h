@@ -67,6 +67,9 @@ struct Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
+  void Save(const std::filesystem::path& path) const;
+  static Graph Load(const std::filesystem::path& path);
+
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);
   void Export(const std::filesystem::path& nodesPath,
