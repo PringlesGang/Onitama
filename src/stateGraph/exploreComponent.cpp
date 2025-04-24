@@ -1,15 +1,12 @@
-#include "stateGraph.h"
+#include "strategies.h"
 
 namespace StateGraph {
+namespace Strategies {
 
-void Graph::ExploreComponentRecursive(
-    std::weak_ptr<Vertex> weakVertex,
-    std::unordered_set<Game::Game>& exploring) {
-  std::shared_ptr<Vertex> vertex = weakVertex.lock();
-  if (vertex == nullptr) return;
-
-  Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
-
+static void ExploreComponentRecursive(std::shared_ptr<Vertex> vertex,
+                                      std::unordered_set<Game::Game>& exploring,
+                                      Graph& graph) {
+  const Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
   if (exploring.contains(game)) return;
   exploring.insert(game);
 
@@ -17,32 +14,32 @@ void Graph::ExploreComponentRecursive(
     Game::Game nextState = game;
     nextState.DoMove(move);
 
-    if (!Vertices.contains(nextState))
-      Vertices.insert({nextState, std::make_shared<Vertex>(nextState)});
-    std::weak_ptr<Vertex> nextVertex = Vertices.at(nextState);
+    const std::shared_ptr<Vertex> nextVertex =
+        graph.Vertices.emplace(nextState, std::make_shared<Vertex>(nextState))
+            .first->second;
 
     vertex->Edges.emplace_back(
         std::make_shared<Edge>(vertex, nextVertex, move));
-    ExploreComponentRecursive(nextVertex, exploring);
+
+    ExploreComponentRecursive(nextVertex, exploring, graph);
   }
 }
 
-std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
+void ExploreComponent(Graph& graph, Game::Game game) {
   const std::chrono::time_point startTime = std::chrono::system_clock::now();
 
   const std::shared_ptr<Vertex> vertex =
-      Vertices.contains(game) ? Vertices.at(game)
-                              : std::make_shared<Vertex>(std::move(game));
+      graph.Vertices.emplace(game, std::make_shared<Vertex>(game))
+          .first->second;
 
   std::unordered_set<Game::Game> exploring;
-  ExploreComponentRecursive(vertex, exploring);
+  ExploreComponentRecursive(vertex, exploring, graph);
 
   const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
                              std::chrono::system_clock::now() - startTime)
                              .count();
   std::cout << std::format("Run time: {}s", runTime) << std::endl;
-
-  return vertex;
 }
 
+}  // namespace Strategies
 }  // namespace StateGraph

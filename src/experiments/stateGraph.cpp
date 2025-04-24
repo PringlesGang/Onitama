@@ -149,7 +149,7 @@ void ComponentArgs::Execute() const {
           ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
           : ::StateGraph::Graph();
 
-  graph.ExploreComponent(Game::Game(*StartingConfiguration));
+  ::StateGraph::Strategies::ExploreComponent(graph, *StartingConfiguration);
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());

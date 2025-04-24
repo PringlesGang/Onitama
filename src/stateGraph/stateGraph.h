@@ -67,8 +67,6 @@ struct Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
-  std::weak_ptr<const Vertex> ExploreComponent(Game::Game&& game);
-
   std::weak_ptr<const Vertex> DispersedFrontier(Game::Game&& game,
                                                 size_t frontier,
                                                 size_t maxThreadCount);
@@ -84,9 +82,6 @@ struct Graph {
 
  private:
   std::optional<Edge> ParseEdge(std::istringstream string) const;
-
-  void ExploreComponentRecursive(std::weak_ptr<Vertex> vertex,
-                                 std::unordered_set<Game::Game>& exploring);
 };
 
 inline std::shared_ptr<Graph> SharedGameStateGraph = std::make_shared<Graph>();
