@@ -63,22 +63,11 @@ struct EqualTo {
 
 struct ForwardRetrogradeProgress;
 
-class Graph {
+struct Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
   std::weak_ptr<const Vertex> ExploreComponent(Game::Game&& game);
-
-  std::weak_ptr<const Vertex> RetrogradeAnalysis(Game::Game&& game);
-
-  std::weak_ptr<const Vertex> ForwardRetrogradeAnalysis(Game::Game&& game);
-  std::weak_ptr<const Vertex> ForwardRetrogradeAnalysis(
-      ForwardRetrogradeProgress progress);
-
-  void SaveForwardRetrogradeAnalysis(const std::filesystem::path& path,
-                                     ForwardRetrogradeProgress&& progress);
-  static std::pair<Graph, ForwardRetrogradeProgress>
-  LoadForwardRetrogradeAnalysis(const std::filesystem::path& path);
 
   std::weak_ptr<const Vertex> DispersedFrontier(Game::Game&& game,
                                                 size_t frontier,
@@ -93,41 +82,11 @@ class Graph {
   std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
       Vertices;
 
-  std::optional<std::filesystem::path> IntermediatePath = std::nullopt;
-
-  size_t SaveTimeInterval = 0;  // Seconds
-
  private:
   std::optional<Edge> ParseEdge(std::istringstream string) const;
 
   void ExploreComponentRecursive(std::weak_ptr<Vertex> vertex,
                                  std::unordered_set<Game::Game>& exploring);
-
-  void ForwardRetrogradeAnalysisExpand(
-      std::shared_ptr<Vertex> game,
-      std::unordered_set<std::shared_ptr<Vertex>>& expandedVertices,
-      std::unordered_set<std::shared_ptr<Edge>>& unlabelledEdges,
-      const std::shared_ptr<const Vertex> root,
-      std::deque<Game::GameSerialization>& callStack,
-      bool& reinstatingCallStack);
-
-  std::weak_ptr<Vertex> RetrogradeAnalysisExpand(
-      Game::Game&& game,
-      std::unordered_set<Game::Game, Hash, EqualTo>& explored,
-      std::unordered_set<std::shared_ptr<Edge>>& edges);
-  void RetrogradeAnalyseEdges(std::unordered_set<std::shared_ptr<Edge>>& edges);
-
-  void PrintRunningTime() const {
-    const size_t runtime = std::chrono::duration_cast<std::chrono::seconds>(
-                               std::chrono::system_clock::now() - StartingTime)
-                               .count();
-    std::cout << std::format("Running time: {}s", runtime) << std::endl;
-  }
-
-  std::chrono::time_point<std::chrono::system_clock> LastSaveTime =
-      std::chrono::system_clock::now();
-  std::chrono::time_point<std::chrono::system_clock> StartingTime =
-      std::chrono::system_clock::now();
 };
 
 inline std::shared_ptr<Graph> SharedGameStateGraph = std::make_shared<Graph>();
@@ -140,7 +99,5 @@ struct ForwardRetrogradeProgress {
 
   std::chrono::duration<size_t> Runtime = std::chrono::duration<size_t>::zero();
 };
-
-void RetrogradeAnalyse(Graph& graph);
 
 }  // namespace StateGraph

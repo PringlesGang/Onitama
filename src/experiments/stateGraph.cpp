@@ -5,116 +5,193 @@
 
 #include "../cli/game.h"
 #include "../stateGraph/stateGraph.h"
+#include "../stateGraph/strategies.h"
 #include "../util/base64.h"
 #include "../util/parse.h"
 
 namespace Experiments {
 namespace StateGraph {
 
-void Execute(StateGraphArgs args) {
-  std::cout << "Generating state graph for:\n"
-            << *args.StartingConfiguration << std::endl;
+std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
+    std::istringstream& stream) {
+  std::string string;
+  stream >> string;
 
-  ::StateGraph::Graph graph =
-      args.ImportPaths ? ::StateGraph::Graph::Import(args.ImportPaths->first,
-                                                     args.ImportPaths->second)
-                       : ::StateGraph::Graph();
-
-  graph.IntermediatePath = args.IntermediatePath;
-  graph.SaveTimeInterval = args.SaveTimeInterval;
-
-  std::function<void(Game::Game&&)> analyse;
-  switch (args.Type) {
-    case StateGraphType::Component:
-      analyse = [&graph](Game::Game&& game) {
-        graph.ExploreComponent(std::move(game));
-      };
-      break;
-
-    case StateGraphType::ForwardRetrogradeAnalysis:
-      analyse = [&graph](Game::Game&& game) {
-        graph.ForwardRetrogradeAnalysis(std::move(game));
-      };
-      break;
-
-    case StateGraphType::RetrogradeAnalysis:
-      analyse = [&graph](Game::Game&& game) {
-        graph.RetrogradeAnalysis(std::move(game));
-      };
-      break;
-
-    case StateGraphType::DispersedFrontier:
-      analyse = [&graph, args](Game::Game&& game) {
-        graph.DispersedFrontier(std::move(game), args.Depth,
-                                args.MaxThreadCount);
-      };
-      break;
-
-    default:
-      std::cerr << std::format("Unknown state graph type \"{}\"",
-                               (size_t)args.Type)
-                << std::endl;
-      return;
+  if (string == "forward" || string == "forward-retrograde" ||
+      string == "forward-retrograde-analysis") {
+    return StateGraphType::ForwardRetrogradeAnalysis;
+  } else if (string == "component") {
+    return StateGraphType::Component;
+  } else if (string == "dispersed" || string == "dispersed-frontier") {
+    return StateGraphType::DispersedFrontier;
   }
 
-  switch (args.Type) {
-    default:
-    case StateGraphType::Component:
-      analyse(Game::Game(*args.StartingConfiguration));
-      break;
-
-    case StateGraphType::ForwardRetrogradeAnalysis:
-    case StateGraphType::RetrogradeAnalysis:
-    case StateGraphType::DispersedFrontier: {
-      analyse(Game::Game(*args.StartingConfiguration));
-
-      const std::shared_ptr<const ::StateGraph::Vertex> vertex =
-          graph.Get(*args.StartingConfiguration)->lock();
-
-      if (vertex->Quality.has_value()) {
-        switch (vertex->Quality.value()) {
-          case WinState::Lose:
-            std::cout << "Lost" << std::endl;
-            break;
-          case WinState::Draw:
-            std::cout << "Draw" << std::endl;
-            break;
-          case WinState::Win:
-            std::cout << "Won" << std::endl;
-            break;
-        }
-      } else {
-        std::cout << "Unkown" << std::endl;
-      }
-
-      break;
-    }
-  }
-
-  if (args.ExportPaths)
-    graph.Export(args.ExportPaths->first, args.ExportPaths->second);
-
-  if (args.ImagesPath) graph.ExportImages(args.ImagesPath.value());
+  std::cerr << std::format("Unknown state graph strategy \"{}\"!\n", string)
+            << "Valid strategies are:\n"
+               "- component\n"
+               "- forward-retrograde-analysis\n"
+               "- dispersed-frontier\n"
+            << std::endl;
+  return std::nullopt;
 }
 
-void ExecuteLoad(StateGraphArgs args) {
-  std::cout << "Continuing state graph construction..." << std::endl;
+std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
+    std::istringstream& stream) {
+  std::shared_ptr<StateGraphArgs> args;
 
-  auto [graph, progress] =
-      ::StateGraph::Graph::LoadForwardRetrogradeAnalysis(args.LoadPath.value());
+  std::string stateType;
+  stream >> stateType;
 
-  graph.SaveTimeInterval = args.SaveTimeInterval;
+  if (stateType == "game") {
+    Parse::GameConfiguration config;
+    if (!config.Parse(stream) || !config.IsValid()) return std::nullopt;
+    args->StartingConfiguration =
+        std::make_shared<Game::Game>(config.ToGame().value());
 
-  const std::shared_ptr<const ::StateGraph::Vertex> root =
-      graph.ForwardRetrogradeAnalysis(progress).lock();
+  } else if (stateType == "state") {
+    const std::optional<Game::GameSerialization> serialization =
+        Game::Game::ParseSerialization(stream);
 
-  if (root == nullptr) {
-    std::cerr << "Root was deleted!" << std::endl;
-    return;
+    if (!serialization) return std::nullopt;
+
+    args->StartingConfiguration = std::make_shared<Game::Game>(
+        std::move(Game::Game::FromSerialization(serialization.value())));
+
+  } else {
+    std::cerr << "Failed to parse starting state type!" << std::endl;
+    return std::nullopt;
   }
 
-  if (root->Quality.has_value()) {
-    switch (root->Quality.value()) {
+  if (!args->ParseCommonArgs(stream)) return std::nullopt;
+
+  std::string parameter;
+  stream >> parameter;
+
+  if (parameter == "--strategy") {
+    std::string strategy;
+    stream >> strategy;
+
+    if (strategy == "component") {
+      args = std::make_shared<ComponentArgs>();
+      if (!args->Parse(stream)) return std::nullopt;
+
+    } else if (strategy == "forward" || strategy == "forward-retrograde" ||
+               strategy == "forward-retrograde-analysis") {
+      args = std::make_shared<ForwardRetrogradeAnalysisArgs>();
+      if (!args->Parse(stream)) return std::nullopt;
+
+    } else if (strategy == "dispersed" || strategy == "dispersed-frontier") {
+      args = std::make_shared<DispersedFrontierArgs>();
+      if (!args->Parse(stream)) return std::nullopt;
+
+    } else {
+      std::cerr << std::format("Unknown strategy \"{}\"!", strategy)
+                << std::endl;
+      return std::nullopt;
+    }
+
+  } else {
+    std::cerr << std::format("Unknown parameter \"{}\"!", parameter)
+              << std::endl;
+    return std::nullopt;
+  }
+
+  if (!args->ParseCommonArgs(stream)) return std::nullopt;
+  if (!Parse::Terminate(stream)) return std::nullopt;
+
+  return args;
+}
+
+bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
+  std::string parameter;
+  stream >> parameter;
+
+  if (parameter == "--export" || parameter == "-e") {
+    const std::optional<std::filesystem::path> nodesPath =
+        Parse::ParsePath(stream);
+    if (!nodesPath) return false;
+
+    const std::optional<std::filesystem::path> edgesPath =
+        Parse::ParsePath(stream);
+    if (!edgesPath) return false;
+
+    ExportPaths = {std::move(nodesPath.value()), std::move(edgesPath.value())};
+
+  } else if (parameter == "--import" || parameter == "-i") {
+    const std::optional<std::filesystem::path> nodesPath =
+        Parse::ParsePath(stream);
+    if (!nodesPath) return false;
+
+    const std::optional<std::filesystem::path> edgesPath =
+        Parse::ParsePath(stream);
+    if (!edgesPath) return false;
+
+    ExportPaths = {std::move(nodesPath.value()), std::move(edgesPath.value())};
+
+  } else if (parameter == "--images") {
+    ImagesPath = Parse::ParsePath(stream);
+    if (!ImagesPath) return false;
+
+  } else {
+    Parse::Unparse(stream, parameter);
+    return true;
+  }
+
+  return ParseCommonArgs(stream);
+}
+
+void ComponentArgs::Execute() const {
+  std::cout << "Generating state graph for:\n"
+            << *StartingConfiguration << std::endl;
+
+  ::StateGraph::Graph graph =
+      ImportPaths
+          ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
+          : ::StateGraph::Graph();
+
+  graph.ExploreComponent(Game::Game(*StartingConfiguration));
+
+  if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
+  if (ImagesPath) graph.ExportImages(ImagesPath.value());
+}
+
+bool ForwardRetrogradeAnalysisArgs::Parse(std::istringstream& stream) {
+  std::string parameter;
+  stream >> parameter;
+
+  if (parameter == "--intermediate") {
+    IntermediatePath = Parse::ParsePath(stream);
+    if (!IntermediatePath) return false;
+
+    if (!(stream >> SaveTimeInterval)) {
+      std::cerr << "Failed to parse save time interval!" << std::endl;
+      return false;
+    }
+
+  } else {
+    Parse::Unparse(stream, parameter);
+    return true;
+  }
+
+  return Parse(stream);
+}
+
+void ForwardRetrogradeAnalysisArgs::Execute() const {
+  std::cout << "Finding perfect positional strategy for:\n"
+            << *StartingConfiguration << std::endl;
+
+  ::StateGraph::Graph graph =
+      ImportPaths
+          ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
+          : ::StateGraph::Graph();
+
+  ::StateGraph::Strategies::ForwardRetrogradeAnalysis(graph,
+                                                      *StartingConfiguration);
+
+  const std::shared_ptr<const ::StateGraph::Vertex> vertex =
+      graph.Get(*StartingConfiguration)->lock();
+  if (vertex->Quality.has_value()) {
+    switch (vertex->Quality.value()) {
       case WinState::Lose:
         std::cout << "Lost" << std::endl;
         break;
@@ -129,172 +206,77 @@ void ExecuteLoad(StateGraphArgs args) {
     std::cout << "Unkown" << std::endl;
   }
 
-  if (args.ExportPaths)
-    graph.Export(args.ExportPaths->first, args.ExportPaths->second);
-
-  if (args.ImagesPath) graph.ExportImages(args.ImagesPath.value());
+  if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
+  if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
 
-bool StateGraphArgs::Parse(std::istringstream& stream) {
-  std::string argument;
-  stream >> argument;
-  Parse::ToLower(argument);
+bool DispersedFrontierArgs::Parse(std::istringstream& stream) {
+  if (!(stream >> Depth)) {
+    std::cerr << "Failed to parse dispersed frontier depth!" << std::endl;
+    return false;
+  }
 
-  if (argument.empty()) return true;
+  if (Depth == 0) {
+    std::cerr << "Dispersed frontier depth cannot be zero!" << std::endl;
+    return false;
+  }
 
-  if (argument == "--state" || argument == "-s") {
-    const std::optional<Game::GameSerialization> serialization =
-        Game::Game::ParseSerialization(stream);
+  if (!(stream >> MaxThreadCount)) {
+    std::cerr << "Failed to parse dispersed frontier max thread count!"
+              << std::endl;
+    return false;
+  }
 
-    if (!serialization) return false;
+  if (MaxThreadCount == 0) {
+    std::cerr << "Dispersed frontier thread count cannot be zero!" << std::endl;
+    return false;
+  }
 
-    StartingConfiguration = std::make_shared<Game::Game>(
-        std::move(Game::Game::FromSerialization(serialization.value())));
+  return true;
+}
 
-  } else if (argument == "--game" || argument == "-g") {
-    Parse::GameConfiguration config;
-    if (!config.Parse(stream) || !config.IsValid()) return false;
-    StartingConfiguration =
-        std::make_shared<Game::Game>(config.ToGame().value());
+void DispersedFrontierArgs::Execute() const {
+  std::cout << "Finding perfect positional strategy for:\n"
+            << *StartingConfiguration << std::endl;
 
-  } else if (argument == "--load") {
-    LoadPath = Parse::ParsePath(stream);
-    if (!LoadPath) return false;
+  ::StateGraph::Graph graph =
+      ImportPaths
+          ? ::StateGraph::Graph::Import(ImportPaths->first, ImportPaths->second)
+          : ::StateGraph::Graph();
 
-  } else if (argument == "--export" || argument == "-e") {
-    const std::optional<std::filesystem::path> nodesPath =
-        Parse::ParsePath(stream);
-    if (!nodesPath) return false;
+  graph.DispersedFrontier(Game::Game(*StartingConfiguration), Depth,
+                          MaxThreadCount);
 
-    const std::optional<std::filesystem::path> edgesPath =
-        Parse::ParsePath(stream);
-    if (!edgesPath) return false;
-
-    ExportPaths = {nodesPath.value(), edgesPath.value()};
-
-  } else if (argument == "--import" || argument == "-i") {
-    const std::optional<std::filesystem::path> nodesPath =
-        Parse::ParsePath(stream);
-    if (!nodesPath) return false;
-
-    const std::optional<std::filesystem::path> edgesPath =
-        Parse::ParsePath(stream);
-    if (!edgesPath) return false;
-
-    ImportPaths = {nodesPath.value(), edgesPath.value()};
-
-  } else if (argument == "--intermediate") {
-    IntermediatePath = Parse::ParsePath(stream);
-    if (!IntermediatePath) return false;
-
-    if (!(stream >> SaveTimeInterval)) {
-      std::cerr << "Failed to parse save time interval!" << std::endl;
-      return false;
-    }
-
-  } else if (argument == "--strategy") {
-    const std::optional<StateGraphType> type = ParseStateGraphType(stream);
-    if (!type) return false;
-    Type = type.value();
-
-    switch (Type) {
-      case StateGraphType::DispersedFrontier: {
-        if (!(stream >> Depth)) {
-          std::cerr << "Failed to parse dispersed frontier depth!" << std::endl;
-          return false;
-        }
-
-        if (Depth == 0) {
-          std::cerr << "Dispersed frontier depth cannot be zero!" << std::endl;
-          return false;
-        }
-
-        if (!(stream >> MaxThreadCount)) {
-          std::cerr << "Failed to parse dispersed frontier max thread count!"
-                    << std::endl;
-          return false;
-        }
-
-        if (MaxThreadCount == 0) {
-          std::cerr << "Dispersed frontier thread count cannot be zero!"
-                    << std::endl;
-          return false;
-        }
-
+  const std::shared_ptr<const ::StateGraph::Vertex> vertex =
+      graph.Get(*StartingConfiguration)->lock();
+  if (vertex->Quality.has_value()) {
+    switch (vertex->Quality.value()) {
+      case WinState::Lose:
+        std::cout << "Lost" << std::endl;
         break;
-      }
-
-      default:
+      case WinState::Draw:
+        std::cout << "Draw" << std::endl;
+        break;
+      case WinState::Win:
+        std::cout << "Won" << std::endl;
         break;
     }
-
-  } else if (argument == "--image") {
-    const std::optional<std::filesystem::path> imagesPath =
-        Parse::ParsePath(stream);
-    if (!imagesPath) return false;
-
-    ImagesPath = imagesPath.value();
-
   } else {
-    Parse::Unparse(stream, argument);
-    return true;
+    std::cout << "Unkown" << std::endl;
   }
 
-  return Parse(stream);
-}
-
-std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
-    std::istringstream& stream) {
-  std::string string;
-  stream >> string;
-
-  if (string == "forward" || string == "forward-retrograde" ||
-      string == "forward-retrograde-analysis") {
-    return StateGraphType::ForwardRetrogradeAnalysis;
-  } else if (string == "component") {
-    return StateGraphType::Component;
-  } else if (string == "retrograde" || string == "retrograde-analysis") {
-    return StateGraphType::RetrogradeAnalysis;
-  } else if (string == "dispersed" || string == "dispersed-frontier") {
-    return StateGraphType::DispersedFrontier;
-  }
-
-  std::cerr << std::format("Unknown state graph strategy \"{}\"!\n", string)
-            << "Valid strategies are:\n"
-               "- component\n"
-               "- retrograde-analysis\n"
-               "- forward-retrograde-analysis\n"
-               "- dispersed-frontier\n"
-            << std::endl;
-  return std::nullopt;
-}
-
-bool StateGraphArgs::IsValid() const {
-  switch (Type) {
-    case StateGraphType::ForwardRetrogradeAnalysis:
-      return StartingConfiguration != nullptr || LoadPath.has_value();
-    default:
-      return StartingConfiguration != nullptr;
-  }
+  if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
+  if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command) {
-  StateGraphArgs args;
-  if (!args.Parse(command)) {
-    std::cerr << "Failed to parse state graph experiment!" << std::endl;
-    return std::nullopt;
-  }
+  const std::optional<std::shared_ptr<StateGraphArgs>> args =
+      StateGraphArgs::Parse(command);
 
-  if (!args.IsValid()) {
-    std::cerr << "Invalid state graph arguments!" << std::endl;
-    return std::nullopt;
-  }
+  if (!args.has_value()) return std::nullopt;
+  if (!args.value()->IsValid()) return std::nullopt;
 
-  if (args.LoadPath) {
-    return [args] { ExecuteLoad(args); };
-  } else {
-    return [args] { Execute(args); };
-  }
+  return [args] { args.value()->Execute(); };
 }
 
 }  // namespace StateGraph

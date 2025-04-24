@@ -82,6 +82,7 @@ set(Header
         src/experiments/stateGraph.h
 
         src/stateGraph/stateGraph.h
+        src/stateGraph/strategies.h
 )
 
 set(SrcTest

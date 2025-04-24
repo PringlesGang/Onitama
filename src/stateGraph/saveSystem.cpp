@@ -214,6 +214,7 @@ VertexInfo Read<VertexInfo>(std::ifstream& stream) {
 
 }  // namespace SaveSystem
 
+/*
 void Graph::SaveForwardRetrogradeAnalysis(
     const std::filesystem::path& path, ForwardRetrogradeProgress&& progress) {
   using namespace SaveSystem;
@@ -258,7 +259,9 @@ void Graph::SaveForwardRetrogradeAnalysis(
     Write<Vertex>(stream, *vertex);
   }
 }
+*/
 
+/*
 std::pair<Graph, ForwardRetrogradeProgress>
 Graph::LoadForwardRetrogradeAnalysis(const std::filesystem::path& path) {
   using namespace SaveSystem;
@@ -347,5 +350,6 @@ Graph::LoadForwardRetrogradeAnalysis(const std::filesystem::path& path) {
 
   return {graph, progress};
 }
+*/
 
 }  // namespace StateGraph

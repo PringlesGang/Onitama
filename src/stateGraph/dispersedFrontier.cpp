@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include "stateGraph.h"
+#include "strategies.h"
 
 namespace StateGraph {
 
@@ -194,7 +195,7 @@ std::weak_ptr<const Vertex> Graph::DispersedFrontier(
         });
   } while (!frontier.empty() || anyThreadActive());
 
-  RetrogradeAnalyse(*this);
+  Strategies::RetrogradeAnalyse(*this);
   return Vertices.at(game);
 }
 

@@ -28,7 +28,7 @@ void Graph::ExploreComponentRecursive(
 }
 
 std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
-  StartingTime = std::chrono::system_clock::now();
+  const std::chrono::time_point startTime = std::chrono::system_clock::now();
 
   const std::shared_ptr<Vertex> vertex =
       Vertices.contains(game) ? Vertices.at(game)
@@ -37,7 +37,10 @@ std::weak_ptr<const Vertex> Graph::ExploreComponent(Game::Game&& game) {
   std::unordered_set<Game::Game> exploring;
   ExploreComponentRecursive(vertex, exploring);
 
-  PrintRunningTime();
+  const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - startTime)
+                             .count();
+  std::cout << std::format("Run time: {}s", runTime) << std::endl;
 
   return vertex;
 }
