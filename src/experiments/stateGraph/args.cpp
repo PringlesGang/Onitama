@@ -141,8 +141,15 @@ bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
   return ParseCommonArgs(stream);
 }
 
-Graph StateGraphArgs::GetGraph() const {
-  if (LoadPath) return Graph::Load(LoadPath.value());
+Graph StateGraphArgs::GetGraph() {
+  if (LoadPath) {
+    const auto [graph, runtime] = Graph::Load(LoadPath.value());
+
+    if (IntermediateParameters)
+      IntermediateParameters->RuntimeTimer.Set(runtime, true);
+
+    return graph;
+  }
 
   if (ImportPaths)
     return Graph::Import(ImportPaths->first, ImportPaths->second);
@@ -150,7 +157,7 @@ Graph StateGraphArgs::GetGraph() const {
   return Graph();
 }
 
-void ComponentArgs::Execute() const {
+void ComponentArgs::Execute() {
   std::cout << "Generating state graph for:\n"
             << *StartingConfiguration << std::endl;
 
@@ -162,7 +169,7 @@ void ComponentArgs::Execute() const {
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
 
-void ForwardRetrogradeAnalysisArgs::Execute() const {
+void ForwardRetrogradeAnalysisArgs::Execute() {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
 
@@ -218,7 +225,7 @@ bool DispersedFrontierArgs::Parse(std::istringstream& stream) {
   return true;
 }
 
-void DispersedFrontierArgs::Execute() const {
+void DispersedFrontierArgs::Execute() {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
 

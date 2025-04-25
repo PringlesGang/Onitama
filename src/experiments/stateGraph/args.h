@@ -28,7 +28,7 @@ struct StateGraphArgs {
   static std::optional<StateGraphType> ParseStateGraphType(
       std::istringstream& stream);
 
-  virtual void Execute() const = 0;
+  virtual void Execute() = 0;
 
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
 
@@ -45,14 +45,14 @@ struct StateGraphArgs {
  protected:
   bool ParseCommonArgs(std::istringstream& stream);
 
-  ::StateGraph::Graph GetGraph() const;
+  ::StateGraph::Graph GetGraph();
 };
 
 struct ComponentArgs : public StateGraphArgs {
   StateGraphType GetType() const override { return StateGraphType::Component; }
 
   bool Parse(std::istringstream& stream) { return true; }
-  void Execute() const override;
+  void Execute() override;
 };
 
 struct ForwardRetrogradeAnalysisArgs : public StateGraphArgs {
@@ -61,7 +61,7 @@ struct ForwardRetrogradeAnalysisArgs : public StateGraphArgs {
   }
 
   bool Parse(std::istringstream& stream) { return true; };
-  void Execute() const override;
+  void Execute() override;
 };
 
 struct DispersedFrontierArgs : public StateGraphArgs {
@@ -74,7 +74,7 @@ struct DispersedFrontierArgs : public StateGraphArgs {
   }
 
   bool Parse(std::istringstream& stream);
-  void Execute() const override;
+  void Execute() override;
 
   size_t Depth = 0;
   size_t MaxThreadCount = 0;

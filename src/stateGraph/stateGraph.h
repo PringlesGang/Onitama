@@ -61,14 +61,13 @@ struct EqualTo {
                   const Game::Game& second) const noexcept;
 };
 
-struct ForwardRetrogradeProgress;
-
 struct Graph {
  public:
   std::optional<std::weak_ptr<const Vertex>> Get(const Game::Game& game) const;
 
-  void Save(const std::filesystem::path& path) const;
-  static Graph Load(const std::filesystem::path& path);
+  void Save(const std::filesystem::path& path, size_t runtime = 0) const;
+  static std::pair<Graph, std::chrono::duration<size_t>> Load(
+      const std::filesystem::path& path);
 
   static Graph Import(const std::filesystem::path& nodesPath,
                       const std::filesystem::path& edgesPath);
@@ -84,14 +83,5 @@ struct Graph {
 };
 
 inline std::shared_ptr<Graph> SharedGameStateGraph = std::make_shared<Graph>();
-
-struct ForwardRetrogradeProgress {
-  std::unordered_set<std::shared_ptr<Vertex>> ExpandedVertices;
-  std::unordered_set<std::shared_ptr<Edge>> UnlabelledEdges;
-
-  std::deque<Game::GameSerialization> CallStack;
-
-  std::chrono::duration<size_t> Runtime = std::chrono::duration<size_t>::zero();
-};
 
 }  // namespace StateGraph

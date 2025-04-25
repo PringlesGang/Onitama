@@ -104,7 +104,7 @@ int Save() {
   }
 
   // Compare graphs
-  const Graph loadedGraph = Graph::Load(outPath);
+  const auto loadedGraph = Graph::Load(outPath).first;
   std::filesystem::remove(outPath);
 
   for (const auto [expectedGame, expectedVertex] : graph.Vertices) {
@@ -224,11 +224,20 @@ int Save() {
 }
 
 int Load() {
-  const Graph graph = Graph::Load("./tests/resources/load.graph");
+  const auto [graph, runtime] = Graph::Load("./tests/resources/load.graph");
 
-  constexpr size_t expectedVertexCount = 9;
+  // Compare runtime
+  constexpr size_t expectedRuntime = 42;
+  const size_t runtimeCount = runtime.count();
+  if (runtimeCount != 42) {
+    std::cerr << std::format("Expected runtime {}; got {}!", expectedRuntime,
+                             runtimeCount)
+              << std::endl;
+    return Fail;
+  }
 
   // Compare graphs
+  constexpr size_t expectedVertexCount = 9;
   if (graph.Vertices.size() != expectedVertexCount) {
     std::cerr << std::format("Expected {} vertices; got {}!",
                              expectedVertexCount, graph.Vertices.size())

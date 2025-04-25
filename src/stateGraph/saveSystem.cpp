@@ -32,7 +32,6 @@ void SaveParameters::Update() {
 
 void SaveParameters::StartTimers() {
   SaveTimer.Reset();
-  RuntimeTimer.Reset();
 
   SaveTimer.Play();
   RuntimeTimer.Play();
@@ -270,13 +269,17 @@ VertexInfo Read<VertexInfo>(std::ifstream& stream) {
 
 }  // namespace SaveSystem
 
-void Graph::Save(const std::filesystem::path& path) const {
+void Graph::Save(const std::filesystem::path& path,
+                 const size_t runtime) const {
   using namespace SaveSystem;
 
   std::cout << "Saving current state graph..." << std::endl;
 
   std::ofstream stream;
   stream.open(path, std::ios::out | std::ios::binary);
+
+  // Write runtime
+  Write<size_t>(stream, runtime);
 
   // Write graph
   Write<size_t>(stream, Vertices.size());
@@ -285,7 +288,8 @@ void Graph::Save(const std::filesystem::path& path) const {
   }
 }
 
-Graph Graph::Load(const std::filesystem::path& path) {
+std::pair<Graph, std::chrono::duration<size_t>> Graph::Load(
+    const std::filesystem::path& path) {
   using namespace SaveSystem;
 
   if (!std::filesystem::is_regular_file(path)) {
@@ -297,8 +301,10 @@ Graph Graph::Load(const std::filesystem::path& path) {
   std::ifstream stream;
   stream.open(path, std::ios::in | std::ios::binary);
 
-  ForwardRetrogradeProgress progress;
   Graph graph;
+
+  // Parse runtime
+  const std::chrono::duration<size_t> runtime(Read<size_t>(stream));
 
   // Parse graph
   const size_t vertexCount = Read<size_t>(stream);
@@ -330,7 +336,7 @@ Graph Graph::Load(const std::filesystem::path& path) {
     }
   }
 
-  return graph;
+  return {std::move(graph), std::move(runtime)};
 }
 
 }  // namespace StateGraph
