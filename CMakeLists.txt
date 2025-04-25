@@ -26,19 +26,6 @@ set(Src
         src/strategies/monteCarlo.cpp
         src/strategies/minMax.cpp
 
-        src/cli/cli.cpp
-        src/cli/command.cpp
-        src/cli/cards.cpp
-        src/cli/game.cpp
-        src/cli/strategies.cpp
-        src/cli/experiment.cpp
-        src/cli/print.cpp
-
-        src/experiments/fairCards/fairCards.cpp
-
-        src/experiments/stateGraph/stateGraph.cpp
-        src/experiments/stateGraph/args.cpp
-
         src/stateGraph/stateGraph.cpp
         src/stateGraph/exploreComponent.cpp
         src/stateGraph/retrogradeAnalysis.cpp
@@ -72,21 +59,38 @@ set(Header
         src/strategies/monteCarlo.h
         src/strategies/minMax.h
 
-        src/cli/cli.h
-        src/cli/command.h
-        src/cli/cards.h
-        src/cli/game.h
-        src/cli/strategies.h
-        src/cli/experiment.h
-        src/cli/print.h
-
-        src/experiments/fairCards/fairCards.h
-
-        src/experiments/stateGraph/stateGraph.h
-        src/experiments/stateGraph/args.h
-
         src/stateGraph/stateGraph.h
         src/stateGraph/strategies.h
+)
+
+set(SrcCli
+    src/cli/cli.cpp
+    src/cli/command.cpp
+    src/cli/cards.cpp
+    src/cli/game.cpp
+    src/cli/strategies.cpp
+    src/cli/experiment.cpp
+    src/cli/print.cpp
+
+    src/experiments/fairCards/fairCards.cpp
+
+    src/experiments/stateGraph/stateGraph.cpp
+    src/experiments/stateGraph/args.cpp
+)
+
+set (HeaderCli
+    src/cli/cli.h
+    src/cli/command.h
+    src/cli/cards.h
+    src/cli/game.h
+    src/cli/strategies.h
+    src/cli/experiment.h
+    src/cli/print.h
+
+    src/experiments/fairCards/fairCards.h
+
+    src/experiments/stateGraph/stateGraph.h
+    src/experiments/stateGraph/args.h
 )
 
 set(SrcTest
@@ -126,7 +130,7 @@ list(APPEND INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/vendor/stb")
 add_library("onitama-core" OBJECT ${Src} ${Header})
 target_include_directories(onitama-core PRIVATE ${INCLUDE_DIRS})
 
-add_executable("onitama" src/main.cpp $<TARGET_OBJECTS:onitama-core>)
+add_executable("onitama" src/main.cpp $<TARGET_OBJECTS:onitama-core> ${SrcCli} ${HeaderCli})
 add_executable("onitama-test" tests/tests.cpp $<TARGET_OBJECTS:onitama-core> ${SrcTest} ${HeaderTest})
 
 target_precompile_headers(onitama-core PRIVATE
