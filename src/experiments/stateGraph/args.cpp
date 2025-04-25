@@ -193,7 +193,7 @@ void ForwardRetrogradeAnalysisArgs::Execute() {
         break;
     }
   } else {
-    std::cout << "Unkown" << std::endl;
+    std::cout << "Unknown" << std::endl;
   }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
@@ -249,7 +249,7 @@ void DispersedFrontierArgs::Execute() {
         break;
     }
   } else {
-    std::cout << "Unkown" << std::endl;
+    std::cout << "Unknown" << std::endl;
   }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);

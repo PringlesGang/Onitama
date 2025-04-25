@@ -17,6 +17,7 @@ static void InsertUnique(std::shared_ptr<Edge> edge,
 
 static std::optional<WinState> Expand(
     const std::shared_ptr<Vertex> vertex, Graph& graph,
+    std::unordered_set<std::shared_ptr<Vertex>>& expandingVertices,
     std::optional<SaveParameters>& saveParameters) {
   // Terminal state
   if (vertex->Quality.has_value()) {
@@ -27,6 +28,8 @@ static std::optional<WinState> Expand(
 
     return vertex->Quality;
   }
+
+  expandingVertices.insert(vertex);
 
   // Insert edges
   const Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
@@ -41,7 +44,8 @@ static std::optional<WinState> Expand(
     InsertUnique(std::make_shared<Edge>(vertex, nextVertex, move),
                  vertex->Edges);
   }
-  assert(vertex->Edges.size() == game.GetValidMoves().size());
+  assert(!game.HasValidMoves() ||
+         vertex->Edges.size() == game.GetValidMoves().size());
 
   for (std::shared_ptr<Edge> edge : vertex->Edges) {
     const std::shared_ptr<Vertex> target = edge->Target.lock();
@@ -49,8 +53,15 @@ static std::optional<WinState> Expand(
 
     // Try to expand node
     if (!target->Quality.has_value()) {
+      // Don't expand already expanding vertices
+      if (expandingVertices.contains(target)) continue;
+
       const std::optional<WinState> targetQuality =
-          Expand(target, graph, saveParameters);
+          Expand(target, graph, expandingVertices, saveParameters);
+
+      // If the vertex has been coloured by retrograde analysis, then
+      // early-exit
+      if (vertex->Quality.has_value()) return vertex->Quality;
     }
   }
 
@@ -68,7 +79,10 @@ void ForwardRetrogradeAnalysis(Graph& graph, const Game::Game root,
   if (rootVertex->Quality.has_value()) return;
 
   if (saveParameters) saveParameters->StartTimers();
-  Expand(rootVertex, graph, saveParameters);
+
+  std::unordered_set<std::shared_ptr<Vertex>> expandingVertices;
+
+  Expand(rootVertex, graph, expandingVertices, saveParameters);
   if (!rootVertex->Quality.has_value()) RetrogradeAnalyse(graph);
 
   const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
