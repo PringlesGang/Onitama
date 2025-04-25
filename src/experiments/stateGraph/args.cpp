@@ -36,6 +36,35 @@ std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
     std::istringstream& stream) {
   std::shared_ptr<StateGraphArgs> args = nullptr;
 
+  // Parse strategy
+  std::string strategy;
+  stream >> strategy;
+
+  if (strategy == "component") {
+    args = std::make_shared<ComponentArgs>();
+    if (!std::static_pointer_cast<ComponentArgs>(args)->Parse(stream))
+      return std::nullopt;
+
+  } else if (strategy == "forward" || strategy == "forward-retrograde" ||
+             strategy == "forward-retrograde-analysis") {
+    args = std::make_shared<ForwardRetrogradeAnalysisArgs>();
+    if (!std::static_pointer_cast<ForwardRetrogradeAnalysisArgs>(args)->Parse(
+            stream)) {
+      return std::nullopt;
+    }
+
+  } else if (strategy == "dispersed" || strategy == "dispersed-frontier") {
+    args = std::make_shared<DispersedFrontierArgs>();
+    if (!std::static_pointer_cast<DispersedFrontierArgs>(args)->Parse(stream))
+      return std::nullopt;
+  }
+
+  if (args == nullptr) {
+    std::cerr << "Failed to parse strategy type!" << std::endl;
+    return std::nullopt;
+  }
+
+  // Parse initial state
   std::string stateType;
   stream >> stateType;
 
@@ -53,48 +82,13 @@ std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
 
     args->StartingConfiguration = std::make_shared<Game::Game>(
         std::move(Game::Game::FromSerialization(serialization.value())));
-  }
-
-  if (args == nullptr) {
-    std::cerr << "Failed to parse starting state type!" << std::endl;
-    return std::nullopt;
-  }
-
-  if (!args->ParseCommonArgs(stream)) return std::nullopt;
-
-  std::string parameter;
-  stream >> parameter;
-
-  if (parameter == "--strategy") {
-    std::string strategy;
-    stream >> strategy;
-
-    if (strategy == "component") {
-      args = std::make_shared<ComponentArgs>();
-      if (!args->Parse(stream)) return std::nullopt;
-
-    } else if (strategy == "forward" || strategy == "forward-retrograde" ||
-               strategy == "forward-retrograde-analysis") {
-      args = std::make_shared<ForwardRetrogradeAnalysisArgs>();
-      if (!args->Parse(stream)) return std::nullopt;
-
-    } else if (strategy == "dispersed" || strategy == "dispersed-frontier") {
-      args = std::make_shared<DispersedFrontierArgs>();
-      if (!args->Parse(stream)) return std::nullopt;
-
-    } else {
-      std::cerr << std::format("Unknown strategy \"{}\"!", strategy)
-                << std::endl;
-      return std::nullopt;
-    }
-
   } else {
-    std::cerr << std::format("Unknown parameter \"{}\"!", parameter)
-              << std::endl;
+    std::cerr << "Failed to parse initial state type!" << std::endl;
     return std::nullopt;
   }
 
   if (!args->ParseCommonArgs(stream)) return std::nullopt;
+
   if (!Parse::Terminate(stream)) return std::nullopt;
 
   return args;
@@ -150,31 +144,10 @@ void ComponentArgs::Execute() const {
                     ? Graph::Import(ImportPaths->first, ImportPaths->second)
                     : Graph();
 
-  ExploreComponent(graph, *StartingConfiguration);
+  ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
-}
-
-bool ForwardRetrogradeAnalysisArgs::Parse(std::istringstream& stream) {
-  std::string parameter;
-  stream >> parameter;
-
-  if (parameter == "--intermediate") {
-    IntermediatePath = Parse::ParsePath(stream);
-    if (!IntermediatePath) return false;
-
-    if (!(stream >> SaveTimeInterval)) {
-      std::cerr << "Failed to parse save time interval!" << std::endl;
-      return false;
-    }
-
-  } else {
-    Parse::Unparse(stream, parameter);
-    return true;
-  }
-
-  return Parse(stream);
 }
 
 void ForwardRetrogradeAnalysisArgs::Execute() const {
@@ -185,7 +158,8 @@ void ForwardRetrogradeAnalysisArgs::Execute() const {
                     ? Graph::Import(ImportPaths->first, ImportPaths->second)
                     : Graph();
 
-  ForwardRetrogradeAnalysis(graph, *StartingConfiguration);
+  ForwardRetrogradeAnalysis(graph, *StartingConfiguration,
+                            IntermediateParameters);
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
@@ -242,7 +216,8 @@ void DispersedFrontierArgs::Execute() const {
                     ? Graph::Import(ImportPaths->first, ImportPaths->second)
                     : Graph();
 
-  DispersedFrontier(graph, *StartingConfiguration, Depth, MaxThreadCount);
+  DispersedFrontier(graph, *StartingConfiguration, Depth, MaxThreadCount,
+                    IntermediateParameters);
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();

@@ -8,16 +8,16 @@ namespace StateGraph {
 constexpr inline std::string_view Name = "stategraph";
 
 constexpr inline std::string_view Command =
-    "stategraph state game_serialization (--export filepath) "
+    "stategraph strategy state game_serialization (--export filepath) "
     "(--import filepath) (--intermediate path seconds-interval)\n"
 
-    "stategraph game (--duplicate-cards) (--cards set_aside r1 r2 b1 b2) "
-    "(--size width height) (--export nodes-path edges-path) "
-    "(--import nodes-path edges-path) (--strategy strategy) "
+    "stategraph strategy game (--duplicate-cards) "
+    "(--cards set_aside r1 r2 b1 b2) (--size width height) "
+    "(--export nodes-path edges-path) (--import nodes-path edges-path) "
     "(--intermediate path seconds-interval)\n"
 
-    "stategraph load intermediate_path (--export nodes-path edges-path) "
-    "(--strategy strategy) (--intermediate path seconds-interval)";
+    "stategraph strategy load intermediate_path "
+    "(--export nodes-path edges-path) (--intermediate path seconds-interval)";
 
 constexpr inline std::string_view Description =
     "Depending on the arguments, "

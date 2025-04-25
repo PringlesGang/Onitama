@@ -57,16 +57,8 @@ struct ForwardRetrogradeAnalysisArgs : public StateGraphArgs {
     return StateGraphType::ForwardRetrogradeAnalysis;
   }
 
-  bool IsValid() const override {
-    return StartingConfiguration != nullptr || LoadPath.has_value();
-  }
-
-  bool Parse(std::istringstream& stream);
+  bool Parse(std::istringstream& stream) { return true; };
   void Execute() const override;
-
-  size_t SaveTimeInterval = 0;
-  std::optional<std::filesystem::path> IntermediatePath = std::nullopt;
-  std::optional<std::filesystem::path> LoadPath = std::nullopt;
 };
 
 struct DispersedFrontierArgs : public StateGraphArgs {
