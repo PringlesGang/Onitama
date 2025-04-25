@@ -130,6 +130,10 @@ bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
     ImagesPath = Parse::ParsePath(stream);
     if (!ImagesPath) return false;
 
+  } else if (parameter == "--intermediate") {
+    IntermediateParameters = SaveParameters::Parse(stream);
+    if (!IntermediateParameters) return false;
+
   } else {
     Parse::Unparse(stream, parameter);
     return true;

@@ -3,9 +3,9 @@
 namespace StateGraph {
 namespace Strategies {
 
-static void ExploreComponentRecursive(std::shared_ptr<Vertex> vertex,
-                                      std::unordered_set<Game::Game>& exploring,
-                                      Graph& graph) {
+static void ExploreComponentRecursive(
+    std::shared_ptr<Vertex> vertex, std::unordered_set<Game::Game>& exploring,
+    Graph& graph, std::optional<SaveParameters>& saveParameters) {
   const Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
   if (exploring.contains(game)) return;
   exploring.insert(game);
@@ -21,11 +21,12 @@ static void ExploreComponentRecursive(std::shared_ptr<Vertex> vertex,
     vertex->Edges.emplace_back(
         std::make_shared<Edge>(vertex, nextVertex, move));
 
-    ExploreComponentRecursive(nextVertex, exploring, graph);
+    ExploreComponentRecursive(nextVertex, exploring, graph, saveParameters);
   }
 }
 
-void ExploreComponent(Graph& graph, Game::Game game) {
+void ExploreComponent(Graph& graph, Game::Game game,
+                      std::optional<SaveParameters> saveParameters) {
   const std::chrono::time_point startTime = std::chrono::system_clock::now();
 
   const std::shared_ptr<Vertex> vertex =
@@ -33,7 +34,7 @@ void ExploreComponent(Graph& graph, Game::Game game) {
           .first->second;
 
   std::unordered_set<Game::Game> exploring;
-  ExploreComponentRecursive(vertex, exploring, graph);
+  ExploreComponentRecursive(vertex, exploring, graph, saveParameters);
 
   const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
                              std::chrono::system_clock::now() - startTime)

@@ -15,11 +15,16 @@ static void InsertUnique(std::shared_ptr<Edge> edge,
   }
 }
 
-static std::optional<WinState> Expand(const std::shared_ptr<Vertex> vertex,
-                                      Graph& graph) {
+static std::optional<WinState> Expand(
+    const std::shared_ptr<Vertex> vertex, Graph& graph,
+    std::optional<SaveParameters>& saveParameters) {
   // Terminal state
   if (vertex->Quality.has_value()) {
     RetrogradeAnalyse(graph);
+
+    if (saveParameters && saveParameters->ShouldSave())
+      saveParameters->Save(graph);
+
     return vertex->Quality;
   }
 
@@ -44,14 +49,16 @@ static std::optional<WinState> Expand(const std::shared_ptr<Vertex> vertex,
 
     // Try to expand node
     if (!target->Quality.has_value()) {
-      const std::optional<WinState> targetQuality = Expand(target, graph);
+      const std::optional<WinState> targetQuality =
+          Expand(target, graph, saveParameters);
     }
   }
 
   return vertex->Quality;
 }
 
-void ForwardRetrogradeAnalysis(Graph& graph, const Game::Game root) {
+void ForwardRetrogradeAnalysis(Graph& graph, const Game::Game root,
+                               std::optional<SaveParameters> saveParameters) {
   const std::chrono::time_point startTime = std::chrono::system_clock::now();
 
   const std::shared_ptr<Vertex> rootVertex =
@@ -60,7 +67,8 @@ void ForwardRetrogradeAnalysis(Graph& graph, const Game::Game root) {
 
   if (rootVertex->Quality.has_value()) return;
 
-  Expand(rootVertex, graph);
+  if (saveParameters) saveParameters->StartTimers();
+  Expand(rootVertex, graph, saveParameters);
   if (!rootVertex->Quality.has_value()) RetrogradeAnalyse(graph);
 
   const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(

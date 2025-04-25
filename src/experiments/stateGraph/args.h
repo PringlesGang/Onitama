@@ -4,9 +4,12 @@
 
 #include "../../cli/command.h"
 #include "../../game/game.h"
+#include "../../stateGraph/strategies.h"
 
 namespace Experiments {
 namespace StateGraph {
+
+using namespace ::StateGraph::SaveSystem;
 
 enum class StateGraphType {
   Component,
@@ -35,6 +38,8 @@ struct StateGraphArgs {
       ImportPaths = std::nullopt;
 
   std::optional<std::filesystem::path> ImagesPath = std::nullopt;
+
+  std::optional<SaveParameters> IntermediateParameters = std::nullopt;
 
  protected:
   bool ParseCommonArgs(std::istringstream& stream);

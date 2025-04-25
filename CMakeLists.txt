@@ -19,6 +19,7 @@ set(Src
         src/util/offset.cpp
         src/util/winState.cpp
         src/util/parse.cpp
+        src/util/stopwatch.tpp
 
         src/strategies/human.cpp
         src/strategies/positional.cpp
@@ -51,6 +52,7 @@ set(Header
         src/util/winState.h
         src/util/base64.h
         src/util/parse.h
+        src/util/stopwatch.h
 
         src/strategies/strategy.h
         src/strategies/human.h
@@ -61,6 +63,7 @@ set(Header
 
         src/stateGraph/stateGraph.h
         src/stateGraph/strategies.h
+        src/stateGraph/saveSystem.h
 )
 
 set(SrcCli

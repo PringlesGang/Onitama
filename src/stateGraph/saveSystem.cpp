@@ -1,10 +1,66 @@
+#include "saveSystem.h"
+
 #include <fstream>
 #include <memory>
 
-#include "stateGraph.h"
+#include "../util/parse.h"
 
 namespace StateGraph {
 namespace SaveSystem {
+
+std::optional<SaveParameters> SaveParameters::Parse(
+    std::istringstream& stream) {
+  const std::optional<std::filesystem::path> filePath =
+      Parse::ParsePath(stream);
+  if (!filePath.has_value()) return std::nullopt;
+
+  size_t secondsInterval;
+  if (!(stream >> secondsInterval)) {
+    std::cerr << "Failed to parse seconds interval!" << std::endl;
+    return std::nullopt;
+  }
+
+  return SaveParameters{
+      .SavePath = filePath.value(),
+      .SaveInterval = std::chrono::duration<size_t>(secondsInterval)};
+}
+
+void SaveParameters::Update() {
+  SaveTimer.Update();
+  RuntimeTimer.Update();
+}
+
+void SaveParameters::StartTimers() {
+  SaveTimer.Reset();
+  RuntimeTimer.Reset();
+
+  SaveTimer.Play();
+  RuntimeTimer.Play();
+}
+
+void SaveParameters::UnpauseTimers() {
+  SaveTimer.Play();
+  RuntimeTimer.Play();
+}
+
+void SaveParameters::PauseTimers() {
+  SaveTimer.Pause();
+  RuntimeTimer.Pause();
+}
+
+bool SaveParameters::ShouldSave() {
+  Update();
+  return SaveTimer.GetRuntime() >= SaveInterval;
+}
+
+void SaveParameters::Save(Graph& graph) {
+  PauseTimers();
+
+  graph.Save(SavePath);
+
+  SaveTimer.Reset();
+  UnpauseTimers();
+}
 
 template <typename T>
 static void Write(std::ofstream& stream, const T value) {

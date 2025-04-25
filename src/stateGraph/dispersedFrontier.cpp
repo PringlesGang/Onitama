@@ -135,7 +135,8 @@ void ThreadContext::Finish(
 }
 
 void DispersedFrontier(Graph& graph, const Game::Game game, const size_t depth,
-                       const size_t maxThreadCount) {
+                       const size_t maxThreadCount,
+                       std::optional<SaveParameters> saveParameters) {
   std::unordered_set<Game::Game, Hash, EqualTo> frontier = {game};
 
   std::shared_mutex mutex;
@@ -146,6 +147,8 @@ void DispersedFrontier(Graph& graph, const Game::Game game, const size_t depth,
         threadContexts.begin(), threadContexts.end(),
         [](const ThreadContext& context) { return context.InUse(); });
   };
+
+  if (saveParameters) saveParameters->StartTimers();
 
   do {
     if (frontier.empty()) {
@@ -177,6 +180,13 @@ void DispersedFrontier(Graph& graph, const Game::Game game, const size_t depth,
         // A finished thread is idling
         if (context.thread->wait_for(0ms) == std::future_status::ready) {
           context.Finish(graph.Vertices, frontier, mutex);
+
+          if (saveParameters && saveParameters->ShouldSave()) {
+            mutex.lock_shared();
+            saveParameters->Save(graph);
+            mutex.unlock_shared();
+          }
+
           idleContext = &context;
           break;
         }
