@@ -40,9 +40,12 @@ struct StateGraphArgs {
   std::optional<std::filesystem::path> ImagesPath = std::nullopt;
 
   std::optional<SaveParameters> IntermediateParameters = std::nullopt;
+  std::optional<std::filesystem::path> LoadPath = std::nullopt;
 
  protected:
   bool ParseCommonArgs(std::istringstream& stream);
+
+  ::StateGraph::Graph GetGraph() const;
 };
 
 struct ComponentArgs : public StateGraphArgs {

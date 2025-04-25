@@ -82,6 +82,7 @@ std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
 
     args->StartingConfiguration = std::make_shared<Game::Game>(
         std::move(Game::Game::FromSerialization(serialization.value())));
+
   } else {
     std::cerr << "Failed to parse initial state type!" << std::endl;
     return std::nullopt;
@@ -128,6 +129,10 @@ bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
     IntermediateParameters = SaveParameters::Parse(stream);
     if (!IntermediateParameters) return false;
 
+  } else if (parameter == "--load") {
+    LoadPath = Parse::ParsePath(stream);
+    if (!LoadPath) return false;
+
   } else {
     Parse::Unparse(stream, parameter);
     return true;
@@ -136,13 +141,20 @@ bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
   return ParseCommonArgs(stream);
 }
 
+Graph StateGraphArgs::GetGraph() const {
+  if (LoadPath) return Graph::Load(LoadPath.value());
+
+  if (ImportPaths)
+    return Graph::Import(ImportPaths->first, ImportPaths->second);
+
+  return Graph();
+}
+
 void ComponentArgs::Execute() const {
   std::cout << "Generating state graph for:\n"
             << *StartingConfiguration << std::endl;
 
-  Graph graph = ImportPaths
-                    ? Graph::Import(ImportPaths->first, ImportPaths->second)
-                    : Graph();
+  Graph graph = GetGraph();
 
   ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
 
@@ -154,9 +166,7 @@ void ForwardRetrogradeAnalysisArgs::Execute() const {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
 
-  Graph graph = ImportPaths
-                    ? Graph::Import(ImportPaths->first, ImportPaths->second)
-                    : Graph();
+  Graph graph = GetGraph();
 
   ForwardRetrogradeAnalysis(graph, *StartingConfiguration,
                             IntermediateParameters);
@@ -212,9 +222,7 @@ void DispersedFrontierArgs::Execute() const {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
 
-  Graph graph = ImportPaths
-                    ? Graph::Import(ImportPaths->first, ImportPaths->second)
-                    : Graph();
+  Graph graph = GetGraph();
 
   DispersedFrontier(graph, *StartingConfiguration, Depth, MaxThreadCount,
                     IntermediateParameters);
