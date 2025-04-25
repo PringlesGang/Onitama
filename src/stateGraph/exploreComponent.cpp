@@ -7,12 +7,14 @@ static void ExploreComponentRecursive(
     std::shared_ptr<Vertex> vertex, std::unordered_set<Game::Game>& exploring,
     Graph& graph, std::optional<SaveParameters>& saveParameters) {
   const Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
-  if (exploring.contains(game)) return;
   exploring.insert(game);
 
   for (Game::Move move : game.GetValidMoves()) {
     Game::Game nextState = game;
     nextState.DoMove(move);
+
+    // Don't expand already expanded vertices
+    if (exploring.contains(nextState)) continue;
 
     const std::shared_ptr<Vertex> nextVertex =
         graph.Vertices.emplace(nextState, std::make_shared<Vertex>(nextState))
