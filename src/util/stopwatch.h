@@ -17,12 +17,12 @@ class Stopwatch {
   void Play();
   void Pause();
 
-  std::chrono::duration<size_t, period> GetRuntime() const { return Runtime; }
-  size_t GetRuntimeCount() const { return Runtime.count(); }
+  std::chrono::duration<size_t, period> GetRuntime() const;
+  size_t GetRuntimeCount() const { return GetRuntime().count(); }
 
  private:
+  std::chrono::time_point<std::chrono::system_clock> StartTime;
   std::chrono::time_point<std::chrono::system_clock> LastUpdateTime;
-  std::chrono::duration<size_t, period> Runtime;
 
   bool Paused;
 };
