@@ -264,7 +264,7 @@ void Game::DoMove(const Move move) {
     GameBoard.DoMove(startCoordinate, offset);
   }
 
-  const std::span<Card, HAND_SIZE> hand = ColorToHand.at(CurrentPlayer);
+  const std::span<Card, HAND_SIZE> hand = GetMutableHand(CurrentPlayer);
   const auto usedCardIt = std::find(hand.begin(), hand.end(), move.UsedCard);
 
   if (usedCardIt == hand.end())

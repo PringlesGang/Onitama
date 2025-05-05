@@ -133,7 +133,7 @@ struct Card {
   std::string GetName() const { return GetName(Type); }
   bool HasMove(const Offset offset) const;
 
-  bool operator==(const Card& other) const { return Type == other.Type; }
+  bool operator==(const Card other) const { return Type == other.Type; }
 
   CardType Type = CardType::CardTypeCount;
 

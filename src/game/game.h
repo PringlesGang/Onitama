@@ -51,12 +51,13 @@ class Game {
   const Board& GetBoard() const { return GameBoard; }
   std::span<const Card, CARD_COUNT> GetCards() const { return Cards; }
   std::span<const Card, HAND_SIZE> GetHand(const Color color) const {
-    return ColorToHand.at(color);
+    return std::span<const Card, HAND_SIZE>(
+        &Cards[1 + HAND_SIZE * (color == Color::Blue)], HAND_SIZE);
   }
   std::span<const Card, HAND_SIZE> GetHand() const {
     return GetHand(CurrentPlayer);
   }
-  Card GetSetAsideCard() const { return SetAsideCard; }
+  Card GetSetAsideCard() const { return Cards[0]; }
   Color GetCurrentPlayer() const { return CurrentPlayer; }
   std::pair<size_t, size_t> GetDimensions() const {
     return GameBoard.GetDimensions();
@@ -103,11 +104,10 @@ class Game {
   Color CurrentPlayer;
 
   Card& SetAsideCard = Cards[0];
-  const std::unordered_map<Color, std::span<Card, HAND_SIZE>> ColorToHand = {
-      {Color::Red, std::span<Card, HAND_SIZE>(&Cards[1], HAND_SIZE)},
-      {Color::Blue,
-       std::span<Card, HAND_SIZE>(&Cards[HAND_SIZE + 1], HAND_SIZE)},
-  };
+  std::span<Card, HAND_SIZE> GetMutableHand(const Color color) {
+    return std::span<Card, HAND_SIZE>(
+        &Cards[1 + HAND_SIZE * (color == Color::Blue)], HAND_SIZE);
+  }
 
   std::vector<Move> ValidMoves;
   bool HasValidMovesVal;

@@ -72,7 +72,7 @@ static bool CompareCoordinates(const Game::Game& first,
 
   const std::vector<Coordinate>& firstCoordinates =
       first.GetPawnCoordinates(firstPlayer);
-  std::vector<Coordinate> secondCoordinates =
+  const std::vector<Coordinate>& secondCoordinates =
       second.GetPawnCoordinates(secondPlayer);
 
   if (firstCoordinates.size() != secondCoordinates.size()) return false;
@@ -84,15 +84,19 @@ static bool CompareCoordinates(const Game::Game& first,
     const auto orientCoord = [width, height](Coordinate coordinate) {
       return Coordinate(width - coordinate.x - 1, height - coordinate.y - 1);
     };
+    const auto orientEqual = [orientCoord](Coordinate first,
+                                           Coordinate second) {
+      return first == orientCoord(second);
+    };
 
-    std::transform(secondCoordinates.begin(), secondCoordinates.end(),
-                   secondCoordinates.begin(), orientCoord);
-
-    if (!masterCaptured && firstCoordinates[0] != secondCoordinates[0])
+    if (!masterCaptured &&
+        orientEqual(firstCoordinates[0], secondCoordinates[0])) {
       return false;
+    }
 
     return std::equal(firstCoordinates.begin() + !masterCaptured,
-                      firstCoordinates.end(), secondCoordinates.rbegin());
+                      firstCoordinates.end(), secondCoordinates.rbegin(),
+                      orientEqual);
   } else {
     return firstCoordinates == secondCoordinates;
   }
@@ -118,8 +122,9 @@ bool EqualTo::operator()(const Game::Game& first,
         first.GetHand(firstPlayer);
     const std::span<const Game::Card, HAND_SIZE> secondHand =
         first.GetHand(firstPlayer);
-    if (!std::is_permutation(firstHand.begin(), firstHand.end(),
-                             secondHand.begin(), secondHand.end())) {
+
+    if (!(firstHand[0] == secondHand[0] && firstHand[1] == secondHand[1] ||
+          firstHand[0] == secondHand[1] && firstHand[1] == secondHand[0])) {
       return false;
     }
 

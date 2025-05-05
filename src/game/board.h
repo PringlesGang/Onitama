@@ -35,7 +35,7 @@ class Board {
   std::optional<Tile> GetTile(const Coordinate coordinate) const;
   std::optional<std::span<const Tile>> GetRow(const size_t row) const;
   const std::vector<Coordinate>& GetPawnCoordinates(const Color color) const {
-    return ColorToLocations.at(color);
+    return color == Color::Blue ? BlueLocations : RedLocations;
   };
   const std::pair<size_t, size_t> GetDimensions() const {
     return {Width, Height};
@@ -62,12 +62,11 @@ class Board {
   bool RedMasterCaptured = false;
   std::vector<Coordinate> BlueLocations;
   bool BlueMasterCaptured = false;
-  const std::unordered_map<Color, std::vector<Coordinate>&> ColorToLocations = {
-      {Color::Red, RedLocations},
-      {Color::Blue, BlueLocations},
-  };
 
   void SetPieceCoordinates();
+  std::vector<Coordinate>& GetMutablePawnCoordinates(const Color color) {
+    return color == Color::Blue ? BlueLocations : RedLocations;
+  };
 
   size_t GetTileId(const Coordinate coordinate) const {
     return coordinate.y * Width + coordinate.x;

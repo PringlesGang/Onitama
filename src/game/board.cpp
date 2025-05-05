@@ -67,8 +67,9 @@ void Board::Reset() {
 
   const size_t temple = Width / 2;
 
-  std::vector<Coordinate>& topLocations = ColorToLocations.at(TopPlayer);
-  std::vector<Coordinate>& bottomLocations = ColorToLocations.at(~TopPlayer);
+  std::vector<Coordinate>& topLocations = GetMutablePawnCoordinates(TopPlayer);
+  std::vector<Coordinate>& bottomLocations =
+      GetMutablePawnCoordinates(~TopPlayer);
 
   topLocations.emplace_back(Coordinate{temple, 0});
   bottomLocations.emplace_back(Coordinate{temple, Height - 1});
@@ -122,7 +123,8 @@ void Board::SetPieceCoordinates() {
 
   for (const std::optional<Piece> tile : Grid) {
     if (tile) {
-      std::vector<Coordinate>& locations = ColorToLocations.at(tile->Team);
+      std::vector<Coordinate>& locations =
+          GetMutablePawnCoordinates(tile->Team);
 
       // Place master in the front
       if (tile->Master) {
@@ -156,9 +158,9 @@ std::optional<Color> Board::IsFinished() const {
   if (BlueMasterCaptured) return Color::Red;
 
   const size_t temple = Width / 2;
-  if (ColorToLocations.at(TopPlayer)[0] == Coordinate{temple, Height - 1})
+  if (GetPawnCoordinates(TopPlayer)[0] == Coordinate{temple, Height - 1})
     return TopPlayer;
-  if (ColorToLocations.at(~TopPlayer)[0] == Coordinate{temple, 0})
+  if (GetPawnCoordinates(~TopPlayer)[0] == Coordinate{temple, 0})
     return ~TopPlayer;
 
   return std::nullopt;
