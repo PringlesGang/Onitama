@@ -8,6 +8,8 @@ namespace Strategies {
 
 using namespace SaveSystem;
 
+void RetrogradeAnalyse(std::shared_ptr<Vertex> source, WinState targetQuality,
+                       std::shared_ptr<Edge> edge);
 void RetrogradeAnalyse(Graph& graph);
 
 void ExploreComponent(

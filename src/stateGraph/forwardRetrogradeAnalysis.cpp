@@ -62,6 +62,11 @@ static std::optional<WinState> Expand(
       // If the vertex has been coloured by retrograde analysis, then
       // early-exit
       if (vertex->Quality.has_value()) return vertex->Quality;
+
+      // Try colouring it yourself instead
+      if (!targetQuality.has_value()) continue;
+      RetrogradeAnalyse(vertex, targetQuality.value(), edge);
+      if (vertex->Quality.has_value()) return vertex->Quality;
     }
   }
 

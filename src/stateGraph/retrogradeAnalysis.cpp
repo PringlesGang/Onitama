@@ -6,6 +6,55 @@
 namespace StateGraph {
 namespace Strategies {
 
+void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
+                       const WinState targetQuality,
+                       const std::shared_ptr<Edge> edge) {
+  const bool lastUnlabelledEdge = std::all_of(
+      source->Edges.begin(), source->Edges.end(),
+      [edge](std::shared_ptr<Edge> otherEdge) {
+        return edge->Move == otherEdge->Move || otherEdge->Optimal.has_value();
+      });
+
+  switch (targetQuality) {
+    case WinState::Lose: {
+      source->Quality = WinState::Win;
+      source->SetOptimalMove(edge->Move);
+      return;
+    }
+
+    case WinState::Win: {
+      if (lastUnlabelledEdge) {
+        if (source->GetOptimalMove().has_value()) {
+          // Draw move was already found
+          source->Quality = WinState::Draw;
+          edge->Optimal = false;
+        } else {
+          // No draw move; only losing moves
+          source->Quality = WinState::Lose;
+          source->SetOptimalMove(edge->Move);
+        }
+
+      } else {
+        edge->Optimal = false;
+      }
+      return;
+    }
+
+    case WinState::Draw: {
+      // Provisionally set the optimal move to draw
+      source->SetOptimalMove(edge->Move);
+      if (lastUnlabelledEdge) source->Quality = WinState::Draw;
+      return;
+    }
+
+    default: {
+      const std::string msg = std::format("Unexpected target quality \"{}\"!",
+                                          (int8_t)targetQuality);
+      throw std::runtime_error(msg);
+    }
+  }
+}
+
 void RetrogradeAnalyse(Graph& graph) {
   // Keep trying until an uneventful loop occurred
   bool edgeLabelled = false;
@@ -33,58 +82,9 @@ void RetrogradeAnalyse(Graph& graph) {
         // Cannot label an edge with an unlabelled target
         const std::shared_ptr<Vertex> target = edge->Target.lock();
         assert(target != nullptr);
+
         if (!target->Quality.has_value()) continue;
-
-        const bool lastUnlabelledEdge =
-            std::all_of(vertex->Edges.begin(), vertex->Edges.end(),
-                        [edge](std::shared_ptr<Edge> otherEdge) {
-                          return edge->Move == otherEdge->Move ||
-                                 otherEdge->Optimal.has_value();
-                        });
-
-        switch (target->Quality.value()) {
-          case WinState::Lose: {
-            vertex->Quality = WinState::Win;
-            vertex->SetOptimalMove(edge->Move);
-            edgeLabelled = true;
-            break;
-          }
-
-          case WinState::Win: {
-            if (lastUnlabelledEdge) {
-              if (vertex->GetOptimalMove().has_value()) {
-                // Draw move was already found
-                vertex->Quality = WinState::Draw;
-                edge->Optimal = false;
-              } else {
-                // No draw move; only losing moves
-                vertex->Quality = WinState::Lose;
-                vertex->SetOptimalMove(edge->Move);
-              }
-
-            } else {
-              edge->Optimal = false;
-            }
-
-            edgeLabelled = true;
-            break;
-          }
-
-          case WinState::Draw: {
-            // Provisionally set the optimal move to draw
-            edgeLabelled = true;
-            vertex->SetOptimalMove(edge->Move);
-            if (lastUnlabelledEdge) vertex->Quality = WinState::Draw;
-            break;
-          }
-
-          default: {
-            const std::string msg =
-                std::format("Unexpected target quality \"{}\"!",
-                            (int8_t)target->Quality.value());
-            throw std::runtime_error(msg);
-          }
-        }
+        RetrogradeAnalyse(vertex, target->Quality.value(), edge);
 
         // The vertex' quality has been determined
         if (vertex->Quality.has_value()) {
