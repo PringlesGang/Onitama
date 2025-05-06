@@ -6,6 +6,85 @@
 namespace StateGraph {
 namespace Strategies {
 
+static bool VerifyCorrectness(const Graph& graph) {
+  for (const auto [game, vertex] : graph.Vertices) {
+    if (!vertex->Quality.has_value()) {
+      bool hasUnlabelledChild = false;
+      for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
+        const std::shared_ptr<const Vertex> target = edge->Target.lock();
+        assert(target != nullptr);
+
+        assert(target->Quality != WinState::Lose);
+
+        hasUnlabelledChild |= !target->Quality.has_value();
+      }
+
+      assert(vertex->Edges.empty() || hasUnlabelledChild);
+
+      continue;
+    }
+
+    if (vertex->Edges.empty()) {
+      assert(vertex->Quality == WinState::Lose);
+      continue;
+    }
+
+    assert(vertex->GetOptimalMove().has_value());
+    const Game::Move optimalMove = vertex->GetOptimalMove().value();
+
+    assert(vertex->GetEdge(optimalMove).has_value());
+    const std::shared_ptr<const Edge> optimalEdge =
+        vertex->GetEdge(optimalMove).value();
+
+    const std::shared_ptr<const Vertex> optimalTarget =
+        optimalEdge->Target.lock();
+    assert(optimalTarget != nullptr);
+
+    switch (vertex->Quality.value()) {
+      case WinState::Win: {
+        assert(optimalTarget->Quality == WinState::Lose);
+
+        for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
+          assert(!(edge != optimalEdge && edge->IsOptimal()));
+        }
+
+        continue;
+      }
+
+      case WinState::Draw: {
+        assert(optimalTarget->Quality == WinState::Draw);
+
+        for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
+          assert(!(edge != optimalEdge && edge->IsOptimal()));
+
+          const std::shared_ptr<const Vertex> target = edge->Target.lock();
+          assert(target != nullptr);
+
+          assert(target->Quality.has_value());
+          assert(target->Quality != WinState::Lose);
+        }
+
+        continue;
+      }
+
+      case WinState::Lose: {
+        for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
+          assert(!(edge != optimalEdge && edge->IsOptimal()));
+
+          const std::shared_ptr<const Vertex> target = edge->Target.lock();
+          assert(target != nullptr);
+
+          assert(target->Quality == WinState::Win);
+        }
+
+        continue;
+      }
+    }
+  }
+
+  return true;
+}
+
 void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
                        const WinState targetQuality,
                        const std::shared_ptr<Edge> edge) {
@@ -190,6 +269,7 @@ void RetrogradeAnalyse(Graph& graph) {
 
   AssignDraws(unlabelledExpandedVertices);
 
+  assert(VerifyCorrectness(graph));
 }
 
 }  // namespace Strategies
