@@ -150,11 +150,12 @@ bool Game::operator==(const Game& other) const {
     if (GetPawnCoordinates(player) != other.GetPawnCoordinates(player))
       return false;
 
-    if (std::unordered_multiset<Card>(GetHand(player).begin(),
-                                      GetHand(player).end()) !=
-        std::unordered_multiset<Card>(other.GetHand(player).begin(),
-                                      other.GetHand(player).end()))
+    const std::span<const Card, HAND_SIZE> firstHand = GetHand(player);
+    const std::span<const Card, HAND_SIZE> secondHand = other.GetHand(player);
+    if (!(firstHand[0] == secondHand[0] && firstHand[1] == secondHand[1] ||
+          firstHand[0] == secondHand[1] && firstHand[1] == secondHand[0])) {
       return false;
+    }
   }
 
   return true;
