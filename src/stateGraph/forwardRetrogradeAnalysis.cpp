@@ -64,8 +64,9 @@ static std::optional<WinState> Expand(
       if (vertex->Quality.has_value()) return vertex->Quality;
 
       // Try colouring it yourself instead
-      // if (!targetQuality.has_value()) continue;
-      // RetrogradeAnalyse(vertex, targetQuality.value(), edge);
+      if (!targetQuality.has_value() || edge->Optimal.has_value()) continue;
+      RetrogradeAnalyse(vertex, targetQuality.value(), edge);
+
       if (vertex->Quality.has_value()) return vertex->Quality;
     }
   }
