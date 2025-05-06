@@ -9,6 +9,8 @@ namespace Strategies {
 void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
                        const WinState targetQuality,
                        const std::shared_ptr<Edge> edge) {
+  assert(!source->Quality.has_value());
+
   const bool lastUnlabelledEdge = std::all_of(
       source->Edges.begin(), source->Edges.end(),
       [edge](std::shared_ptr<Edge> otherEdge) {
@@ -17,8 +19,10 @@ void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
 
   switch (targetQuality) {
     case WinState::Lose: {
+      assert(!source->Quality.has_value());
       source->Quality = WinState::Win;
       source->SetOptimalMove(edge->Move);
+      assert(edge->IsOptimal());
       return;
     }
 
@@ -26,10 +30,12 @@ void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
       if (lastUnlabelledEdge) {
         if (source->GetOptimalMove().has_value()) {
           // Draw move was already found
+          assert(!source->Quality.has_value());
           source->Quality = WinState::Draw;
           edge->Optimal = false;
         } else {
           // No draw move; only losing moves
+          assert(!source->Quality.has_value());
           source->Quality = WinState::Lose;
           source->SetOptimalMove(edge->Move);
         }
@@ -43,7 +49,11 @@ void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
     case WinState::Draw: {
       // Provisionally set the optimal move to draw
       source->SetOptimalMove(edge->Move);
-      if (lastUnlabelledEdge) source->Quality = WinState::Draw;
+      assert(edge->IsOptimal());
+      if (lastUnlabelledEdge) {
+        assert(!source->Quality.has_value());
+        source->Quality = WinState::Draw;
+      }
       return;
     }
 
@@ -76,15 +86,15 @@ void RetrogradeAnalyse(Graph& graph) {
            edgeIt++) {
         const std::shared_ptr<Edge> edge = *edgeIt;
 
-        // Cannot relabel a labelled edge
-        if (edge->Optimal.has_value()) continue;
-
         // Cannot label an edge with an unlabelled target
         const std::shared_ptr<Vertex> target = edge->Target.lock();
         assert(target != nullptr);
-
         if (!target->Quality.has_value()) continue;
+
+        const bool previouslyLabelled = edge->Optimal.has_value();
         RetrogradeAnalyse(vertex, target->Quality.value(), edge);
+        edgeLabelled |= previouslyLabelled != edge->Optimal.has_value();
+        assert(edge->Optimal.has_value());
 
         // The vertex' quality has been determined
         if (vertex->Quality.has_value()) {
@@ -112,6 +122,11 @@ void RetrogradeAnalyse(Graph& graph) {
     for (auto vertexIt = unlabelledExpandedVertices.begin();
          vertexIt != unlabelledExpandedVertices.end();) {
       const std::shared_ptr<Vertex> vertex = *vertexIt;
+      if (vertex->Quality.has_value()) {
+        removeVertex(vertexIt);
+        continue;
+      };
+
       currentVertexRemoved = false;
 
       for (const std::shared_ptr<Edge> edge : vertex->Edges) {
@@ -128,7 +143,8 @@ void RetrogradeAnalyse(Graph& graph) {
             break;
           }
 
-          assert(target->Quality.value() != WinState::Lose);
+          assert((target->Quality.value() != WinState::Lose) &&
+                 "Should have been a Win!");
           continue;
         }
 
@@ -141,7 +157,8 @@ void RetrogradeAnalyse(Graph& graph) {
         // Set the supposed draw move
         vertex->SetOptimalMove(edge->Move);
       }
-      assert(currentVertexRemoved || vertex->GetOptimalMove().has_value());
+      assert((currentVertexRemoved || vertex->GetOptimalMove().has_value()) &&
+             "Should have been a Loss!");
 
       if (!currentVertexRemoved) vertexIt++;
     }
@@ -149,6 +166,8 @@ void RetrogradeAnalyse(Graph& graph) {
 
   // Mark unlabelled expanded vertices with only expanded children as draws
   for (const std::shared_ptr<Vertex> draw : unlabelledExpandedVertices) {
+    assert(!draw->Quality.has_value() ||
+           draw->Quality.value() == WinState::Draw);
     draw->Quality = WinState::Draw;
     assert(draw->GetOptimalMove().has_value());
   }

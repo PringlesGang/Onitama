@@ -19,16 +19,6 @@ static std::optional<WinState> Expand(
     const std::shared_ptr<Vertex> vertex, Graph& graph,
     std::unordered_set<std::shared_ptr<Vertex>>& expandingVertices,
     std::optional<SaveParameters>& saveParameters) {
-  // Terminal state
-  if (vertex->Quality.has_value()) {
-    RetrogradeAnalyse(graph);
-
-    if (saveParameters && saveParameters->ShouldSave())
-      saveParameters->Save(graph);
-
-    return vertex->Quality;
-  }
-
   expandingVertices.insert(vertex);
 
   // Insert edges
@@ -37,12 +27,22 @@ static std::optional<WinState> Expand(
     Game::Game nextGame(game);
     nextGame.DoMove(move);
 
-    const std::shared_ptr<Vertex> nextVertex =
-        graph.Vertices.emplace(nextGame, std::make_shared<Vertex>(nextGame))
-            .first->second;
+    const auto [nextGameIt, inserted] =
+        graph.Vertices.emplace(nextGame, std::make_shared<Vertex>(nextGame));
+    const std::shared_ptr<Vertex> nextVertex = nextGameIt->second;
 
     InsertUnique(std::make_shared<Edge>(vertex, nextVertex, move),
                  vertex->Edges);
+
+    if (inserted && nextVertex->Quality.has_value()) {
+      // New terminal state found
+      assert(nextVertex->Edges.empty() &&
+             nextVertex->Quality.value() == WinState::Lose);
+      RetrogradeAnalyse(graph);
+
+      if (saveParameters && saveParameters->ShouldSave())
+        saveParameters->Save(graph);
+    }
   }
   assert(!game.HasValidMoves() ||
          vertex->Edges.size() == game.GetValidMoves().size());
@@ -64,8 +64,8 @@ static std::optional<WinState> Expand(
       if (vertex->Quality.has_value()) return vertex->Quality;
 
       // Try colouring it yourself instead
-      if (!targetQuality.has_value()) continue;
-      RetrogradeAnalyse(vertex, targetQuality.value(), edge);
+      // if (!targetQuality.has_value()) continue;
+      // RetrogradeAnalyse(vertex, targetQuality.value(), edge);
       if (vertex->Quality.has_value()) return vertex->Quality;
     }
   }
