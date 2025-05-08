@@ -90,7 +90,7 @@ static bool CompareCoordinates(const Game::Game& first,
     };
 
     if (!masterCaptured &&
-        orientEqual(firstCoordinates[0], secondCoordinates[0])) {
+        !orientEqual(firstCoordinates[0], secondCoordinates[0])) {
       return false;
     }
 
@@ -121,7 +121,7 @@ bool EqualTo::operator()(const Game::Game& first,
     const std::span<const Game::Card, HAND_SIZE> firstHand =
         first.GetHand(firstPlayer);
     const std::span<const Game::Card, HAND_SIZE> secondHand =
-        first.GetHand(firstPlayer);
+        second.GetHand(secondPlayer);
 
     if (!(firstHand[0] == secondHand[0] && firstHand[1] == secondHand[1] ||
           firstHand[0] == secondHand[1] && firstHand[1] == secondHand[0])) {
