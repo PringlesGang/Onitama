@@ -150,7 +150,7 @@ size_t Hash::operator()(const Game::Game& game) const noexcept {
   const bool orient = TopPlayer == game.GetCurrentPlayer();
 
   for (size_t playerId = 0; playerId < 2; playerId++) {
-    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+    const Color player = playerId == 0 ? TopPlayer : BottomPlayer;
     for (const Coordinate coordinate : game.GetPawnCoordinates(player)) {
       const size_t offset = coordinate.x + width * coordinate.y;
       hash ^= orient ? offset : boardEnd - offset;

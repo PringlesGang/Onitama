@@ -77,7 +77,7 @@ static constexpr size_t ReadBits(GameSerialization& input,
 Game Game::FromSerialization(GameSerialization serialization) {
   // Current player
   constexpr size_t playerSize = 1;
-  Color player = ReadBits(serialization, playerSize) ? TopPlayer : ~TopPlayer;
+  Color player = ReadBits(serialization, playerSize) ? TopPlayer : BottomPlayer;
 
   // Card distribution
   std::array<Card, CARD_COUNT> cards;
@@ -98,7 +98,7 @@ Game Game::FromSerialization(GameSerialization serialization) {
 
   std::vector<Tile> grid(width * height);
   for (size_t pawn = 0; pawn < width * 2; pawn++) {
-    const Color pawnColor = pawn < width ? TopPlayer : ~TopPlayer;
+    const Color pawnColor = pawn < width ? TopPlayer : BottomPlayer;
     const bool isMaster = pawn % width == 0;
 
     const size_t offset = ReadBits(serialization, coordinateSize);
@@ -142,7 +142,7 @@ bool Game::operator==(const Game& other) const {
   if (GetDimensions() != other.GetDimensions()) return false;
 
   for (size_t playerId = 0; playerId < 2; playerId++) {
-    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+    const Color player = playerId == 0 ? TopPlayer : BottomPlayer;
 
     if (MasterCaptured(player) != other.MasterCaptured(player)) return false;
 
@@ -396,7 +396,7 @@ bool Game::ExportImage(std::filesystem::path directory) const {
 
     const bool moverPlaced =
         CurrentPlayer == TopPlayer && y == boardStart ||
-        CurrentPlayer == ~TopPlayer && y == boardStart + boardHeight - 1;
+        CurrentPlayer == BottomPlayer && y == boardStart + boardHeight - 1;
 
     if (boardWidth < 5 || !moverPlaced) PushPixel(pixels, backgroundCol);
     if (moverPlaced) {
@@ -422,7 +422,7 @@ bool Game::ExportImage(std::filesystem::path directory) const {
   for (size_t x = 0; x < width; x++) PushPixel(pixels, backgroundCol);
 
   // Write bottom hand
-  printHand(GetHand(~TopPlayer), ~TopPlayer, pixels);
+  printHand(GetHand(BottomPlayer), BottomPlayer, pixels);
 
   return stbi_write_bmp(directory.string().c_str(), width, height, channels,
                         pixels.data());
@@ -433,7 +433,8 @@ std::ostream& operator<<(std::ostream& stream, const Game& game) {
             << std::endl;
 
   const std::span<const Card, HAND_SIZE> topHand = game.GetHand(TopPlayer);
-  const std::span<const Card, HAND_SIZE> bottomHand = game.GetHand(~TopPlayer);
+  const std::span<const Card, HAND_SIZE> bottomHand =
+      game.GetHand(BottomPlayer);
 
   std::string cardNumberString = "";
   for (size_t card = 0; card < HAND_SIZE; card++) {
@@ -544,7 +545,7 @@ GameSerialization Game::Serialize() const {
   constexpr size_t coordinateSize = std::bit_width(captured);
 
   for (size_t playerId = 0; playerId < 2; playerId++) {
-    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+    const Color player = playerId == 0 ? TopPlayer : BottomPlayer;
 
     if (MasterCaptured(player)) {
       AddBits(serialization, captured, size, coordinateSize);
@@ -579,7 +580,7 @@ size_t std::hash<Game::Game>::operator()(
   // Pawn locations
   const size_t width = game.GetDimensions().first;
   for (size_t playerId = 0; playerId < 2; playerId++) {
-    const Color player = playerId == 0 ? TopPlayer : ~TopPlayer;
+    const Color player = playerId == 0 ? TopPlayer : BottomPlayer;
     for (const Coordinate coordinate : game.GetPawnCoordinates(player)) {
       hash ^= coordinate.x + width * coordinate.y;
     }

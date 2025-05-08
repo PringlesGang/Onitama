@@ -189,7 +189,7 @@ int GetHand() {
       TemplateGame->GetCards();
 
   for (size_t playerNum = 0; playerNum < 2; playerNum++) {
-    const Color player = playerNum == 0 ? TopPlayer : ~TopPlayer;
+    const Color player = playerNum == 0 ? TopPlayer : BottomPlayer;
     const std::span<const Game::Card, HAND_SIZE> hand =
         TemplateGame->GetHand(player);
 
@@ -206,7 +206,7 @@ int GetHand() {
 
 int GetCurrentHand() {
   for (size_t playerNum = 0; playerNum < 2; playerNum++) {
-    Color player = playerNum == 0 ? TopPlayer : ~TopPlayer;
+    Color player = playerNum == 0 ? TopPlayer : BottomPlayer;
 
     const std::span<const Game::Card, HAND_SIZE> hand =
         TemplateGame->GetHand(player);
@@ -231,7 +231,7 @@ int GetSetAsideCard() {
 
 int GetCurrentPlayer() {
   for (size_t playerNum = 0; playerNum < 2; playerNum++) {
-    Color player = playerNum == 0 ? TopPlayer : ~TopPlayer;
+    Color player = playerNum == 0 ? TopPlayer : BottomPlayer;
     const Game::Game game = Game::Game(
         Board(*TemplateBoard),
         std::array<Game::Card, CARD_COUNT>(TemplateCards), std::move(player));
