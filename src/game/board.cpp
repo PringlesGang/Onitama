@@ -65,23 +65,23 @@ void Board::Reset() {
   RedMasterCaptured = false;
   BlueMasterCaptured = false;
 
-  const size_t temple = Width / 2;
-
   std::vector<Coordinate>& topLocations = GetMutablePawnCoordinates(TopPlayer);
   std::vector<Coordinate>& bottomLocations =
       GetMutablePawnCoordinates(~TopPlayer);
 
-  topLocations.emplace_back(Coordinate{temple, 0});
-  bottomLocations.emplace_back(Coordinate{temple, Height - 1});
+  topLocations.emplace_back(GetTemple(TopPlayer));
+  bottomLocations.emplace_back(GetTemple(~TopPlayer));
 
+  const size_t topTempleX = GetTemple(TopPlayer).x;
+  const size_t bottomTempleX = GetTemple(~TopPlayer).x;
   for (size_t x = 0; x < Width; x++) {
-    Grid[GetTileId(Coordinate{x, 0})].emplace(TopPlayer, x == temple);
-    Grid[GetTileId(Coordinate{x, Height - 1})].emplace(~TopPlayer, x == temple);
+    Grid[GetTileId(Coordinate{x, 0})].emplace(TopPlayer, x == topTempleX);
+    Grid[GetTileId(Coordinate{x, Height - 1})].emplace(~TopPlayer,
+                                                       x == bottomTempleX);
 
-    if (x != temple) {
-      topLocations.emplace_back(Coordinate{x, 0});
+    if (x != topTempleX) topLocations.emplace_back(Coordinate{x, 0});
+    if (x != bottomTempleX)
       bottomLocations.emplace_back(Coordinate{x, Height - 1});
-    }
 
     for (size_t y = 1; y < Height - 1; y++)
       Grid[GetTileId(Coordinate{x, y})].reset();
@@ -157,10 +157,9 @@ std::optional<Color> Board::IsFinished() const {
   if (RedMasterCaptured) return Color::Blue;
   if (BlueMasterCaptured) return Color::Red;
 
-  const size_t temple = Width / 2;
-  if (GetPawnCoordinates(TopPlayer)[0] == Coordinate{temple, Height - 1})
+  if (GetPawnCoordinates(TopPlayer)[0] == GetTemple(~TopPlayer))
     return TopPlayer;
-  if (GetPawnCoordinates(~TopPlayer)[0] == Coordinate{temple, 0})
+  if (GetPawnCoordinates(~TopPlayer)[0] == GetTemple(TopPlayer))
     return ~TopPlayer;
 
   return std::nullopt;

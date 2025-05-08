@@ -40,6 +40,10 @@ class Board {
   const std::pair<size_t, size_t> GetDimensions() const {
     return {Width, Height};
   };
+  const Coordinate GetTemple(const Color color) const {
+    const bool topPlayer = color == TopPlayer;
+    return {(Width - topPlayer) / 2, topPlayer ? 0 : Height - 1};
+  }
   bool MasterCaptured(Color color) const {
     return color == Color::Red ? RedMasterCaptured : BlueMasterCaptured;
   }
