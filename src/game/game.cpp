@@ -394,8 +394,21 @@ bool Game::ExportImage(std::filesystem::path directory) const {
       }
     }
 
-    for (size_t x = boardWidth + CARD_DISPLAY_SIZE; x < width; x++)
+    const bool moverPlaced =
+        CurrentPlayer == TopPlayer && y == boardStart ||
+        CurrentPlayer == ~TopPlayer && y == boardStart + boardHeight - 1;
+
+    if (boardWidth < 5 || !moverPlaced) PushPixel(pixels, backgroundCol);
+    if (moverPlaced) {
+      PushPixel(pixels,
+                CurrentPlayer == ::Color::Red ? redMasterCol : blueMasterCol);
+    }
+
+    const size_t moverOffset = 1 + moverPlaced;
+    for (size_t x = boardWidth + CARD_DISPLAY_SIZE + moverOffset; x < width;
+         x++) {
       PushPixel(pixels, backgroundCol);
+    }
 
     if (cardStart <= y && y < cardStart + CARD_DISPLAY_SIZE) {
       printCardRow(SetAsideCard, y - cardStart, CurrentPlayer);
