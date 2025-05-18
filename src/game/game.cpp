@@ -511,12 +511,7 @@ static void AddBits(GameSerialization& input, const size_t bits,
 
 GameSerialization Game::Serialize() const {
   const auto [width, height] = GetDimensions();
-  if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
-    const std::string msg = std::format(
-        "Tried to serialize board of size {}x{} when max size is {}x{}!", width,
-        height, MAX_DIMENSION, MAX_DIMENSION);
-    throw std::runtime_error(msg);
-  }
+  assert(width <= MAX_DIMENSION && height <= MAX_DIMENSION);
 
   GameSerialization serialization;
   size_t size = 0;
@@ -558,7 +553,7 @@ GameSerialization Game::Serialize() const {
     }
 
     // Serialize captured pawns
-    for (size_t i = locations.size() + MasterCaptured(); i < width; i++) {
+    for (size_t i = locations.size() + MasterCaptured(player); i < width; i++) {
       AddBits(serialization, captured, size, coordinateSize);
     }
   }
