@@ -13,6 +13,7 @@ using namespace ::StateGraph::SaveSystem;
 
 enum class StateGraphType {
   Component,
+  RetrogradeAnalysis,
   ForwardRetrogradeAnalysis,
   DispersedFrontier,
 };
@@ -52,6 +53,15 @@ struct ComponentArgs : public StateGraphArgs {
   StateGraphType GetType() const override { return StateGraphType::Component; }
 
   bool Parse(std::istringstream& stream) { return true; }
+  void Execute() override;
+};
+
+struct RetrogradeAnalysisArgs : public StateGraphArgs {
+  StateGraphType GetType() const override {
+    return StateGraphType::RetrogradeAnalysis;
+  }
+
+  bool Parse(std::istringstream& stream) { return true; };
   void Execute() override;
 };
 

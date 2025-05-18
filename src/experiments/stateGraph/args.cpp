@@ -14,8 +14,10 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
   std::string string;
   stream >> string;
 
-  if (string == "forward" || string == "forward-retrograde" ||
-      string == "forward-retrograde-analysis") {
+  if (string == "retrograde" || string == "retrograde-analysis") {
+    return StateGraphType::RetrogradeAnalysis;
+  } else if (string == "forward" || string == "forward-retrograde" ||
+             string == "forward-retrograde-analysis") {
     return StateGraphType::ForwardRetrogradeAnalysis;
   } else if (string == "component") {
     return StateGraphType::Component;
@@ -26,6 +28,7 @@ std::optional<StateGraphType> StateGraphArgs::ParseStateGraphType(
   std::cerr << std::format("Unknown state graph strategy \"{}\"!\n", string)
             << "Valid strategies are:\n"
                "- component\n"
+               "- retrograde-analysis\n"
                "- forward-retrograde-analysis\n"
                "- dispersed-frontier\n"
             << std::endl;
@@ -43,6 +46,11 @@ std::optional<std::shared_ptr<StateGraphArgs>> StateGraphArgs::Parse(
   if (strategy == "component") {
     args = std::make_shared<ComponentArgs>();
     if (!std::static_pointer_cast<ComponentArgs>(args)->Parse(stream))
+      return std::nullopt;
+
+  } else if (strategy == "retrograde" || strategy == "retrograde-analysis") {
+    args = std::make_shared<RetrogradeAnalysisArgs>();
+    if (!std::static_pointer_cast<RetrogradeAnalysisArgs>(args)->Parse(stream))
       return std::nullopt;
 
   } else if (strategy == "forward" || strategy == "forward-retrograde" ||
@@ -164,6 +172,37 @@ void ComponentArgs::Execute() {
   Graph graph = GetGraph();
 
   ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
+
+  if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
+  if (ImagesPath) graph.ExportImages(ImagesPath.value());
+}
+
+void RetrogradeAnalysisArgs::Execute() {
+  std::cout << "Finding perfect positional strategy for:\n"
+            << *StartingConfiguration << std::endl;
+
+  Graph graph = GetGraph();
+
+  ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
+  RetrogradeAnalyse(graph);
+
+  const std::shared_ptr<const Vertex> vertex =
+      graph.Get(*StartingConfiguration)->lock();
+  if (vertex->Quality.has_value()) {
+    switch (vertex->Quality.value()) {
+      case WinState::Lose:
+        std::cout << "Lost" << std::endl;
+        break;
+      case WinState::Draw:
+        std::cout << "Draw" << std::endl;
+        break;
+      case WinState::Win:
+        std::cout << "Won" << std::endl;
+        break;
+    }
+  } else {
+    std::cout << "Unknown" << std::endl;
+  }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
