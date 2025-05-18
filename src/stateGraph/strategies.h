@@ -13,7 +13,7 @@ void RetrogradeAnalyse(std::shared_ptr<Vertex> source, WinState targetQuality,
 void RetrogradeAnalyse(Graph& graph);
 
 void ExploreComponent(
-    Graph& graph, Game::Game root,
+    Graph& graph, Game::Game root, size_t maxDepth,
     std::optional<SaveParameters> saveParameters = std::nullopt);
 
 void ForwardRetrogradeAnalysis(

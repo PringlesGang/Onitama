@@ -165,6 +165,15 @@ Graph StateGraphArgs::GetGraph() {
   return Graph();
 }
 
+bool ComponentArgs::Parse(std::istringstream& stream) {
+  if (!(stream >> MaxDepth)) {
+    std::cerr << "Failed to parse Component's max depth!" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 void ComponentArgs::Execute() {
   std::cout << "Generating state graph for:\n"
             << *StartingConfiguration << std::endl;
@@ -173,7 +182,8 @@ void ComponentArgs::Execute() {
 
   const std::chrono::time_point startTime = std::chrono::system_clock::now();
 
-  ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
+  ExploreComponent(graph, *StartingConfiguration, MaxDepth,
+                   IntermediateParameters);
 
   const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
                              std::chrono::system_clock::now() - startTime)
@@ -188,6 +198,15 @@ void ComponentArgs::Execute() {
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
 
+bool RetrogradeAnalysisArgs::Parse(std::istringstream& stream) {
+  if (!(stream >> MaxDepth)) {
+    std::cerr << "Failed to parse Component's max depth!" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 void RetrogradeAnalysisArgs::Execute() {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
@@ -196,7 +215,8 @@ void RetrogradeAnalysisArgs::Execute() {
 
   const std::chrono::time_point startTime = std::chrono::system_clock::now();
 
-  ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
+  ExploreComponent(graph, *StartingConfiguration, MaxDepth,
+                   IntermediateParameters);
   RetrogradeAnalyse(graph);
 
   const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(

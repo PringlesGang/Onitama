@@ -52,8 +52,10 @@ struct StateGraphArgs {
 struct ComponentArgs : public StateGraphArgs {
   StateGraphType GetType() const override { return StateGraphType::Component; }
 
-  bool Parse(std::istringstream& stream) { return true; }
+  bool Parse(std::istringstream& stream);
   void Execute() override;
+
+  size_t MaxDepth = 0;
 };
 
 struct RetrogradeAnalysisArgs : public StateGraphArgs {
@@ -61,8 +63,10 @@ struct RetrogradeAnalysisArgs : public StateGraphArgs {
     return StateGraphType::RetrogradeAnalysis;
   }
 
-  bool Parse(std::istringstream& stream) { return true; };
+  bool Parse(std::istringstream& stream);
   void Execute() override;
+
+  size_t MaxDepth = 0;
 };
 
 struct ForwardRetrogradeAnalysisArgs : public StateGraphArgs {
