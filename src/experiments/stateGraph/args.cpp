@@ -141,6 +141,9 @@ bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
     LoadPath = Parse::ParsePath(stream);
     if (!LoadPath) return false;
 
+  } else if (parameter == "--disable-symmetries") {
+    UseSymmetries = false;
+
   } else {
     Parse::Unparse(stream, parameter);
     return true;
@@ -178,6 +181,8 @@ void ComponentArgs::Execute() {
   std::cout << "Generating state graph for:\n"
             << *StartingConfiguration << std::endl;
 
+  StateGraph::UseSymmetries = UseSymmetries;
+
   Graph graph = GetGraph();
 
   const std::chrono::time_point startTime = std::chrono::system_clock::now();
@@ -210,6 +215,8 @@ bool RetrogradeAnalysisArgs::Parse(std::istringstream& stream) {
 void RetrogradeAnalysisArgs::Execute() {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
+
+  StateGraph::UseSymmetries = UseSymmetries;
 
   Graph graph = GetGraph();
 
@@ -253,6 +260,8 @@ void RetrogradeAnalysisArgs::Execute() {
 void ForwardRetrogradeAnalysisArgs::Execute() {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
+
+  StateGraph::UseSymmetries = UseSymmetries;
 
   Graph graph = GetGraph();
 
@@ -320,6 +329,8 @@ bool DispersedFrontierArgs::Parse(std::istringstream& stream) {
 void DispersedFrontierArgs::Execute() {
   std::cout << "Finding perfect positional strategy for:\n"
             << *StartingConfiguration << std::endl;
+
+  StateGraph::UseSymmetries = UseSymmetries;
 
   Graph graph = GetGraph();
 

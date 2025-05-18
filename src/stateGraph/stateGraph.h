@@ -56,6 +56,7 @@ struct Hash {
   size_t operator()(const Game::Game& game) const noexcept;
 };
 
+inline bool UseSymmetries = true;
 struct EqualTo {
   bool operator()(const Game::Game& first,
                   const Game::Game& second) const noexcept;

@@ -108,6 +108,8 @@ Edge::Edge(std::weak_ptr<Vertex> source, std::weak_ptr<Vertex> target,
 
 bool EqualTo::operator()(const Game::Game& first,
                          const Game::Game& second) const noexcept {
+  if (!UseSymmetries) return first == second;
+
   if (first.GetSetAsideCard() != second.GetSetAsideCard()) return false;
 
   if (first.GetDimensions() != second.GetDimensions()) return false;

@@ -33,6 +33,8 @@ struct StateGraphArgs {
 
   std::shared_ptr<Game::Game> StartingConfiguration = nullptr;
 
+  bool UseSymmetries = true;
+
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
       ExportPaths = std::nullopt;
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
