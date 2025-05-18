@@ -173,6 +173,10 @@ void ComponentArgs::Execute() {
 
   ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
 
+  std::cout << std::format("Analysed {} nodes and {} edges",
+                           graph.GetNodeCount(), graph.GetEdgeCount())
+            << std::endl;
+
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
@@ -204,6 +208,10 @@ void RetrogradeAnalysisArgs::Execute() {
     std::cout << "Unknown" << std::endl;
   }
 
+  std::cout << std::format("Analysed {} nodes and {} edges",
+                           graph.GetNodeCount(), graph.GetEdgeCount())
+            << std::endl;
+
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
@@ -234,6 +242,10 @@ void ForwardRetrogradeAnalysisArgs::Execute() {
   } else {
     std::cout << "Unknown" << std::endl;
   }
+
+  std::cout << std::format("Analysed {} nodes and {} edges",
+                           graph.GetNodeCount(), graph.GetEdgeCount())
+            << std::endl;
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
@@ -290,6 +302,10 @@ void DispersedFrontierArgs::Execute() {
   } else {
     std::cout << "Unknown" << std::endl;
   }
+
+  std::cout << std::format("Analysed {} nodes and {} edges",
+                           graph.GetNodeCount(), graph.GetEdgeCount())
+            << std::endl;
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());

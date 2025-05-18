@@ -75,6 +75,9 @@ struct Graph {
               const std::filesystem::path& edgesPath) const;
   void ExportImages(const std::filesystem::path& imagesPath) const;
 
+  size_t GetNodeCount() const { return Vertices.size(); }
+  size_t GetEdgeCount() const;
+
   std::unordered_map<Game::Game, std::shared_ptr<Vertex>, Hash, EqualTo>
       Vertices;
 

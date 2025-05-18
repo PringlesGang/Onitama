@@ -437,4 +437,16 @@ void Graph::ExportImages(const std::filesystem::path& imagesPath) const {
   }
 }
 
+size_t Graph::GetEdgeCount() const {
+  size_t count = 0;
+
+  std::for_each(
+      Vertices.begin(), Vertices.end(),
+      [&count](std::pair<Game::Game, std::shared_ptr<const Vertex>> vertex) {
+        count += vertex.second->Edges.size();
+      });
+
+  return count;
+}
+
 }  // namespace StateGraph
