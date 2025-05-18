@@ -29,19 +29,12 @@ static void ExploreComponentRecursive(
 
 void ExploreComponent(Graph& graph, Game::Game game,
                       std::optional<SaveParameters> saveParameters) {
-  const std::chrono::time_point startTime = std::chrono::system_clock::now();
-
   const std::shared_ptr<Vertex> vertex =
       graph.Vertices.emplace(game, std::make_shared<Vertex>(game))
           .first->second;
 
   std::unordered_set<Game::Game> exploring;
   ExploreComponentRecursive(vertex, exploring, graph, saveParameters);
-
-  const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
-                             std::chrono::system_clock::now() - startTime)
-                             .count();
-  std::cout << std::format("Run time: {}s", runTime) << std::endl;
 }
 
 }  // namespace Strategies

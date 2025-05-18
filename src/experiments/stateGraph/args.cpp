@@ -171,9 +171,16 @@ void ComponentArgs::Execute() {
 
   Graph graph = GetGraph();
 
+  const std::chrono::time_point startTime = std::chrono::system_clock::now();
+
   ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
 
-  std::cout << std::format("Analysed {} nodes and {} edges",
+  const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - startTime)
+                             .count();
+
+  std::cout << std::format("Run time: {}s\n", runTime)
+            << std::format("Analysed {} nodes and {} edges",
                            graph.GetNodeCount(), graph.GetEdgeCount())
             << std::endl;
 
@@ -187,8 +194,14 @@ void RetrogradeAnalysisArgs::Execute() {
 
   Graph graph = GetGraph();
 
+  const std::chrono::time_point startTime = std::chrono::system_clock::now();
+
   ExploreComponent(graph, *StartingConfiguration, IntermediateParameters);
   RetrogradeAnalyse(graph);
+
+  const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - startTime)
+                             .count();
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
@@ -208,7 +221,8 @@ void RetrogradeAnalysisArgs::Execute() {
     std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Analysed {} nodes and {} edges",
+  std::cout << std::format("Run time: {}s\n", runTime)
+            << std::format("Analysed {} nodes and {} edges",
                            graph.GetNodeCount(), graph.GetEdgeCount())
             << std::endl;
 
@@ -222,8 +236,14 @@ void ForwardRetrogradeAnalysisArgs::Execute() {
 
   Graph graph = GetGraph();
 
+  const std::chrono::time_point startTime = std::chrono::system_clock::now();
+
   ForwardRetrogradeAnalysis(graph, *StartingConfiguration,
                             IntermediateParameters);
+
+  const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - startTime)
+                             .count();
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
@@ -243,7 +263,8 @@ void ForwardRetrogradeAnalysisArgs::Execute() {
     std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Analysed {} nodes and {} edges",
+  std::cout << std::format("Run time: {}s\n", runTime)
+            << std::format("Analysed {} nodes and {} edges",
                            graph.GetNodeCount(), graph.GetEdgeCount())
             << std::endl;
 
@@ -282,8 +303,14 @@ void DispersedFrontierArgs::Execute() {
 
   Graph graph = GetGraph();
 
+  const std::chrono::time_point startTime = std::chrono::system_clock::now();
+
   DispersedFrontier(graph, *StartingConfiguration, Depth, MaxThreadCount,
                     IntermediateParameters);
+
+  const size_t runTime = std::chrono::duration_cast<std::chrono::seconds>(
+                             std::chrono::system_clock::now() - startTime)
+                             .count();
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
@@ -303,7 +330,8 @@ void DispersedFrontierArgs::Execute() {
     std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Analysed {} nodes and {} edges",
+  std::cout << std::format("Run time: {}s\n", runTime)
+            << std::format("Analysed {} nodes and {} edges",
                            graph.GetNodeCount(), graph.GetEdgeCount())
             << std::endl;
 
