@@ -205,7 +205,8 @@ void ComponentArgs::Execute() {
 
 bool RetrogradeAnalysisArgs::Parse(std::istringstream& stream) {
   if (!(stream >> MaxDepth)) {
-    std::cerr << "Failed to parse Component's max depth!" << std::endl;
+    std::cerr << "Failed to parse Retrograde Analysis's max depth!"
+              << std::endl;
     return false;
   }
 

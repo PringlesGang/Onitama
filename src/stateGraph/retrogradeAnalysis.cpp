@@ -69,6 +69,9 @@ static bool VerifyCorrectness(const Graph& graph) {
 
       case WinState::Lose: {
         for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
+          if (edge != optimalEdge && edge->IsOptimal()) {
+            std::cerr << "Error!" << std::endl;
+          }
           assert(!(edge != optimalEdge && edge->IsOptimal()));
 
           const std::shared_ptr<const Vertex> target = edge->Target.lock();
@@ -103,11 +106,7 @@ void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
     case WinState::Lose: {
       assert(!source->Quality.has_value());
       source->Quality = WinState::Win;
-
-      for (const std::shared_ptr<Edge> otherEdge : source->Edges) {
-        otherEdge->Optimal = false;
-      }
-      edge->Optimal = true;
+      source->SetOptimalMove(edge->Move);
       return;
     }
 
@@ -119,7 +118,6 @@ void RetrogradeAnalyse(const std::shared_ptr<Vertex> source,
           if (target->Quality == WinState::Draw) {
             assert(!source->Quality.has_value());
             source->Quality = WinState::Draw;
-            edge->Optimal = false;
             source->SetOptimalMove(otherEdge->Move);
             return;
           }

@@ -19,18 +19,17 @@ static void ExploreComponentRecursive(
     Game::Game nextState = game;
     nextState.DoMove(move);
 
-    // Don't expand already expanded vertices
-    if (exploring.contains(nextState)) continue;
-
     const std::shared_ptr<Vertex> nextVertex =
         graph.Vertices.emplace(nextState, std::make_shared<Vertex>(nextState))
             .first->second;
-
-    assert(Game::Game::FromSerialization(nextVertex->Serialization) ==
-           nextState);
+    assert(EqualTo()(Game::Game::FromSerialization(nextVertex->Serialization),
+                     nextState));
 
     vertex->Edges.emplace_back(
         std::make_shared<Edge>(vertex, nextVertex, move));
+
+    // Don't expand already expanded vertices
+    if (exploring.contains(nextState)) continue;
 
     if (maxDepth == 0 || depth + 1 <= maxDepth) {
       ExploreComponentRecursive(nextVertex, exploring, frontier, depth + 1,

@@ -167,7 +167,7 @@ void Game::SetValidMoves() {
   // No valid moves for a finished game
   if (IsFinished()) return;
 
-  const std::span<const Card, HAND_SIZE>& hand = GetHand();
+  const std::span<const Card, HAND_SIZE> hand = GetHand();
 
   for (size_t pawnId = 0; pawnId < GetPawnCount(); pawnId++) {
     for (auto cardIt = hand.begin(); cardIt != hand.end(); cardIt++) {
@@ -185,7 +185,9 @@ void Game::SetValidMoves() {
         };
 
         if (CheckIsValidMove(move)) {
-          ValidMoves.emplace_back(std::move(move));
+          assert(std::find(ValidMoves.begin(), ValidMoves.end(), move) ==
+                 ValidMoves.end());
+          ValidMoves.push_back(move);
         }
       }
     }
@@ -197,7 +199,14 @@ void Game::SetValidMoves() {
     ValidMoves.reserve(HAND_SIZE);
 
     for (Card card : GetHand()) {
-      ValidMoves.emplace_back(Move{.UsedCard = card});
+      const Move move{.UsedCard = card};
+
+      if (std::find(ValidMoves.begin(), ValidMoves.end(), move) !=
+          ValidMoves.end()) {
+        continue;
+      }
+
+      ValidMoves.push_back(move);
     }
   }
 }
