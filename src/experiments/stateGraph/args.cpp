@@ -225,10 +225,25 @@ void RetrogradeAnalysisArgs::Execute() {
 
   ExploreComponent(graph, *StartingConfiguration, MaxDepth,
                    IntermediateParameters);
+
+  const std::chrono::time_point finishedExploringTime =
+      std::chrono::system_clock::now();
+
   RetrogradeAnalyse(graph);
 
+  const std::chrono::time_point finishedRetrogradeTime =
+      std::chrono::system_clock::now();
+
+  const size_t exploreTime =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          finishedExploringTime - startTime)
+          .count();
+  const size_t retrogradeTime =
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+          finishedRetrogradeTime - finishedExploringTime)
+          .count();
   const size_t runTime = std::chrono::duration_cast<std::chrono::milliseconds>(
-                             std::chrono::system_clock::now() - startTime)
+                             finishedRetrogradeTime - startTime)
                              .count();
 
   const std::shared_ptr<const Vertex> vertex =
@@ -249,7 +264,11 @@ void RetrogradeAnalysisArgs::Execute() {
     std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
+  std::cout << std::format("Graph exploration time: {:.3f}s\n",
+                           exploreTime / 1000.0f)
+            << std::format("Retrograde analysis time: {:.3f}s\n",
+                           retrogradeTime / 1000.0f)
+            << std::format("Total run time: {:.3f}s\n", runTime / 1000.0f)
             << std::format("Analysed {} nodes and {} edges",
                            graph.GetNodeCount(), graph.GetEdgeCount())
             << std::endl;
