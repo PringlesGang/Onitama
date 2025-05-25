@@ -3,7 +3,7 @@
 #include "cli/cli.h"
 
 void WelcomeMessage() {
-  std::cout << "Onitama analyzer v0.1.0" << std::endl << std::endl;
+  std::cout << "Onitama analyzer v1.0.0" << std::endl << std::endl;
 }
 
 void CommandLoop() {
