@@ -1,5 +1,8 @@
 build
 experiments/**
-.vscode
-.vs
 vendor
+
+.vscode
+
+.vs
+CMakeSettings.json

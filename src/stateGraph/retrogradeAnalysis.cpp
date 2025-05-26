@@ -229,18 +229,24 @@ static void AssignDraws(
 void RetrogradeAnalyse(Graph& graph) {
   // Keep trying until an uneventful loop occurred
   bool edgeLabelled = false;
+
   std::unordered_set<std::shared_ptr<Vertex>> unlabelledExpandedVertices;
+  unlabelledExpandedVertices.reserve(graph.Vertices.size());
+  for (auto& [_, vertex] : graph.Vertices) {
+    if (!vertex->Quality.has_value() && !vertex->Edges.empty()) {
+      unlabelledExpandedVertices.insert(vertex);
+    }
+  }
 
   // Analyse wins and losses
   do {
     edgeLabelled = false;
 
     // Check all vertices
-    for (auto& [game, vertex] : graph.Vertices) {
-      // Cannot relabel a labelled vertex
-      if (vertex->Quality.has_value()) continue;
-
-      if (!vertex->Edges.empty()) unlabelledExpandedVertices.insert(vertex);
+    for (auto vertexIt = unlabelledExpandedVertices.begin();
+         vertexIt != unlabelledExpandedVertices.end();) {
+      const std::shared_ptr<Vertex> vertex = *vertexIt;
+      bool vertexErased = false;
 
       // Check all edges
       for (auto edgeIt = vertex->Edges.begin(); edgeIt != vertex->Edges.end();
@@ -258,10 +264,13 @@ void RetrogradeAnalyse(Graph& graph) {
 
         // The vertex' quality has been determined
         if (vertex->Quality.has_value()) {
-          unlabelledExpandedVertices.erase(vertex);
+          vertexIt = unlabelledExpandedVertices.erase(vertexIt);
+          vertexErased = true;
           break;
         }
       }
+
+      if (!vertexErased) vertexIt++;
     }
   } while (edgeLabelled);
 
