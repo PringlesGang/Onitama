@@ -64,18 +64,17 @@ static std::optional<WinState> Expand(
 
     // Try to expand node if not already begin expanded
     if (!target->Quality.has_value() && !expandingVertices.contains(target)) {
-      const std::optional<WinState> targetQuality =
-          Expand(target, graph, expandingVertices, root, saveParameters);
+      Expand(target, graph, expandingVertices, root, saveParameters);
 
       // If the current or root vertex has been coloured by retrograde analysis,
       // then early-exit
-      if (vertex->Quality.has_value() || root->Quality.has_value())
+      if (vertex->Quality.has_value() || root->Quality.has_value()) {
         return vertex->Quality;
+      }
+    }
 
-      // Try colouring the current vertex yourself instead
-      if (!targetQuality.has_value() || edge->Optimal.has_value()) continue;
-      RetrogradeAnalyse(vertex, targetQuality.value(), edge);
-
+    if (target->Quality.has_value() && !edge->Optimal.has_value()) {
+      RetrogradeAnalyse(vertex, target->Quality.value(), edge);
       if (vertex->Quality.has_value()) return vertex->Quality;
     }
   }
