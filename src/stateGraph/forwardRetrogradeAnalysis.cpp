@@ -18,6 +18,7 @@ static void InsertUnique(std::shared_ptr<Edge> edge,
 static std::optional<WinState> Expand(
     const std::shared_ptr<Vertex> vertex, Graph& graph,
     std::unordered_set<std::shared_ptr<Vertex>>& expandingVertices,
+    const std::shared_ptr<const Vertex> root,
     std::optional<SaveParameters>& saveParameters) {
   expandingVertices.insert(vertex);
 
@@ -51,19 +52,17 @@ static std::optional<WinState> Expand(
     const std::shared_ptr<Vertex> target = edge->Target.lock();
     assert(target != nullptr);
 
-    // Try to expand node
-    if (!target->Quality.has_value()) {
-      // Don't expand already expanding vertices
-      if (expandingVertices.contains(target)) continue;
-
+    // Try to expand node if not already begin expanded
+    if (!target->Quality.has_value() && !expandingVertices.contains(target)) {
       const std::optional<WinState> targetQuality =
-          Expand(target, graph, expandingVertices, saveParameters);
+          Expand(target, graph, expandingVertices, root, saveParameters);
 
-      // If the vertex has been coloured by retrograde analysis, then
-      // early-exit
-      if (vertex->Quality.has_value()) return vertex->Quality;
+      // If the current or root vertex has been coloured by retrograde analysis,
+      // then early-exit
+      if (vertex->Quality.has_value() || root->Quality.has_value())
+        return vertex->Quality;
 
-      // Try colouring it yourself instead
+      // Try colouring the current vertex yourself instead
       if (!targetQuality.has_value() || edge->Optimal.has_value()) continue;
       RetrogradeAnalyse(vertex, targetQuality.value(), edge);
 
@@ -86,7 +85,7 @@ void ForwardRetrogradeAnalysis(Graph& graph, const Game::Game root,
 
   std::unordered_set<std::shared_ptr<Vertex>> expandingVertices;
 
-  Expand(rootVertex, graph, expandingVertices, saveParameters);
+  Expand(rootVertex, graph, expandingVertices, rootVertex, saveParameters);
   if (!rootVertex->Quality.has_value()) RetrogradeAnalyse(graph);
 }
 

@@ -215,9 +215,6 @@ static void AssignDraws(
   for (const std::shared_ptr<Vertex> vertex : unlabelledExpandedVertices) {
     const auto edgeIt =
         std::find_if(vertex->Edges.begin(), vertex->Edges.end(), isDrawEdge);
-    if (edgeIt == vertex->Edges.end()) {
-      std::cerr << "here";
-    }
     assert(edgeIt != vertex->Edges.end());
 
     const std::shared_ptr<Edge> edge = *edgeIt;
