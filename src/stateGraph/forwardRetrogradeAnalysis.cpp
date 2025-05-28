@@ -24,6 +24,7 @@ static std::optional<WinState> Expand(
 
   // Insert edges
   const Game::Game game = Game::Game::FromSerialization(vertex->Serialization);
+  bool terminalStateFound = false;
   for (Game::Move move : game.GetValidMoves()) {
     Game::Game nextGame(game);
     nextGame.DoMove(move);
@@ -39,12 +40,21 @@ static std::optional<WinState> Expand(
       // New terminal state found
       assert(nextVertex->Edges.empty() &&
              nextVertex->Quality.value() == WinState::Lose);
-      RetrogradeAnalyse(graph);
 
-      if (saveParameters && saveParameters->ShouldSave())
-        saveParameters->Save(graph);
+      expandingVertices.insert(nextVertex);
+      terminalStateFound = true;
     }
   }
+
+  if (terminalStateFound) {
+    RetrogradeAnalyse(graph);
+
+    if (saveParameters && saveParameters->ShouldSave())
+      saveParameters->Save(graph);
+
+    if (vertex->Quality.has_value()) return vertex->Quality;
+  }
+
   assert(!game.HasValidMoves() ||
          vertex->Edges.size() == game.GetValidMoves().size());
 
