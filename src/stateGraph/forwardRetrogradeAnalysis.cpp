@@ -52,7 +52,10 @@ static std::optional<WinState> Expand(
     if (saveParameters && saveParameters->ShouldSave())
       saveParameters->Save(graph);
 
-    if (vertex->Quality.has_value()) return vertex->Quality;
+    // Because there's a direct move to a terminal state, this state will have
+    // to be labelled winning by retrograde analysis
+    assert(vertex->Quality == WinState::Win);
+    return vertex->Quality;
   }
 
   assert(!game.HasValidMoves() ||
@@ -62,8 +65,8 @@ static std::optional<WinState> Expand(
     const std::shared_ptr<Vertex> target = edge->Target.lock();
     assert(target != nullptr);
 
-    // Try to expand node if not already begin expanded
-    if (!target->Quality.has_value() && !expandingVertices.contains(target)) {
+    // Try to expand node if not already being expanded
+    if (!expandingVertices.contains(target)) {
       Expand(target, graph, expandingVertices, root, saveParameters);
 
       // If the current or root vertex has been coloured by retrograde analysis,
