@@ -2,10 +2,6 @@
 
 #include "cli/cli.h"
 
-void WelcomeMessage() {
-  std::cout << "Onitama analyzer v1.0.1" << std::endl << std::endl;
-}
-
 void CommandLoop() {
   Cli::Cli cli;
 
@@ -29,8 +25,6 @@ void CommandLoop() {
 }
 
 int main(int argc, char* argv[]) {
-  WelcomeMessage();
-
   if (argc <= 1) {
     CommandLoop();
   } else {

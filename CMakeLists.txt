@@ -74,6 +74,7 @@ set(SrcCli
     src/cli/strategies.cpp
     src/cli/experiment.cpp
     src/cli/print.cpp
+    src/cli/version.cpp
 
     src/experiments/fairCards/fairCards.cpp
 
@@ -89,6 +90,7 @@ set (HeaderCli
     src/cli/strategies.h
     src/cli/experiment.h
     src/cli/print.h
+    src/cli/version.h
 
     src/experiments/fairCards/fairCards.h
 
@@ -160,6 +162,11 @@ target_precompile_headers(onitama-core PRIVATE
     <unordered_set>
     <vector>
 )
+
+
+# Set version constant
+file(READ "VERSION" onitamaVersion)
+add_definitions(-DVERSION="${onitamaVersion}")
 
 
 if(TARGET onitama-test)
