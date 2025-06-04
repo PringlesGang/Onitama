@@ -1,10 +1,6 @@
-name: CMake on multiple platforms
+name: Onitama build pipeline
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: push
 
 jobs:
   lint:
@@ -36,6 +32,7 @@ jobs:
           continue_on_error: false
 
   build:
+    name: Build
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -50,16 +47,19 @@ jobs:
             cpp_compiler: cl
             os_name: windows
             binary_path: Release/onitama.exe
+            binary_name: onitama-windows-cl.exe
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
             os_name: linux
             binary_path: onitama
+            binary_name: onitama-linux-gcc
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
             os_name: linux
             binary_path: onitama
+            binary_name: onitama-linux-clang
         exclude:
           - os: windows-latest
             c_compiler: gcc
@@ -91,9 +91,61 @@ jobs:
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }}
+
+    - name: Rename output
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: mv "./${{ matrix.binary_path }}" "./${{ matrix.binary_name }}"
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: Onitama-${{ matrix.os_name }}-${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir}}/${{ matrix.binary_path }}
+        path: ${{ steps.strings.outputs.build-output-dir}}/${{ matrix.binary_name }}
+
+  publish-release:
+    name: Publish release
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - build
+      - lint
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      BUILD_VERSION: INVALID
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Get build version
+      run: echo "BUILD_VERSION=v$(cat VERSION)" >> $GITHUB_ENV
+
+    - name: Get latest release version
+      id: get-release-version
+      uses: pozetroninc/github-action-get-latest-release@v0.8.0
+      with:
+        repository: ${{ github.repository }}
+    
+    - name: Download artifacts
+      if: ${{ env.BUILD_VERSION != steps.get-release-version.outputs.release }}
+      uses: actions/download-artifact@v4
+      with:
+        pattern: Onitama-*
+        path: "${{ github.workspace }}/release"
+        merge-multiple: true
+
+    - name: Publish release
+      if: ${{ env.BUILD_VERSION != steps.get-release-version.outputs.release }}
+      uses: softprops/action-gh-release@v2
+      with:
+        name: ${{ env.BUILD_VERSION }}
+        tag_name: ${{ env.BUILD_VERSION }}
+        files:
+          ${{ github.workspace }}/release/*
+        prerelease: false
+        draft: false
+        fail_on_unmatched_files: true
+        target_commitish: ${{ github.sha }}
+        make_latest: true
+        generate_release_notes: true
