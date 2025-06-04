@@ -35,6 +35,8 @@ struct StateGraphArgs {
 
   bool UseSymmetries = true;
 
+  bool Data = false;
+
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>
       ExportPaths = std::nullopt;
   std::optional<std::pair<std::filesystem::path, std::filesystem::path>>

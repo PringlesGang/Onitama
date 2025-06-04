@@ -144,6 +144,9 @@ bool StateGraphArgs::ParseCommonArgs(std::istringstream& stream) {
   } else if (parameter == "--disable-symmetries") {
     UseSymmetries = false;
 
+  } else if (parameter == "--data") {
+    Data = true;
+
   } else {
     Parse::Unparse(stream, parameter);
     return true;
@@ -178,8 +181,10 @@ bool ComponentArgs::Parse(std::istringstream& stream) {
 }
 
 void ComponentArgs::Execute() {
-  std::cout << "Generating state graph for:\n"
-            << *StartingConfiguration << std::endl;
+  if (!Data) {
+    std::cout << "Generating state graph for:\n"
+              << *StartingConfiguration << std::endl;
+  }
 
   StateGraph::UseSymmetries = UseSymmetries;
 
@@ -194,10 +199,16 @@ void ComponentArgs::Execute() {
                              std::chrono::system_clock::now() - startTime)
                              .count();
 
-  std::cout << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
-            << std::format("Analysed {} nodes and {} edges",
-                           graph.GetNodeCount(), graph.GetEdgeCount())
-            << std::endl;
+  if (!Data) {
+    std::cout << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
+              << std::format("Analysed {} nodes and {} edges",
+                             graph.GetNodeCount(), graph.GetEdgeCount())
+              << std::endl;
+  } else {
+    std::cout << std::format("{:.3f},{},{}", runTime / 1000.0f,
+                             graph.GetNodeCount(), graph.GetEdgeCount())
+              << std::endl;
+  }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
@@ -214,8 +225,10 @@ bool RetrogradeAnalysisArgs::Parse(std::istringstream& stream) {
 }
 
 void RetrogradeAnalysisArgs::Execute() {
-  std::cout << "Finding perfect positional strategy for:\n"
-            << *StartingConfiguration << std::endl;
+  if (!Data) {
+    std::cout << "Finding perfect positional strategy for:\n"
+              << *StartingConfiguration << std::endl;
+  }
 
   StateGraph::UseSymmetries = UseSymmetries;
 
@@ -248,38 +261,49 @@ void RetrogradeAnalysisArgs::Execute() {
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
+  std::string qualityString = "Unknown";
   if (vertex->Quality.has_value()) {
     switch (vertex->Quality.value()) {
       case WinState::Lose:
-        std::cout << "Lost" << std::endl;
+        qualityString = "Lost";
         break;
       case WinState::Draw:
-        std::cout << "Draw" << std::endl;
+        qualityString = "Draw";
         break;
       case WinState::Win:
-        std::cout << "Won" << std::endl;
+        qualityString = "Won";
         break;
     }
-  } else {
-    std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Graph exploration time: {:.3f}s\n",
-                           exploreTime / 1000.0f)
-            << std::format("Retrograde analysis time: {:.3f}s\n",
-                           retrogradeTime / 1000.0f)
-            << std::format("Total run time: {:.3f}s\n", runTime / 1000.0f)
-            << std::format("Analysed {} nodes and {} edges",
-                           graph.GetNodeCount(), graph.GetEdgeCount())
-            << std::endl;
+  if (Data) {
+    std::cout << std::format("{:.3f},{:.3f},{:.3f},{},{},{}",
+                             exploreTime / 1000.0f, retrogradeTime / 1000.0f,
+                             runTime / 1000.0f, graph.GetNodeCount(),
+                             graph.GetEdgeCount(), qualityString)
+              << std::endl;
+
+  } else {
+    std::cout << qualityString << "\n"
+              << std::format("Graph exploration time: {:.3f}s\n",
+                             exploreTime / 1000.0f)
+              << std::format("Retrograde analysis time: {:.3f}s\n",
+                             retrogradeTime / 1000.0f)
+              << std::format("Total run time: {:.3f}s\n", runTime / 1000.0f)
+              << std::format("Analysed {} nodes and {} edges",
+                             graph.GetNodeCount(), graph.GetEdgeCount())
+              << std::endl;
+  }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
 }
 
 void ForwardRetrogradeAnalysisArgs::Execute() {
-  std::cout << "Finding perfect positional strategy for:\n"
-            << *StartingConfiguration << std::endl;
+  if (!Data) {
+    std::cout << "Finding perfect positional strategy for:\n"
+              << *StartingConfiguration << std::endl;
+  }
 
   StateGraph::UseSymmetries = UseSymmetries;
 
@@ -296,26 +320,34 @@ void ForwardRetrogradeAnalysisArgs::Execute() {
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
+  std::string qualityString = "Unknown";
   if (vertex->Quality.has_value()) {
     switch (vertex->Quality.value()) {
       case WinState::Lose:
-        std::cout << "Lost" << std::endl;
+        qualityString = "Lost";
         break;
       case WinState::Draw:
-        std::cout << "Draw" << std::endl;
+        qualityString = "Draw";
         break;
       case WinState::Win:
-        std::cout << "Won" << std::endl;
+        qualityString = "Won";
         break;
     }
-  } else {
-    std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
-            << std::format("Analysed {} nodes and {} edges",
-                           graph.GetNodeCount(), graph.GetEdgeCount())
-            << std::endl;
+  if (Data) {
+    std::cout << std::format("{:.3f},{},{},{}", runTime / 1000.0f,
+                             graph.GetNodeCount(), graph.GetEdgeCount(),
+                             qualityString)
+              << std::endl;
+
+  } else {
+    std::cout << qualityString << "\n"
+              << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
+              << std::format("Analysed {} nodes and {} edges",
+                             graph.GetNodeCount(), graph.GetEdgeCount())
+              << std::endl;
+  }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
@@ -347,8 +379,10 @@ bool DispersedFrontierArgs::Parse(std::istringstream& stream) {
 }
 
 void DispersedFrontierArgs::Execute() {
-  std::cout << "Finding perfect positional strategy for:\n"
-            << *StartingConfiguration << std::endl;
+  if (!Data) {
+    std::cout << "Finding perfect positional strategy for:\n"
+              << *StartingConfiguration << std::endl;
+  }
 
   StateGraph::UseSymmetries = UseSymmetries;
 
@@ -365,26 +399,34 @@ void DispersedFrontierArgs::Execute() {
 
   const std::shared_ptr<const Vertex> vertex =
       graph.Get(*StartingConfiguration)->lock();
+  std::string qualityString = "Unknown";
   if (vertex->Quality.has_value()) {
     switch (vertex->Quality.value()) {
       case WinState::Lose:
-        std::cout << "Lost" << std::endl;
+        qualityString = "Lost";
         break;
       case WinState::Draw:
-        std::cout << "Draw" << std::endl;
+        qualityString = "Draw";
         break;
       case WinState::Win:
-        std::cout << "Won" << std::endl;
+        qualityString = "Won";
         break;
     }
-  } else {
-    std::cout << "Unknown" << std::endl;
   }
 
-  std::cout << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
-            << std::format("Analysed {} nodes and {} edges",
-                           graph.GetNodeCount(), graph.GetEdgeCount())
-            << std::endl;
+  if (Data) {
+    std::cout << std::format("{:.3f},{},{},{}", runTime / 1000.0f,
+                             graph.GetNodeCount(), graph.GetEdgeCount(),
+                             qualityString)
+              << std::endl;
+
+  } else {
+    std::cout << qualityString << "\n"
+              << std::format("Run time: {:.3f}s\n", runTime / 1000.0f)
+              << std::format("Analysed {} nodes and {} edges",
+                             graph.GetNodeCount(), graph.GetEdgeCount())
+              << std::endl;
+  }
 
   if (ExportPaths) graph.Export(ExportPaths->first, ExportPaths->second);
   if (ImagesPath) graph.ExportImages(ImagesPath.value());
