@@ -14,3 +14,8 @@ struct Piece {
 };
 
 }  // namespace Game
+
+inline std::string to_string(Game::Piece piece) {
+  std::string string = to_string(piece.Team);
+  return string + (piece.Master ? " master" : " student");
+}

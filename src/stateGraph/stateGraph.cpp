@@ -397,7 +397,7 @@ void Graph::Export(const std::filesystem::path& nodesPath,
     const std::string sourceSerialization =
         Base64::Encode(vertex.Serialization);
     const std::string quality =
-        vertex.Quality.transform(to_string).value_or("Unknown");
+        vertex.Quality.has_value() ? "Unknown" : to_string(*vertex.Quality);
 
     nodesStream << std::format("{},{},{}.bmp", sourceSerialization, quality,
                                sourceSerialization)

@@ -89,3 +89,8 @@ class Board {
 std::ostream& operator<<(std::ostream& stream, const std::span<const Tile> row);
 
 }  // namespace Game
+
+inline std::string to_string(Game::Tile tile) {
+  if (tile.has_value()) return to_string(tile.value());
+  return "empty";
+}
