@@ -37,9 +37,9 @@ void Init() {
   TemplateBoard = std::make_unique<const Board>(
       TemplateGrid, TemplateBoardWidth, TemplateBoardHeight);
 
-  TemplateGame = std::make_unique<const Game::Game>(Game::Game(
+  TemplateGame = std::make_unique<const Game::Game>(
       Board(*TemplateBoard), std::array<Game::Card, CARD_COUNT>(TemplateCards),
-      Color(TemplatePlayer)));
+      Color(TemplatePlayer));
 }
 
 int InitialStateConstructor() {

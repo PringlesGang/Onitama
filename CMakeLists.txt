@@ -104,6 +104,8 @@ set(SrcTest
         tests/game/game.cpp
         tests/game/board.cpp
 
+        tests/stateGraph/vertex.cpp
+
         tests/stateGraph/saveSystem.cpp
 )
 
@@ -112,6 +114,8 @@ set(HeaderTest
 
         tests/game/game.h
         tests/game/board.h
+
+        tests/stateGraph/vertex.h
 
         tests/stateGraph/saveSystem.h
 )
@@ -221,6 +225,15 @@ set(tests
     "Game::Board::MasterCaptured"
     "Game::Board::OnBoard"
     "Game::Board::IsFinished"
+
+    "StateGraph::Vertex::GameConstructor"
+    "StateGraph::Vertex::SerializationConstructor"
+    "StateGraph::Vertex::EqualityOperator"
+    "StateGraph::Vertex::GameEqualityOperator"
+    "StateGraph::Vertex::SetOptimalMove"
+    "StateGraph::Vertex::GetOptimalMove"
+    "StateGraph::Vertex::GetEdgeMove"
+    "StateGraph::Vertex::GetEdgeSerialization"
 
     "StateGraph::Graph::Save"
     "StateGraph::Graph::Load"

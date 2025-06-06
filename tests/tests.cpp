@@ -10,6 +10,7 @@
 #include "./game/board.h"
 #include "./game/game.h"
 #include "./stateGraph/saveSystem.h"
+#include "./stateGraph/vertex.h"
 
 namespace Tests {
 
@@ -88,6 +89,22 @@ const static std::unordered_map<std::string, std::function<int()>,
         {"Game::Board::OnBoard", Game::Board::OnBoard},
         {"Game::Board::IsFinished", Game::Board::IsFinished},
 
+        {"StateGraph::Vertex::GameConstructor",
+         StateGraph::Vertex::GameConstructor},
+        {"StateGraph::Vertex::SerializationConstructor",
+         StateGraph::Vertex::SerializationConstructor},
+        {"StateGraph::Vertex::EqualityOperator",
+         StateGraph::Vertex::EqualityOperator},
+        {"StateGraph::Vertex::GameEqualityOperator",
+         StateGraph::Vertex::GameEqualityOperator},
+        {"StateGraph::Vertex::SetOptimalMove",
+         StateGraph::Vertex::SetOptimalMove},
+        {"StateGraph::Vertex::GetOptimalMove",
+         StateGraph::Vertex::GetOptimalMove},
+        {"StateGraph::Vertex::GetEdgeMove", StateGraph::Vertex::GetEdgeMove},
+        {"StateGraph::Vertex::GetEdgeSerialization",
+         StateGraph::Vertex::GetEdgeSerialization},
+
         {"StateGraph::Graph::Save", StateGraph::Save},
         {"StateGraph::Graph::Load", StateGraph::Load},
 };
@@ -129,6 +146,7 @@ int Run(const std::string& id) {
 void Init() {
   Game::Game::Init();
   Game::Board::Init();
+  StateGraph::Vertex::Init();
 }
 
 }  // namespace Tests
