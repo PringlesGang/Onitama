@@ -169,14 +169,14 @@ int ParseIncorrectSerialization() {
 }
 
 int Equality() {
-  if (TemplateGame == TemplateGame) return Pass;
+  if (*TemplateGame == *TemplateGame) return Pass;
 
   std::cerr << "Identity does not hold!" << std::endl;
   return Fail;
 }
 
 int Inequality() {
-  if (TemplateGame != TemplateGame) {
+  if (*TemplateGame != *TemplateGame) {
     std::cerr << "Identity does not hold!" << std::endl;
     return Fail;
   }
