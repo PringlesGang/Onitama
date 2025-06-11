@@ -9,6 +9,7 @@
 
 #include "./game/board.h"
 #include "./game/game.h"
+#include "./stateGraph/edge.h"
 #include "./stateGraph/saveSystem.h"
 #include "./stateGraph/vertex.h"
 
@@ -105,6 +106,9 @@ const static std::unordered_map<std::string, std::function<int()>,
         {"StateGraph::Vertex::GetEdgeSerialization",
          StateGraph::Vertex::GetEdgeSerialization},
 
+        {"StateGraph::Edge::Constructor", StateGraph::Edge::Constructor},
+        {"StateGraph::Edge::IsOptimal", StateGraph::Edge::IsOptimal},
+
         {"StateGraph::Graph::Save", StateGraph::Save},
         {"StateGraph::Graph::Load", StateGraph::Load},
 };
@@ -147,6 +151,7 @@ void Init() {
   Game::Game::Init();
   Game::Board::Init();
   StateGraph::Vertex::Init();
+  StateGraph::Edge::Init();
 }
 
 }  // namespace Tests

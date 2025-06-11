@@ -105,7 +105,7 @@ set(SrcTest
         tests/game/board.cpp
 
         tests/stateGraph/vertex.cpp
-
+        tests/stateGraph/edge.cpp
         tests/stateGraph/saveSystem.cpp
 )
 
@@ -116,7 +116,7 @@ set(HeaderTest
         tests/game/board.h
 
         tests/stateGraph/vertex.h
-
+        tests/stateGraph/edge.h
         tests/stateGraph/saveSystem.h
 )
 
@@ -234,6 +234,9 @@ set(tests
     "StateGraph::Vertex::GetOptimalMove"
     "StateGraph::Vertex::GetEdgeMove"
     "StateGraph::Vertex::GetEdgeSerialization"
+
+    "StateGraph::Edge::Constructor"
+    "StateGraph::Edge::IsOptimal"
 
     "StateGraph::Graph::Save"
     "StateGraph::Graph::Load"
