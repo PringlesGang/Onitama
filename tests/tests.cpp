@@ -10,6 +10,7 @@
 #include "./game/board.h"
 #include "./game/game.h"
 #include "./stateGraph/edge.h"
+#include "./stateGraph/retrogradeAnalysis.h"
 #include "./stateGraph/saveSystem.h"
 #include "./stateGraph/vertex.h"
 
@@ -111,6 +112,11 @@ const static std::unordered_map<std::string, std::function<int()>,
 
         {"StateGraph::Graph::Save", StateGraph::Save},
         {"StateGraph::Graph::Load", StateGraph::Load},
+
+        {"StateGraph::RetrogradeAnalysis::RetrogradeAnalyseEdge",
+         StateGraph::RetrogradeAnalysis::RetrogradeAnalyseEdge},
+        {"StateGraph::RetrogradeAnalysis::RetrogradeAnalyseGraph",
+         StateGraph::RetrogradeAnalysis::RetrogradeAnalyseGraph},
 };
 
 int RunAll() {
@@ -152,6 +158,7 @@ void Init() {
   Game::Board::Init();
   StateGraph::Vertex::Init();
   StateGraph::Edge::Init();
+  StateGraph::RetrogradeAnalysis::Init();
 }
 
 }  // namespace Tests

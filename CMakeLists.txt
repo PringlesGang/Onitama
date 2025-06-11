@@ -107,6 +107,7 @@ set(SrcTest
         tests/stateGraph/vertex.cpp
         tests/stateGraph/edge.cpp
         tests/stateGraph/saveSystem.cpp
+        tests/stateGraph/retrogradeAnalysis.cpp
 )
 
 set(HeaderTest
@@ -118,6 +119,7 @@ set(HeaderTest
         tests/stateGraph/vertex.h
         tests/stateGraph/edge.h
         tests/stateGraph/saveSystem.h
+        tests/stateGraph/retrogradeAnalysis.h
 )
 
 set(INCLUDE_DIRS)
@@ -240,6 +242,9 @@ set(tests
 
     "StateGraph::Graph::Save"
     "StateGraph::Graph::Load"
+
+    "StateGraph::RetrogradeAnalysis::RetrogradeAnalyseEdge"
+    "StateGraph::RetrogradeAnalysis::RetrogradeAnalyseGraph"
 )
 
 foreach(testId ${tests})

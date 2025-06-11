@@ -69,9 +69,6 @@ static bool VerifyCorrectness(const Graph& graph) {
 
       case WinState::Lose: {
         for (const std::shared_ptr<const Edge> edge : vertex->Edges) {
-          if (edge != optimalEdge && edge->IsOptimal()) {
-            std::cerr << "Error!" << std::endl;
-          }
           assert(!(edge != optimalEdge && edge->IsOptimal()));
 
           const std::shared_ptr<const Vertex> target = edge->Target.lock();
