@@ -24,9 +24,15 @@ class StrategiesCommand : public Command {
  public:
   std::optional<Thunk> Parse(std::istringstream& command) const override;
 
-  std::string GetName() const override;
-  std::string GetCommand() const override;
-  std::string GetHelp() const override;
+  constexpr std::string GetName() const override { return "strategies"; }
+
+  constexpr std::string GetHelpEntry() const override {
+    constexpr std::array<std::string_view, 1> description{
+        "Print all available strategies."};
+    return PadCommandName(GetName(), description);
+  }
+
+  constexpr std::string GetHelp() const override { return GetHelpEntry(); }
 };
 
 }  // namespace Cli

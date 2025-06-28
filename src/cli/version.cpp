@@ -12,12 +12,4 @@ std::optional<Thunk> VersionCommand::Parse(std::istringstream& command) const {
   return ExecuteVersion;
 }
 
-std::string VersionCommand::GetName() const { return "version"; }
-
-std::string VersionCommand::GetCommand() const { return GetName(); }
-
-std::string VersionCommand::GetHelp() const {
-  return "Prints the current version of the software.";
-}
-
 }  // namespace Cli

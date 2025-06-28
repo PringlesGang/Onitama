@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../experiments/fairCards/fairCards.h"
+#include "../experiments/stateGraph/stateGraph.h"
 #include "command.h"
 
 namespace Cli {
@@ -7,8 +9,23 @@ namespace Cli {
 struct ExperimentParser {
   const std::string_view Name;
   const std::function<std::optional<Thunk>(std::istringstream&)> Parser;
-  const std::string_view Command;
-  const std::string_view Description;
+  const std::string_view HelpEntry;
+  const std::string_view Help;
+};
+
+const inline std::array<ExperimentParser, 2> Experiments = {
+    ExperimentParser{
+        .Name = Experiments::FairCards::Name,
+        .Parser = Experiments::FairCards::Parse,
+        .HelpEntry = Experiments::FairCards::HelpEntry,
+        .Help = Experiments::FairCards::Help,
+    },
+    ExperimentParser{
+        .Name = Experiments::StateGraph::Name,
+        .Parser = Experiments::StateGraph::Parse,
+        .HelpEntry = Experiments::StateGraph::HelpEntry,
+        .Help = Experiments::StateGraph::Help,
+    },
 };
 
 void ExecuteListExperiments();
@@ -17,9 +34,21 @@ class ExperimentCommand : public Command {
  public:
   std::optional<Thunk> Parse(std::istringstream& command) const override;
 
-  std::string GetName() const override;
-  std::string GetCommand() const override;
-  std::string GetHelp() const override;
+  constexpr std::string GetName() const override { return "experiment"; }
+
+  constexpr std::string GetHelpEntry() const override {
+    constexpr std::array<std::string_view, 1> description{
+        "Performs an experiment."};
+    return PadCommandName(GetName(), description);
+  }
+
+  constexpr std::string GetHelp() const override {
+    std::string help = "Performs an experiment.\n\n";
+    for (const ExperimentParser& experiment : Experiments) {
+      help += experiment.HelpEntry;
+    }
+    return help;
+  };
 };
 
 }  // namespace Cli

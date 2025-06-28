@@ -10,9 +10,15 @@ class VersionCommand : public Command {
  public:
   std::optional<Thunk> Parse(std::istringstream& command) const override;
 
-  std::string GetName() const override;
-  std::string GetCommand() const override;
-  std::string GetHelp() const override;
+  constexpr std::string GetName() const override { return "version"; }
+
+  constexpr std::string GetHelpEntry() const override {
+    constexpr std::array<std::string_view, 1> description{
+        "Print the current version of the software."};
+    return PadCommandName(GetName(), description);
+  }
+
+  constexpr std::string GetHelp() const override { return GetHelpEntry(); }
 };
 
 }  // namespace Cli

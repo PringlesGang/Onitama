@@ -70,14 +70,6 @@ std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
   return std::nullopt;
 }
 
-std::string StrategiesCommand::GetName() const { return "strategies"; }
-
-std::string StrategiesCommand::GetCommand() const { return GetName(); }
-
-std::string StrategiesCommand::GetHelp() const {
-  return "Prints all available strategies to the console.";
-}
-
 std::optional<Thunk> StrategiesCommand::Parse(
     std::istringstream& command) const {
   if (!Terminate(command)) return std::nullopt;

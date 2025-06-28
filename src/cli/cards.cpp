@@ -20,14 +20,6 @@ void ExecuteCards() {
   }
 }
 
-std::string CardsCommand::GetName() const { return "cards"; }
-
-std::string CardsCommand::GetCommand() const { return GetName(); }
-
-std::string CardsCommand::GetHelp() const {
-  return "Prints all available cards.";
-}
-
 std::optional<Thunk> CardsCommand::Parse(std::istringstream& command) const {
   if (!Terminate(command)) return std::nullopt;
 

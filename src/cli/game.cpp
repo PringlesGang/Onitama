@@ -89,38 +89,6 @@ ExecuteGameInfo ExecuteGame(const GameArgs args) {
   return info;
 }
 
-std::string GameCommand::GetName() const { return "game"; }
-
-std::string GameCommand::GetCommand() const {
-  return std::format(
-      "{} red_strategy blue_strategy "
-      "(--duplicate-cards) "
-      "(--repeat repeat_count) "
-      "(--cards set_aside r1 r2 b1 b2) "
-      "(--print-type type) "
-      "(--multithread) "
-      "(--size width height)",
-      GetName());
-}
-
-std::string GameCommand::GetHelp() const {
-  return "Plays a game with the provided strategies.\n"
-
-         "If `--repeat` is supplied, the game is played `repeat_count` times.\n"
-         "With --multithread these games are run on different threads.\n"
-
-         "With `--cards` the game cards can be specified. If not supplied, "
-         "random cards will be chosen.\n"
-
-         "By default, the random cards do not allow for repeats. "
-         "`--duplicate-cards` suppresses this.\n"
-
-         "Use `--print-type` to specify in what output the game should give.\n"
-
-         "The size of the board can be altered using --size, "
-         "with a default of 5x5.";
-}
-
 std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
   GameArgs args;
   if (!args.Parse(command)) return std::nullopt;

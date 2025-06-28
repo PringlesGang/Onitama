@@ -7,27 +7,10 @@
 
 namespace Cli {
 
-std::string Cli::GetName() const { return ""; }
-
-std::string Cli::GetCommand() const {
-  return "Type \"help\" for more information.";
-}
-
-std::string Cli::GetHelp() const {
-  std::string string = "";
-
-  for (auto command = commands.begin(); command != commands.end(); command++) {
-    string += std::format("- {}\n{}\n\n", (*command)->GetCommand(),
-                          (*command)->GetHelp());
-  }
-
-  return string;
-}
-
-std::optional<Thunk> Cli::Parse(std::istringstream& command) const {
+std::optional<Thunk> Cli::Parse(std::istringstream& inputCommand) const {
   std::string option;
 
-  command >> option;
+  inputCommand >> option;
   Parse::ToLower(option);
 
   if (option.empty()) {
@@ -35,21 +18,18 @@ std::optional<Thunk> Cli::Parse(std::istringstream& command) const {
   } else {
     if (option == "help") return std::bind(&Cli::ExecuteHelp, this);
 
-    for (auto commandIt = commands.begin(); commandIt != commands.end();
-         commandIt++) {
-      if (option != (*commandIt)->GetName()) continue;
+    for (const auto& command : Commands) {
+      if (option != command->GetName()) continue;
 
-      const std::optional<Thunk> result = (*commandIt)->Parse(command);
+      const std::optional<Thunk> result = command->Parse(inputCommand);
 
-      if (!result) std::cout << (*commandIt)->GetCommand() << std::endl;
+      if (!result) std::cout << command->GetHelp() << std::endl;
 
       return result;
     }
 
     std::cout << std::format("Unknown command \"{}\"!", option) << std::endl;
   }
-
-  std::cout << GetCommand() << std::endl;
 
   return std::nullopt;
 }

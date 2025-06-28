@@ -68,16 +68,4 @@ std::optional<Thunk> PrintCommand::ParsePrintGame(
   return [args] { ExecutePrintGame(args); };
 }
 
-std::string PrintCommand::GetName() const { return "print"; }
-
-std::string PrintCommand::GetCommand() const {
-  return std::format("{} game serialization (--image directory)", GetName());
-}
-
-std::string PrintCommand::GetHelp() const {
-  return "- game\n"
-         "Prints the provided serialization as a game state.\n\n"
-         "- --image exports the game as a bmp in the specified directory";
-}
-
 }  // namespace Cli
