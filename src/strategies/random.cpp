@@ -17,12 +17,4 @@ std::optional<std::function<std::unique_ptr<Random>()>> Random::Parse(
   return std::make_unique<Random>;
 }
 
-std::string Random::GetName() { return "random"; }
-
-std::string Random::GetCommand() { return GetName(); }
-
-std::string Random::GetDescription() {
-  return "Performs a uniformly distributed random move out of all valid ones.";
-}
-
 }  // namespace Strategy

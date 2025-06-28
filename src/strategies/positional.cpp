@@ -5,7 +5,6 @@
 
 #include "../cli/command.h"
 #include "../stateGraph/strategies.h"
-#include "../util/parse.h"
 
 namespace Strategy {
 
@@ -74,17 +73,6 @@ std::optional<std::function<std::unique_ptr<Positional>()>> Positional::Parse(
     return graph ? std::make_unique<Positional>(graph.value())
                  : std::make_unique<Positional>();
   };
-}
-
-std::string Positional::GetName() { return "positional"; }
-
-std::string Positional::GetCommand() {
-  return std::format("{} (--import nodes-path edges-path)", GetName());
-}
-
-std::string Positional::GetDescription() {
-  return "Slowly seeks out a perfect positional strategy to perform.\n"
-         "A file storing a state graph may be provided.";
 }
 
 }  // namespace Strategy

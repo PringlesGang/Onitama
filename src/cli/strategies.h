@@ -16,8 +16,7 @@ struct StrategyParser {
   const std::string Name;
   const std::function<std::optional<StrategyFactory>(std::istringstream&)>
       Parser;
-  const std::string Command;
-  const std::string Description;
+  const std::string HelpEntry;
 };
 
 class StrategiesCommand : public Command {
@@ -27,7 +26,7 @@ class StrategiesCommand : public Command {
   constexpr std::string GetName() const override { return "strategies"; }
 
   constexpr std::string GetHelpEntry() const override {
-    return PadCommandName(GetName(), "Prints all available strategies.");
+    return Parse::PadCommandName(GetName(), "Prints all available strategies.");
   }
 
   constexpr std::string GetHelp() const override { return GetHelpEntry(); }

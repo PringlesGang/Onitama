@@ -16,36 +16,31 @@ namespace Cli {
 const static std::array<StrategyParser, 5> Strategies = {
     StrategyParser{.Name = Strategy::Human::GetName(),
                    .Parser = Strategy::Human::Parse,
-                   .Command = Strategy::Human::GetCommand(),
-                   .Description = Strategy::Human::GetDescription()},
+                   .HelpEntry = Strategy::Human::GetHelpEntry()},
 
     StrategyParser{.Name = Strategy::Random::GetName(),
                    .Parser = Strategy::Random::Parse,
-                   .Command = Strategy::Random::GetCommand(),
-                   .Description = Strategy::Random::GetDescription()},
+                   .HelpEntry = Strategy::Random::GetHelpEntry()},
 
     StrategyParser{.Name = Strategy::MonteCarlo::GetName(),
                    .Parser = Strategy::MonteCarlo::Parse,
-                   .Command = Strategy::MonteCarlo::GetCommand(),
-                   .Description = Strategy::MonteCarlo::GetDescription()},
+                   .HelpEntry = Strategy::MonteCarlo::GetHelpEntry()},
 
     StrategyParser{.Name = Strategy::MinMax::GetName(),
                    .Parser = Strategy::MinMax::Parse,
-                   .Command = Strategy::MinMax::GetCommand(),
-                   .Description = Strategy::MinMax::GetDescription()},
+                   .HelpEntry = Strategy::MinMax::GetHelpEntry()},
 
     StrategyParser{.Name = Strategy::Positional::GetName(),
                    .Parser = Strategy::Positional::Parse,
-                   .Command = Strategy::Positional::GetCommand(),
-                   .Description = Strategy::Positional::GetDescription()},
+                   .HelpEntry = Strategy::Positional::GetHelpEntry()},
 };
 
 void ExecuteStrategies() {
+  std::string string = "";
   for (const StrategyParser& strategy : Strategies) {
-    std::cout << std::format("- {}\n{}\n\n", strategy.Name,
-                             strategy.Description)
-              << std::endl;
+    string += strategy.HelpEntry;
   }
+  std::cout << string << std::endl;
 }
 
 std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
@@ -60,8 +55,6 @@ std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
     if (name != strategy.Name) continue;
 
     const std::optional<StrategyFactory> result = strategy.Parser(command);
-
-    if (!result) std::cout << strategy.Command << std::endl;
 
     return result;
   }

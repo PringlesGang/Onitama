@@ -14,7 +14,7 @@ class CardsCommand : public Command {
   constexpr std::string GetName() const override { return "cards"; }
 
   constexpr std::string GetHelpEntry() const override {
-    return PadCommandName(GetName(), "Prints all available cards.");
+    return Parse::PadCommandName(GetName(), "Prints all available cards.");
   }
 
   constexpr std::string GetHelp() const override { return GetHelpEntry(); }

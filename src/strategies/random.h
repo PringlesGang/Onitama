@@ -6,6 +6,7 @@
 #include <random>
 #include <sstream>
 
+#include "../util/parse.h"
 #include "strategy.h"
 
 namespace Strategy {
@@ -19,9 +20,12 @@ class Random : public Strategy {
   static std::optional<std::function<std::unique_ptr<Random>()>> Parse(
       std::istringstream& stream);
 
-  static std::string GetName();
-  static std::string GetCommand();
-  static std::string GetDescription();
+  constexpr static std::string GetName() { return "random"; }
+
+  constexpr static std::string GetHelpEntry() {
+    return Parse::PadCommandName(
+        "Random", "Choose a random valid move, uniformly distributed.");
+  }
 
  private:
   std::random_device RandomDevice;

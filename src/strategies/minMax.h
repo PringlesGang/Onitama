@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "../util/parse.h"
 #include "../util/winState.h"
 #include "strategy.h"
 
@@ -16,9 +17,14 @@ class MinMax : public Strategy {
   static std::optional<std::function<std::unique_ptr<MinMax>()>> Parse(
       std::istringstream& stream);
 
-  static std::string GetName();
-  static std::string GetCommand();
-  static std::string GetDescription();
+  constexpr static std::string GetName() { return "minmax"; }
+
+  constexpr static std::string GetHelpEntry() {
+    constexpr std::string_view name = "MinMax [<max_depth>] [--no-max-depth]";
+    constexpr std::array<std::string_view, 2> description{
+        "Recursively simulate the game to find a perfect move", "to play."};
+    return Parse::PadCommandName(name, description);
+  }
 
  private:
   const std::optional<const size_t> MaxDepth;

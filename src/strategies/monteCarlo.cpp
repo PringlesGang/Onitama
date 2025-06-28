@@ -60,15 +60,4 @@ std::optional<std::function<std::unique_ptr<MonteCarlo>()>> MonteCarlo::Parse(
   return [repeatCount] { return std::make_unique<MonteCarlo>(repeatCount); };
 }
 
-std::string MonteCarlo::GetName() { return "montecarlo"; }
-
-std::string MonteCarlo::GetCommand() {
-  return std::format("{} repeat_count", GetName());
-}
-
-std::string MonteCarlo::GetDescription() {
-  return "Performs a random simulation for a specified amount of times "
-         "and picks the move that lead to the most wins.";
-}
-
 }  // namespace Strategy

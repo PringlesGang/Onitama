@@ -6,7 +6,6 @@
 #include <sstream>
 
 #include "../cli/command.h"
-#include "../util/parse.h"
 
 namespace Strategy {
 
@@ -90,19 +89,6 @@ std::optional<std::function<std::unique_ptr<MinMax>()>> MinMax::Parse(
   }
 
   return [maxDepth] { return std::make_unique<MinMax>(maxDepth); };
-}
-
-std::string MinMax::GetName() { return "minmax"; }
-
-std::string MinMax::GetCommand() {
-  return std::format("{} max_depth\n{} --no-max-depth", GetName(), GetName());
-}
-
-std::string MinMax::GetDescription() {
-  return "Recursively seeks out the best strategy for both players. "
-         "Will perform the move that guarantees a win, "
-         "or guarantees a non-loss.\n"
-         "Max search depth is configurable.";
 }
 
 }  // namespace Strategy

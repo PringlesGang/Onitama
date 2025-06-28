@@ -17,6 +17,32 @@ void ToLower(std::string& string);
 bool Terminate(std::istringstream& stream);
 bool ParseHelp(std::istringstream& stream);
 
+constexpr std::string PadCommandName(
+    const std::string_view name, const std::span<const std::string_view> help) {
+  constexpr size_t HelpPaddingSize = 24;
+  const size_t nameLength = name.size();
+
+  std::string string = std::string(name);
+  if (nameLength >= HelpPaddingSize - 2) {
+    string +=
+        "\n" + std::string(HelpPaddingSize, ' ') + std::string(help[0]) + "\n";
+  } else {
+    string += std::string(HelpPaddingSize - nameLength, ' ') +
+              std::string(help[0]) + "\n";
+  }
+
+  for (size_t i = 1; i < help.size(); i++) {
+    string += std::string(HelpPaddingSize, ' ') + std::string(help[i]) + "\n";
+  }
+
+  return string;
+}
+
+constexpr std::string PadCommandName(const std::string_view name,
+                                     const std::string_view description) {
+  return PadCommandName(name, std::array<std::string_view, 1>{description});
+}
+
 std::optional<std::filesystem::path> ParsePath(std::istringstream& stream);
 
 std::optional<std::array<Game::Card, CARD_COUNT>> ParseCards(

@@ -22,7 +22,7 @@ class Cli : public Command {
     for (const auto& command : Commands) {
       string += command->GetHelpEntry();
     }
-    string += PadCommandName("exit", "Exit the application.");
+    string += Parse::PadCommandName("exit", "Exit the application.");
 
     return string;
   }

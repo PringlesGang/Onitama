@@ -5,6 +5,7 @@
 #include <optional>
 #include <sstream>
 
+#include "../util/parse.h"
 #include "strategy.h"
 
 namespace Strategy {
@@ -16,9 +17,12 @@ class Human : public Strategy {
   static std::optional<std::function<std::unique_ptr<Human>()>> Parse(
       std::istringstream& stream);
 
-  static std::string GetName();
-  static std::string GetCommand();
-  static std::string GetDescription();
+  constexpr static std::string GetName() { return "human"; }
+
+  constexpr static std::string GetHelpEntry() {
+    return Parse::PadCommandName(
+        "Human", "Play the game yourself through command-line input.");
+  }
 
  private:
   static std::optional<Game::Move> ParseMove(std::istringstream& input,

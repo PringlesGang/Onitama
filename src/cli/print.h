@@ -19,7 +19,7 @@ class PrintCommand : public Command {
   constexpr std::string GetName() const override { return "print"; }
 
   constexpr std::string GetHelpEntry() const override {
-    return PadCommandName(GetName(), "Prints the provided game.");
+    return Parse::PadCommandName(GetName(), "Prints the provided game.");
   }
 
   constexpr std::string GetHelp() const override {
