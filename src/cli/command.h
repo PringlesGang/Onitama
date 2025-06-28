@@ -44,6 +44,11 @@ class Command {
 
     return string;
   }
+
+  static constexpr std::string PadCommandName(
+      const std::string_view name, const std::string_view description) {
+    return PadCommandName(name, std::array<std::string_view, 1>{description});
+  }
 };
 
 }  // namespace Cli

@@ -27,9 +27,7 @@ class StrategiesCommand : public Command {
   constexpr std::string GetName() const override { return "strategies"; }
 
   constexpr std::string GetHelpEntry() const override {
-    constexpr std::array<std::string_view, 1> description{
-        "Print all available strategies."};
-    return PadCommandName(GetName(), description);
+    return PadCommandName(GetName(), "Prints all available strategies.");
   }
 
   constexpr std::string GetHelp() const override { return GetHelpEntry(); }

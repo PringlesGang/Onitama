@@ -36,9 +36,8 @@ class GameCommand : public Command {
   constexpr std::string GetName() const override { return "game"; }
 
   constexpr std::string GetHelpEntry() const override {
-    constexpr std::array<std::string_view, 1> description{
-        "Simulates a game with the provided strategies."};
-    return PadCommandName(GetName(), description);
+    return PadCommandName(GetName(),
+                          "Simulates a game with the provided strategies.");
   }
 
   constexpr std::string GetHelp() const override {

@@ -15,6 +15,7 @@ namespace Parse {
 void Unparse(std::istringstream& stream, const std::string& string);
 void ToLower(std::string& string);
 bool Terminate(std::istringstream& stream);
+bool ParseHelp(std::istringstream& stream);
 
 std::optional<std::filesystem::path> ParsePath(std::istringstream& stream);
 

@@ -55,6 +55,9 @@ bool PrintCommand::ParsePrintGameArgs(std::istringstream& command,
 
 std::optional<Thunk> PrintCommand::ParsePrintGame(
     std::istringstream& command) const {
+  if (Parse::ParseHelp(command))
+    return [this] { std::cout << GetHelp() << std::endl; };
+
   const std::optional<Game::GameSerialization> serialization =
       Game::Game::ParseSerialization(command);
   if (!serialization) return std::nullopt;

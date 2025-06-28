@@ -78,6 +78,8 @@ void Execute(const size_t repeatCount, const Cli::StrategyFactory strategy) {
 }
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command) {
+  if (Parse::ParseHelp(command)) return [] { std::cout << Help << std::endl; };
+
   size_t repeatCount;
   if (!(command >> repeatCount)) {
     std::cout << "Did not provide valid repeat count for fair cards experiment!"

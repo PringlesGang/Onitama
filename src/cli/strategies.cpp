@@ -72,6 +72,9 @@ std::optional<StrategyFactory> ParseStrategy(std::istringstream& command) {
 
 std::optional<Thunk> StrategiesCommand::Parse(
     std::istringstream& command) const {
+  if (Parse::ParseHelp(command))
+    return [this] { std::cout << GetHelp() << std::endl; };
+
   if (!Terminate(command)) return std::nullopt;
 
   return ExecuteStrategies;

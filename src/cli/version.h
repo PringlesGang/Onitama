@@ -13,9 +13,8 @@ class VersionCommand : public Command {
   constexpr std::string GetName() const override { return "version"; }
 
   constexpr std::string GetHelpEntry() const override {
-    constexpr std::array<std::string_view, 1> description{
-        "Print the current version of the software."};
-    return PadCommandName(GetName(), description);
+    return PadCommandName(GetName(),
+                          "Print the current version of the software.");
   }
 
   constexpr std::string GetHelp() const override { return GetHelpEntry(); }

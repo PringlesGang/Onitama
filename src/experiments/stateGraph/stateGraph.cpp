@@ -14,6 +14,8 @@ namespace Experiments {
 namespace StateGraph {
 
 std::optional<Cli::Thunk> Parse(std::istringstream& command) {
+  if (Parse::ParseHelp(command)) return [] { std::cout << Help << std::endl; };
+
   const std::optional<std::shared_ptr<StateGraphArgs>> args =
       StateGraphArgs::Parse(command);
 

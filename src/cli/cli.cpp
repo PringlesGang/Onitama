@@ -23,8 +23,6 @@ std::optional<Thunk> Cli::Parse(std::istringstream& inputCommand) const {
 
       const std::optional<Thunk> result = command->Parse(inputCommand);
 
-      if (!result) std::cout << command->GetHelp() << std::endl;
-
       return result;
     }
 

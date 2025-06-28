@@ -10,6 +10,9 @@ namespace Cli {
 
 std::optional<Thunk> ExperimentCommand::Parse(
     std::istringstream& command) const {
+  if (Parse::ParseHelp(command))
+    return [this] { std::cout << GetHelp() << std::endl; };
+
   std::string arg;
   if (!(command >> arg)) {
     std::cout << "Failed to parse experiment argument!" << std::endl;
@@ -22,7 +25,6 @@ std::optional<Thunk> ExperimentCommand::Parse(
 
     const std::optional<Thunk> result = experiment.Parser(command);
 
-    if (!result) std::cout << experiment.Help << std::endl;
     if (!Terminate(command)) return std::nullopt;
 
     return result;

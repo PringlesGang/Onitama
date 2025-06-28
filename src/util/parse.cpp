@@ -24,6 +24,17 @@ bool Terminate(std::istringstream& stream) {
   return false;
 }
 
+bool ParseHelp(std::istringstream& stream) {
+  std::string arg;
+  stream >> arg;
+  Parse::ToLower(arg);
+
+  if (arg == "help" || arg == "--help" || arg == "-h") return true;
+
+  Parse::Unparse(stream, arg);
+  return false;
+}
+
 std::optional<std::filesystem::path> ParsePath(std::istringstream& stream) {
   std::string path;
   stream >> path;

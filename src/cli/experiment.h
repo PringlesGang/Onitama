@@ -37,9 +37,7 @@ class ExperimentCommand : public Command {
   constexpr std::string GetName() const override { return "experiment"; }
 
   constexpr std::string GetHelpEntry() const override {
-    constexpr std::array<std::string_view, 1> description{
-        "Performs an experiment."};
-    return PadCommandName(GetName(), description);
+    return PadCommandName(GetName(), "Performs an experiment.");
   }
 
   constexpr std::string GetHelp() const override {

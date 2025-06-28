@@ -90,6 +90,9 @@ ExecuteGameInfo ExecuteGame(const GameArgs args) {
 }
 
 std::optional<Thunk> GameCommand::Parse(std::istringstream& command) const {
+  if (Parse::ParseHelp(command))
+    return [this] { std::cout << GetHelp() << std::endl; };
+
   GameArgs args;
   if (!args.Parse(command)) return std::nullopt;
 

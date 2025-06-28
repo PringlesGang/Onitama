@@ -21,6 +21,9 @@ void ExecuteCards() {
 }
 
 std::optional<Thunk> CardsCommand::Parse(std::istringstream& command) const {
+  if (Parse::ParseHelp(command))
+    return [this] { std::cout << GetHelp() << std::endl; };
+
   if (!Terminate(command)) return std::nullopt;
 
   return ExecuteCards;
